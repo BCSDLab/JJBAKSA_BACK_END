@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: url
+    username: username
+    password: password
+
+  jpa:
+    show-sql: true
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    properties:
+      hibernate.format_sql: true
+      default_batch_fetch_size: 100
+
+flyway:
+  enabled: true
+  baseline-on-migrate: true
+  url: url
+  user: user
+  password: password
+
+server:
+  port: 8080
