@@ -58,4 +58,20 @@ public class UserEntity extends BaseEntity {
     public void update(UserRequest userRequest) {
 
     }
+
+    public void increaseReviewCount() {
+        userCount.increaseReviewCount();
+    }
+
+    public void decreaseReviewCount() {
+        userCount.decreaseReviewCount();
+    }
+
+    public void increaseFriendCount() {
+        userCount.increaseFriendCount();
+    }
+
+    public void decreaseFriendCount() {
+        userCount.decreaseFriendCount();
+    }
 }
