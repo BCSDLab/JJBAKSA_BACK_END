@@ -23,6 +23,18 @@ import javax.persistence.*;
 @Table(name = "user")
 public class UserEntity extends BaseEntity {
 
+    private static class UserEntityBuilderImpl extends UserEntityBuilder<UserEntity, UserEntityBuilderImpl> {
+
+        @Override
+        public UserEntity build() {
+
+            UserEntity user = new UserEntity(this);
+            user.getUserCount().setUser(user);
+
+            return user;
+        }
+    }
+
     @Basic
     @Column(name = "account", nullable = false)
     private String account;
@@ -40,7 +52,7 @@ public class UserEntity extends BaseEntity {
     private String nickname;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "profile_image_id", nullable = false)
+    @JoinColumn(name = "profile_image_id")
     private ImageEntity profileImage;
 
     @Enumerated(EnumType.STRING)

@@ -9,4 +9,8 @@ import lombok.*;
 @AllArgsConstructor
 public class UserRequest {
 
+    private String account;
+    private String password;
+    private String email;
+    private String nickname;
 }

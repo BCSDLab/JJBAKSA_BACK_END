@@ -1,12 +1,7 @@
 package com.jjbacsa.jjbacsabackend.shop.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
-import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
-import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
-import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
-import com.jjbacsa.jjbacsabackend.user.entity.UserCount;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +19,18 @@ import javax.persistence.*;
 @Where(clause = "is_deleted = 0")
 @Table(name = "shop")
 public class ShopEntity extends BaseEntity {
+
+    private static class ShopEntityBuilderImpl extends ShopEntityBuilder<ShopEntity, ShopEntityBuilderImpl> {
+
+        @Override
+        public ShopEntity build() {
+
+            ShopEntity shop = new ShopEntity(this);
+            shop.getShopCount().setShop(shop);
+
+            return shop;
+        }
+    }
 
     @Basic
     @Column(name = "place_id", nullable = false)

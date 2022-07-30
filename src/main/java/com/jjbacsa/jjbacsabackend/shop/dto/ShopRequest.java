@@ -9,4 +9,9 @@ import lombok.*;
 @AllArgsConstructor
 public class ShopRequest {
 
+    private String placeId;
+    private String placeName;
+    private String x;
+    private String y;
+    private String categoryName;
 }
