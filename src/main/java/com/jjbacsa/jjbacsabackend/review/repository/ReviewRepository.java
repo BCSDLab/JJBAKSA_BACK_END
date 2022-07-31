@@ -11,9 +11,12 @@ import java.util.List;
 @Repository
 public interface ReviewRepository extends JpaRepository<ReviewEntity, Long> {
 
+    // Todo: 페이지네이션
     List<ReviewEntity> findAllByWriter(UserEntity writer);
 
+    // Todo: 페이지네이션
     List<ReviewEntity> findAllByShop(ShopEntity shop);
 
+    // Todo: 페이지네이션
     List<ReviewEntity> findAllByWriterAndShop(UserEntity writer, ShopEntity shop);
 }

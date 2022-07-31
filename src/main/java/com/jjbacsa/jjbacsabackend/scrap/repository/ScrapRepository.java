@@ -11,7 +11,9 @@ import java.util.List;
 @Repository
 public interface ScrapRepository extends JpaRepository<ScrapEntity, Long> {
 
+    // Todo: 페이지네이션
     List<ScrapEntity> findAllByUserAndDirectory(UserEntity user, ScrapDirectoryEntity directory);
 
+    // Todo: 페이지네이션
     List<ScrapEntity> findAllByUserAndDirectoryIsNull(UserEntity user);
 }
