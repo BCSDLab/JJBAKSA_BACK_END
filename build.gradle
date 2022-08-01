@@ -74,7 +74,13 @@ configurations {
 	}
 	querydsl.extendsFrom compileClasspath
 }
-
+project.afterEvaluate {
+	project.tasks.compileQuerydsl.options.compilerArgs = [
+			"-proc:only",
+			"-processor", project.querydsl.processors() +
+					',lombok.launch.AnnotationProcessorHider$AnnotationProcessor'
+	]
+}
 
 tasks.named('test') {
 	useJUnitPlatform()
