@@ -51,7 +51,7 @@ public class UserEntity extends BaseEntity {
     @Column(name = "nickname", nullable = false)
     private String nickname;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "profile_image_id")
     private ImageEntity profileImage;
 
