@@ -13,7 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,11 +28,16 @@ public class UserServiceImpl implements UserService {
 
     private final JwtUtil jwtUtil;
 
+    //TODO : 토큰별 이름 변경
+    private String accessTokenName = "access_token";
+
     //TODO : OAuth별 작동
     @Override
     @Transactional
     public UserResponse signUp(UserRequest request) throws Exception {
-        if(userRepository.existsByAccount(request.getAccount())) throw new Exception();
+        if(userRepository.existsByAccount(request.getAccount())){
+            throw new Exception();
+        }
         //TODO : 이메일 인증 확인 절차 추가
 
         //TODO : Default Profile 등록하기
@@ -47,17 +55,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public Map<String, String> login(UserRequest request) throws Exception{
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
-        if(!BCrypt.checkpw(request.getPassword(), user.getPassword()))
+        if(!BCrypt.checkpw(request.getPassword(), user.getPassword())){
             throw new Exception("Not Invalid Access");
+        }
 
         //TODO : 토큰 전달 보안 강화
         Map<String, String> token = new HashMap<>();
-        token.put("access_token", jwtUtil.generateToken(user.getId()));
+        token.put(accessTokenName, jwtUtil.generateToken(user.getId()));
         return token;
+    }
+
+    @Override
+    public UserResponse getLoginUser() throws Exception{
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String token = request.getHeader("Authorization");
+
+        Map<String, Object> payloads = jwtUtil.getPayloadsFromJwt(token.substring(7));
+        UserEntity user = userRepository.findById(Long.valueOf(String.valueOf(payloads.get("id"))))
+                .orElseThrow(() -> new Exception("Token is not valid"));
+
+        return UserMapper.INSTANCE.toUserResponse(user);
     }
 }

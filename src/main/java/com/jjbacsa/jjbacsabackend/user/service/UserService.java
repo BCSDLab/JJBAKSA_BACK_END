@@ -8,4 +8,5 @@ import java.util.Map;
 public interface UserService {
     UserResponse signUp(UserRequest request) throws Exception;
     Map<String, String> login(UserRequest request) throws Exception;
+    UserResponse getLoginUser() throws Exception;
 }
