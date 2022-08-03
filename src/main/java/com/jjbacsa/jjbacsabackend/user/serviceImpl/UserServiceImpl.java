@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
+import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
@@ -17,7 +18,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -27,9 +27,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     private final JwtUtil jwtUtil;
-
-    //TODO : 토큰별 이름 변경
-    private String accessTokenName = "access_token";
 
     //TODO : OAuth별 작동
     @Override
@@ -52,7 +49,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Map<String, String> login(UserRequest request) throws Exception{
+    public Token login(UserRequest request) throws Exception{
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
@@ -61,9 +58,7 @@ public class UserServiceImpl implements UserService {
         }
 
         //TODO : 토큰 전달 보안 강화
-        Map<String, String> token = new HashMap<>();
-        token.put(accessTokenName, jwtUtil.generateToken(user.getId()));
-        return token;
+        return new Token(jwtUtil.generateToken(user.getId()));
     }
 
     @Override

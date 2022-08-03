@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.user.controller;
 
 import com.jjbacsa.jjbacsabackend.etc.annotations.Auth;
+import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
@@ -10,8 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -24,7 +23,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/user/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody UserRequest request) throws Exception{
+    public ResponseEntity<Token> login(@RequestBody UserRequest request) throws Exception{
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
