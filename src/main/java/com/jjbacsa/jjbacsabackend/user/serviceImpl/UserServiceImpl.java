@@ -34,18 +34,15 @@ public class UserServiceImpl implements UserService {
     //TODO : OAuth별 작동
     @Override
     @Transactional
-    public UserResponse signUp(UserRequest request) throws Exception {
+    public UserResponse register(UserRequest request) throws Exception {
         if(userRepository.existsByAccount(request.getAccount())){
             throw new Exception();
         }
         //TODO : 이메일 인증 확인 절차 추가
 
         //TODO : Default Profile 등록하기
-        UserEntity user = UserEntity.builder()
-                .account(request.getAccount())
+        UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
                 .password(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()))
-                .nickname(request.getNickname())
-                .email(request.getEmail())
                 .userType(UserType.NORMAL)
                 .oAuthType(OAuthType.NONE)
                 .build();
@@ -60,7 +57,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
         if(!BCrypt.checkpw(request.getPassword(), user.getPassword())){
-            throw new Exception("Not Invalid Access");
+            throw new Exception("User Not Founded");
         }
 
         //TODO : 토큰 전달 보안 강화

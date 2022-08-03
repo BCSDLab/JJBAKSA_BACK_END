@@ -6,7 +6,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import java.util.Map;
 
 public interface UserService {
-    UserResponse signUp(UserRequest request) throws Exception;
+    UserResponse register(UserRequest request) throws Exception;
     Map<String, String> login(UserRequest request) throws Exception;
     UserResponse getLoginUser() throws Exception;
 }

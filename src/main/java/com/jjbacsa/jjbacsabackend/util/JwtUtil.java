@@ -19,6 +19,8 @@ public class JwtUtil {
     @Value("${jwt.key}")
     private String key;
 
+    private final short BEARER_LENGTH = 7;
+
     public String generateToken(Long id){
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("typ", "JWT");
@@ -49,13 +51,13 @@ public class JwtUtil {
         if(token == null){
             throw new Exception("Token is null");
         }
-        if(token.length() < 8){
+        if(token.length() < BEARER_LENGTH + 1){
             throw new Exception("Not Invalid Token");
         }
         if(!token.startsWith("Bearer ")){
             throw new Exception("Token is not Bearer");
         }
-        String authToken = token.substring(7);
+        String authToken = token.substring(BEARER_LENGTH);
 
         try{
             Jwts.parserBuilder().setSigningKey(key.getBytes()).build().parseClaimsJws(authToken);
