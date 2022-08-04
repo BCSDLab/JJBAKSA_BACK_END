@@ -51,7 +51,7 @@ public class ShopEntity extends BaseEntity {
     @Column(name = "category_name", nullable = false)
     private String categoryName;
 
-    @OneToOne(mappedBy = "shop", optional = false, cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "shop", fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
     @Builder.Default
     private ShopCount shopCount = new ShopCount();
 
