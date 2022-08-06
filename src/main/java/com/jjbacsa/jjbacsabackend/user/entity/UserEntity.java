@@ -1,7 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
-import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
@@ -36,11 +35,11 @@ public class UserEntity extends BaseEntity {
     }
 
     @Basic
-    @Column(name = "account", nullable = false)
+    @Column(name = "account")
     private String account;
 
     @Basic
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
     private String password;
 
     @Basic
@@ -56,14 +55,10 @@ public class UserEntity extends BaseEntity {
     private ImageEntity profileImage;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "oauth_type", nullable = false)
-    private OAuthType oAuthType;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
     private UserType userType;
 
-    @OneToOne(mappedBy = "user", optional = false, cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
     @Builder.Default
     private UserCount userCount = new UserCount();
 

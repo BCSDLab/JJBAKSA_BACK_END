@@ -14,12 +14,11 @@ CREATE TABLE IF NOT EXISTS user
     created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
     is_deleted       TINYINT      NOT NULL DEFAULT 0,
-    account          VARCHAR(255) NOT NULL,
-    password         VARCHAR(255) NOT NULL,
+    account          VARCHAR(255),
+    password         VARCHAR(255),
     email            VARCHAR(255) NOT NULL,
     nickname         VARCHAR(255) NOT NULL,
     profile_image_id BIGINT,
-    oauth_type       VARCHAR(255) NOT NULL,
     user_type        VARCHAR(255) NOT NULL,
     FOREIGN KEY (profile_image_id) REFERENCES image (id) ON DELETE SET NULL
 ) default character set utf8mb4
@@ -33,6 +32,20 @@ CREATE TABLE IF NOT EXISTS user_count
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 ) default character set utf8mb4
   collate utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS oauth_info
+(
+    id         BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+    is_deleted TINYINT      NOT NULL DEFAULT 0,
+    api_key    VARCHAR(255) NOT NULL,
+    oauth_type VARCHAR(255) NOT NULL,
+    user_id    BIGINT,
+    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL
+) default character set utf8mb4
+  collate utf8mb4_general_ci;
+
 
 CREATE TABLE IF NOT EXISTS shop
 (
