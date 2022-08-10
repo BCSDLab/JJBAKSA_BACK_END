@@ -51,6 +51,16 @@ public class FollowController {
 
     @Auth
     @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @PostMapping(value = "/follow/cancel/{request_id}")
+    public ResponseEntity<Void> cancelFollow(@PathVariable("request_id") Long requestId) throws Exception {
+
+        service.cancel(requestId);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Auth
+    @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
     @PostMapping(value = "/follow/delete")
     public ResponseEntity<Void> deleteFollow(@RequestBody FollowRequest request) throws Exception {
 
