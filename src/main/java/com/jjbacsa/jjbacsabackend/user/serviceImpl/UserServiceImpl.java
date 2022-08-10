@@ -41,7 +41,6 @@ public class UserServiceImpl implements UserService {
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
                 .password(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()))
                 .userType(UserType.NORMAL)
-                .oAuthType(OAuthType.NONE)
                 .build();
 
         userRepository.save(user);
