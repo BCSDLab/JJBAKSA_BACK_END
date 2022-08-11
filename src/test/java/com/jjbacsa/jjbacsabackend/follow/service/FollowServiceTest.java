@@ -11,6 +11,7 @@ import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,26 +19,25 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.TestConstructor;
 
 import javax.transaction.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@RequiredArgsConstructor
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @Transactional
 class FollowServiceTest {
 
-    @Autowired
-    private FollowService followService;
+    private final FollowService followService;
     @MockBean
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private FollowRepository followRepository;
-    @Autowired
-    private FollowRequestRepository followRequestRepository;
+    private final UserRepository userRepository;
+    private final FollowRepository followRepository;
+    private final FollowRequestRepository followRequestRepository;
 
     private static UserRequest userRequest1;
     private static UserRequest userRequest2;
