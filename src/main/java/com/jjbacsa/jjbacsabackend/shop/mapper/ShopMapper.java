@@ -1,7 +1,9 @@
 package com.jjbacsa.jjbacsabackend.shop.mapper;
 
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "Spring")

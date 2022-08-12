@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.shop.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
