@@ -1,11 +1,9 @@
 package com.jjbacsa.jjbacsabackend.shop.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.shop.dto.ShopDto;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.service.ShopService;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
@@ -22,11 +20,10 @@ import java.util.concurrent.TimeUnit;
 public class ShopServiceImpl implements ShopService {
 
     private final WebClient webClient;
-    private final String BASE_URL="https://dapi.kakao.com";
 
     public ShopServiceImpl(WebClient.Builder webclientBuilder, @Value("${external.api.key}")String key) {
 
-        DefaultUriBuilderFactory factory=new DefaultUriBuilderFactory(BASE_URL);
+        DefaultUriBuilderFactory factory=new DefaultUriBuilderFactory();
         factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.TEMPLATE_AND_VALUES);
 
         HttpClient httpClient = HttpClient.create()
@@ -35,7 +32,7 @@ public class ShopServiceImpl implements ShopService {
                 .doOnConnected(conn ->
                         conn.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS)));
 
-        this.webClient = webclientBuilder.uriBuilderFactory(factory).baseUrl(BASE_URL)
+        this.webClient = webclientBuilder.uriBuilderFactory(factory)
                 .defaultHeader("Authorization",key)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
@@ -43,17 +40,18 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
-    public List<ShopDto> search(String query, String x, String y) {
+    public ShopDto getShop(String place_id) {
+        //1. DB에 place_id의 상점이 있는지 검색
+        //2. place_id를 기반으로 google에 상점 검색 -> ShopDto로 파싱
 
-        ShopResponse res= webClient.get().uri(uriBuilder ->
-                        uriBuilder.path("/v2/local/search/keyword.json")
-                                .queryParam("query",query)
-                                .queryParam("x",x)
-                                .queryParam("y",y)
-                                .queryParam("sort","accuracy")
-                                .build()
-                ).retrieve().bodyToMono(ShopResponse.class).block();
+        //1에서 상점이 있는 경우 ->
+        //1에서 상점이 없는 경우 ->
+        return null;
+    }
 
-        return res.getDocuments();
+    @Override
+    public ShopDto.Shop searchShop(String place_id) {
+
+        return null;
     }
 }
