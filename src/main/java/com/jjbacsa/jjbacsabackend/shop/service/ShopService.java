@@ -1,10 +1,11 @@
 package com.jjbacsa.jjbacsabackend.shop.service;
 
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopDto;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopResponse;
-
-import java.util.List;
+import com.jjbacsa.jjbacsabackend.shop.dto.Shop;
+import org.json.simple.parser.ParseException;
 
 public interface ShopService {
-    List<ShopDto> search(String query, String x, String y);
+    Long getShop(String placeId) throws ParseException;
+    Long searchShop(String keyword) throws ParseException;
+    Shop getShopDetails(String placeId) throws ParseException;
+    Long register(Shop shop);
 }

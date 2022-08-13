@@ -12,4 +12,6 @@ public interface ShopRepository extends JpaRepository<ShopEntity, Long> {
     Optional<ShopEntity> findByPlaceId(String placeId);
 
     boolean existsByPlaceId(String placeId);
+
+    Optional<ShopEntity> findByPlaceNameContaining(String placeName);
 }
