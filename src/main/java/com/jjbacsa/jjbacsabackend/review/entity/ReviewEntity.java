@@ -5,9 +5,7 @@ import com.jjbacsa.jjbacsabackend.review.dto.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -16,6 +14,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@ToString
 @Getter
 @NoArgsConstructor
 @SuperBuilder(toBuilder = true)
@@ -25,6 +24,20 @@ import java.util.List;
 @Table(name = "review")
 public class ReviewEntity extends BaseEntity {
 
+    private static class ReviewEntityBuilderImpl extends ReviewEntityBuilder<ReviewEntity, ReviewEntityBuilderImpl>{
+
+        @Override
+        public ReviewEntity build(){
+            ReviewEntity reviewEntity = new ReviewEntity(this);
+            if(reviewEntity.getReviewImages() != null) {
+                for (ReviewImageEntity image : reviewEntity.getReviewImages()) {
+                    image.setReview(reviewEntity);
+                }
+            }
+            return reviewEntity;
+        }
+
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id")
@@ -34,6 +47,7 @@ public class ReviewEntity extends BaseEntity {
     @JoinColumn(name = "shop_id")
     private ShopEntity shop;
 
+    @Setter
     @Lob
     @Column(name = "content")
     private String content;
@@ -47,6 +61,4 @@ public class ReviewEntity extends BaseEntity {
     @Builder.Default
     private List<ReviewImageEntity> reviewImages = new ArrayList<>();
 
-    public void update(ReviewRequest reviewRequest) {
-    }
 }
