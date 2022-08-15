@@ -14,6 +14,7 @@ import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +85,7 @@ class FollowServiceTest {
                 .build();
     }
 
+    @DisplayName("팔로우 요청")
     @Test
     void request() throws Exception {
 
@@ -124,6 +126,7 @@ class FollowServiceTest {
         assertEquals(user1, request.getUser());
     }
 
+    @DisplayName("팔로우 수락")
     @Test
     void accept() throws Exception {
 
@@ -154,6 +157,7 @@ class FollowServiceTest {
         assertEquals(user1, follow2.getFollower());
     }
 
+    @DisplayName("탈퇴한 유저가 보낸 팔로우 요청 수락")
     @Test
     void acceptWithdrawalUser() throws Exception {
 
@@ -174,6 +178,7 @@ class FollowServiceTest {
         assertEquals(1, followRequestEntity.getIsDeleted());
     }
 
+    @DisplayName("이미 팔로우된 사용자에게 팔로우 요청")
     @Test
     void requestAlreadyFollowed() throws Exception {
 
@@ -193,6 +198,7 @@ class FollowServiceTest {
         );
     }
 
+    @DisplayName("팔로우 거절")
     @Test
     void reject() throws Exception {
 
@@ -220,6 +226,7 @@ class FollowServiceTest {
         assertTrue(followRepository.findByUserAndFollower(user1, user2).isEmpty());
     }
 
+    @DisplayName("팔로우 요청 취소")
     @Test
     void cancel() throws Exception {
 
@@ -247,6 +254,7 @@ class FollowServiceTest {
         assertEquals(1, followRequestEntity.getIsDeleted());
     }
 
+    @DisplayName("팔로우 해제")
     @Test
     void delete() throws Exception {
 
