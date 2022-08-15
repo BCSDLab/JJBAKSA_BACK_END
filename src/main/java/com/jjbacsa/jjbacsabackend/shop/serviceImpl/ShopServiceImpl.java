@@ -1,7 +1,7 @@
 package com.jjbacsa.jjbacsabackend.shop.serviceImpl;
 
-import com.jjbacsa.jjbacsabackend.shop.dto.Shop;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopDto;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.mapper.ShopMapper;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
@@ -53,38 +53,40 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
-    public Long getShop(String placeId) throws ParseException {
-        boolean placeIdExist=shopRepository.existsByPlaceId(placeId);
+    public ShopResponse getShop(String placeId) throws ParseException {
 
-        if(placeIdExist){
+        if(shopRepository.existsByPlaceId(placeId)){
             Optional<ShopEntity> shopEntity=shopRepository.findByPlaceId(placeId);
-            Optional<Long> savedShopId=shopEntity.map(ShopEntity::getId);
+            ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity.get());
 
-            return savedShopId.get();
+            return shopResponse;
+
         }else{
-            Shop shop= getShopDetails(placeId);
-            Long savedShopId=register(shop);
+            ShopDto shopDto = getShopDetails(placeId);
+            ShopEntity shopEntity=register(shopDto);
 
-            return savedShopId;
+            return ShopMapper.INSTANCE.toShopResponse(shopEntity);
         }
     }
 
     @Override
-    public Long register(Shop shop) {
-        ShopRequest shopRequest=ShopRequest.builder()
-                .placeId(shop.getPlaceId())
-                .placeName(shop.getPlaceName())
-                .categoryName(shop.getCategoryName())
-                .x(shop.getX())
-                .y(shop.getY()).build();
+    public ShopResponse searchShop(String keyword) throws ParseException {
+        Optional<ShopEntity> savedShop=shopRepository.findByPlaceNameContaining(keyword);
 
-        ShopEntity shopEntity= ShopMapper.INSTANCE.toShopEntity(shopRequest);
-        ShopEntity savedShop=shopRepository.save(shopEntity);
-        return savedShop.getId();
+        if(savedShop.isPresent())
+            return ShopMapper.INSTANCE.toShopResponse(savedShop.get());
+        else
+            throw new NullPointerException("해당하는 가게가 없습니다.");
+
     }
 
-    @Override
-    public Shop getShopDetails(String placeId) throws ParseException {
+
+    private ShopEntity register(ShopDto shopDto) {
+        ShopEntity shopEntity= ShopMapper.INSTANCE.toEntity(shopDto);
+        return shopRepository.save(shopEntity);
+    }
+
+    private ShopDto getShopDetails(String placeId) throws ParseException {
         String shopStr=webClient.get().uri(uriBuilder ->
                 uriBuilder.path("/details/json")
                         .queryParam("place_id",placeId)
@@ -97,20 +99,7 @@ public class ShopServiceImpl implements ShopService {
         return jsonToShop(shopStr);
     }
 
-    @Override
-    public Long searchShop(String keyword) throws ParseException {
-        Optional<ShopEntity> savedShop=shopRepository.findByPlaceNameContaining(keyword);
-
-        if(savedShop.isPresent()){
-            Optional<Long> shopId=savedShop.map(ShopEntity::getId);
-
-            return shopId.get();
-        }else
-            throw new NullPointerException("해당하는 가게가 없습니다.");
-
-    }
-
-    public Shop jsonToShop(String jsonStr) throws ParseException {
+    private ShopDto jsonToShop(String jsonStr) throws ParseException {
         JSONParser jsonParser= new JSONParser();
         JSONObject jsonObject=(JSONObject) jsonParser.parse(jsonStr);
 
@@ -134,40 +123,38 @@ public class ShopServiceImpl implements ShopService {
 
         String address= jsonObject_result.get("formatted_address").toString();
 
-        Optional<String> phoneNumber;
+        String phoneNumber;
         try{
-            String phoneNumberStr=jsonObject_result.get("formatted_phone_number").toString();
-            phoneNumber=Optional.ofNullable(phoneNumberStr);
+            phoneNumber=jsonObject_result.get("formatted_phone_number").toString();
         }catch (NullPointerException e){
-            phoneNumber=Optional.empty();
+            phoneNumber=null;
         }
 
         JSONObject opening_hours=(JSONObject) jsonObject_result.get("opening_hours");
 
-        Optional<String> weekdayText;
+        String weekdayText;
         try{
-            String weekdayTextStr=opening_hours.get("weekday_text").toString();
-            weekdayText=Optional.ofNullable(weekdayTextStr);
+            weekdayText=opening_hours.get("weekday_text").toString();
         }catch (NullPointerException e){
-            weekdayText=Optional.empty();
+            weekdayText=null;
         }
 
         if(!(categoryName.equals("cafe")||categoryName.equals("restaurant")))
             throw new RuntimeException("카페/맛집이 아닙니다.");
 
 
-        Shop shop=Shop.builder()
+        ShopDto shopDto = ShopDto.builder()
                 .placeId(placeId)
                 .placeName(placeName)
                 .x(x)
                 .y(y)
                 .address(address)
-                .phoneNumber(phoneNumber)
-                .weekdayText(weekdayText)
+                .phone(phoneNumber)
+                .businessDay(weekdayText)
                 .categoryName(categoryName)
                 .build();
 
-        return shop;
+        return shopDto;
     }
 }
 

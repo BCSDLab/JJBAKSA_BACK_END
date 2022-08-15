@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.shop.mapper;
 
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopDto;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,6 +12,9 @@ public interface ShopMapper {
 
     ShopMapper INSTANCE = Mappers.getMapper(ShopMapper.class);
 
-    ShopEntity toShopEntity(ShopRequest shopRequest);
+    ShopEntity toEntity(ShopDto shopDto);
+
+    @Mapping(source="id",target="shopId")
+    ShopResponse toShopResponse(ShopEntity shopEntity);
 
 }

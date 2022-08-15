@@ -1,7 +1,8 @@
 package com.jjbacsa.jjbacsabackend.shop.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,15 +48,25 @@ public class ShopEntity extends BaseEntity {
     @Basic
     @Column(name = "y", nullable = false)
     private String y;
+
     @Basic
     @Column(name = "category_name", nullable = false)
     private String categoryName;
 
+    @Basic
+    @Column(name="phone",nullable = true)
+    private String phone;
+
+    @Basic
+    @Column(name="business_day",nullable = true)
+    private String businessDay;
+
+    @JsonIgnore
     @OneToOne(mappedBy = "shop", optional = false, cascade = CascadeType.PERSIST)
     @Builder.Default
     private ShopCount shopCount = new ShopCount();
 
-    public void update(ShopRequest shopRequest) {
+    public void update(ShopDto shopDto) {
 
     }
 
