@@ -8,10 +8,7 @@ import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
@@ -41,7 +38,7 @@ public class FollowController {
 
     @Auth
     @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
-    @PostMapping(value = "/follow/reject/{request_id}")
+    @DeleteMapping(value = "/follow/reject/{request_id}")
     public ResponseEntity<Void> rejectFollow(@PathVariable("request_id") Long requestId) throws Exception {
 
         service.reject(requestId);
@@ -51,7 +48,7 @@ public class FollowController {
 
     @Auth
     @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
-    @PostMapping(value = "/follow/cancel/{request_id}")
+    @DeleteMapping(value = "/follow/cancel/{request_id}")
     public ResponseEntity<Void> cancelFollow(@PathVariable("request_id") Long requestId) throws Exception {
 
         service.cancel(requestId);
@@ -61,7 +58,7 @@ public class FollowController {
 
     @Auth
     @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
-    @PostMapping(value = "/follow/delete")
+    @DeleteMapping(value = "/follow/delete")
     public ResponseEntity<Void> deleteFollow(@RequestBody FollowRequest request) throws Exception {
 
         service.delete(request);
