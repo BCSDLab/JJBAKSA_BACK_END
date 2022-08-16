@@ -32,14 +32,15 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public void modifyReview(ReviewWithImageDto reviewWithImageDto) {
+    public ReviewWithImageResponse modifyReview(ReviewWithImageDto reviewWithImageDto) {
         try {
             ReviewEntity review = reviewRepository.getById(reviewWithImageDto.getId());
             if (reviewWithImageDto.getContent() != null) review.setContent(reviewWithImageDto.getContent());  // not null 컬럼
-            // save하지 않아도 트랜잭션안에서 변경감지로 처리됨.
+            return ReviewMapper.INSTANCE.fromReviewEntityWithImages(review);
         }catch (EntityNotFoundException e){
             log.warn("리뷰 업데이트 실패, 리뷰를 찾을 수 없습니다 - dto: {}", reviewWithImageDto);
         }
+        return null;
     }
 
     @Override
