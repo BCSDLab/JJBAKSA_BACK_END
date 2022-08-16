@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 public interface ReviewService {
 
     ReviewWithImageResponse createReview(ReviewWithImageDto reviewWithImageDto);
-    void modifyReview(ReviewWithImageDto reviewWithImageDto);
+    ReviewWithImageResponse modifyReview(ReviewWithImageDto reviewWithImageDto);
     void deleteReview(Long reviewId);
     ReviewWithImageResponse getReview(Long reviewId);
     Page<ReviewResponse> searchShopReviews(Long shopId, Pageable pageable);
