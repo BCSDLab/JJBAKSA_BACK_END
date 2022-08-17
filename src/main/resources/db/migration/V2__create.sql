@@ -57,7 +57,9 @@ CREATE TABLE IF NOT EXISTS shop
     place_name    VARCHAR(255) NOT NULL,
     x             VARCHAR(255) NOT NULL,
     y             VARCHAR(255) NOT NULL,
-    category_name VARCHAR(255) NOT NULL
+    category_name VARCHAR(255) NOT NULL,
+    phone         VARCHAR(30),
+    business_day  VARCHAR(1000)
 ) default character set utf8mb4
   collate utf8mb4_general_ci;
 
