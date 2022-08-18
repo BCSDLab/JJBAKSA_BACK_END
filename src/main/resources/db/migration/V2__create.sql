@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS image
     is_deleted TINYINT   NOT NULL DEFAULT 0,
     path       TEXT      NOT NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS user
 (
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS user
     user_type        VARCHAR(255) NOT NULL,
     FOREIGN KEY (profile_image_id) REFERENCES image (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS user_count
 (
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS user_count
     friend_count INT    NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS oauth_info
 (
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS oauth_info
     user_id    BIGINT,
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 
 CREATE TABLE IF NOT EXISTS shop
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS shop
     y             VARCHAR(255) NOT NULL,
     category_name VARCHAR(255) NOT NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS shop_count
 (
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS shop_count
     rating_count INT    NOT NULL DEFAULT 0,
     FOREIGN KEY (shop_id) REFERENCES shop (id) ON DELETE CASCADE
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS rating
 (
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS rating
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL,
     FOREIGN KEY (shop_id) REFERENCES shop (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS review
 (
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS review
     FOREIGN KEY (writer_id) REFERENCES user (id) ON DELETE SET NULL,
     FOREIGN KEY (shop_id) REFERENCES shop (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS review_image
 (
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS review_image
     FOREIGN KEY (review_id) REFERENCES review (id) ON DELETE SET NULL,
     FOREIGN KEY (image_id) REFERENCES image (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS follow
 (
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS follow
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL,
     FOREIGN KEY (follower_id) REFERENCES user (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS follow_request
 (
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS follow_request
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL,
     FOREIGN KEY (follower_id) REFERENCES user (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS scrap_directory
 (
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS scrap_directory
     is_deleted TINYINT      NOT NULL DEFAULT 0,
     name       VARCHAR(255) NOT NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS scrap
 (
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS scrap
     FOREIGN KEY (shop_id) REFERENCES shop (id) ON DELETE SET NULL,
     FOREIGN KEY (directory_id) REFERENCES scrap_directory (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS post
 (
@@ -173,4 +173,4 @@ CREATE TABLE IF NOT EXISTS post
     content    TEXT         NOT NULL,
     board_type VARCHAR(255) NOT NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;

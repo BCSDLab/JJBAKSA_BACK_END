@@ -9,12 +9,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface FollowRepository extends JpaRepository<FollowEntity, Long> {
+public interface FollowRepository extends JpaRepository<FollowEntity, Long>, DslFollowRepository {
 
     Optional<FollowEntity> findByUserAndFollower(UserEntity user, UserEntity follower);
-
-    // Todo: 페이지네이션
-    List<FollowEntity> findAllByUser(UserEntity user);
 
     boolean existsByUserAndFollower(UserEntity user, UserEntity follower);
 }
