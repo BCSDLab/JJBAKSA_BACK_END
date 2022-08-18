@@ -27,6 +27,7 @@ public class UserEntity extends BaseEntity {
         @Override
         public UserEntity build() {
 
+            id(null);
             UserEntity user = new UserEntity(this);
             user.getUserCount().setUser(user);
 
