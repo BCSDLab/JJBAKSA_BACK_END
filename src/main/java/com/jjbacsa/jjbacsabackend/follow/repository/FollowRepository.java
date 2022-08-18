@@ -15,4 +15,6 @@ public interface FollowRepository extends JpaRepository<FollowEntity, Long> {
 
     // Todo: 페이지네이션
     List<FollowEntity> findAllByUser(UserEntity user);
+
+    boolean existsByUserAndFollower(UserEntity user, UserEntity follower);
 }
