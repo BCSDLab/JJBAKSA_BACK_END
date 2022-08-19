@@ -28,14 +28,4 @@ public class FollowEntity extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "follower_id")
     private UserEntity follower;
-
-    public String getCursor() {
-
-        String pad =
-                IntStream.range(0, 20 - follower.getNickname().length())
-                        .mapToObj(i -> "0")
-                        .reduce((s, s2) -> s + s2).get();
-
-        return pad + follower.getNickname() + String.format("%010d", follower.getId());
-    }
 }

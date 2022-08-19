@@ -4,6 +4,7 @@ import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.util.CursorUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -112,10 +113,10 @@ class FollowRepositoryTest {
 
 
         Page<FollowEntity> page1 = followRepository.findAllByUserWithCursor(user1, null, PageRequest.of(0, 10));
-        Page<FollowEntity> page2 = followRepository.findAllByUserWithCursor(user1, page1.getContent().get(3).getCursor(), PageRequest.of(0, 10));
+        Page<FollowEntity> page2 = followRepository.findAllByUserWithCursor(user1, CursorUtil.getFollowerCursor(page1.getContent().get(3).getFollower()), PageRequest.of(0, 10));
 
-        assertEquals(7,page1.getContent().size());
-        assertEquals(3,page2.getContent().size());
-        assertEquals(page1.getContent().get(4),page2.getContent().get(0));
+        assertEquals(7, page1.getContent().size());
+        assertEquals(3, page2.getContent().size());
+        assertEquals(page1.getContent().get(4), page2.getContent().get(0));
     }
 }

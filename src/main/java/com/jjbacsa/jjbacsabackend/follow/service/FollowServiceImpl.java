@@ -1,14 +1,17 @@
 package com.jjbacsa.jjbacsabackend.follow.service;
 
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequest;
+import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowRequestEntity;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRequestRepository;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,6 +92,21 @@ public class FollowServiceImpl implements FollowService {
 
         deleteFollow(user, follower);
         deleteFollow(follower, user);
+    }
+
+    @Override
+    public Page<FollowRequestResponse> getSendRequests(int page) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Page<FollowRequestResponse> getReceiveRequests(int page) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Page<UserResponse> getFollowers(String cursor) throws Exception {
+        return null;
     }
 
     private UserEntity getLoginUser() throws Exception {
