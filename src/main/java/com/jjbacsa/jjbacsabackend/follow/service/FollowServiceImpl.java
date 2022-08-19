@@ -4,14 +4,18 @@ import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequest;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowRequestEntity;
+import com.jjbacsa.jjbacsabackend.follow.mapper.FollowRequestMapper;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRequestRepository;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
+import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 public class FollowServiceImpl implements FollowService {
+
+    private final int followerPageSize = 20;
+    private final int requestPageSize = 20;
 
     private final UserService userService;
 
@@ -96,17 +103,29 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public Page<FollowRequestResponse> getSendRequests(int page) throws Exception {
-        return null;
+
+        UserEntity user = getLoginUser();
+        Pageable pageable = PageRequest.of(page, requestPageSize);
+
+        return followRequestRepository.findAllByUser(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
     }
 
     @Override
     public Page<FollowRequestResponse> getReceiveRequests(int page) throws Exception {
-        return null;
+
+        UserEntity user = getLoginUser();
+        Pageable pageable = PageRequest.of(page, requestPageSize);
+
+        return followRequestRepository.findAllByFollower(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
     }
 
     @Override
     public Page<UserResponse> getFollowers(String cursor) throws Exception {
-        return null;
+
+        UserEntity user = getLoginUser();
+        Pageable pageable = PageRequest.of(0, followerPageSize);
+
+        return followRepository.findAllByUserWithCursor(user, cursor, pageable).map(follow -> UserMapper.INSTANCE.toUserResponse(follow.getFollower()));
     }
 
     private UserEntity getLoginUser() throws Exception {
