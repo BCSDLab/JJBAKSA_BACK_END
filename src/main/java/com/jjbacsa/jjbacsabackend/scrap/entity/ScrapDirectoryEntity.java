@@ -1,16 +1,14 @@
 package com.jjbacsa.jjbacsabackend.scrap.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
+import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Getter
 @NoArgsConstructor
@@ -20,6 +18,10 @@ import javax.persistence.Table;
 @Where(clause = "is_deleted = 0")
 @Table(name = "scrap_directory")
 public class ScrapDirectoryEntity extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 
     @Basic
     @Column(name = "name", nullable = false)
