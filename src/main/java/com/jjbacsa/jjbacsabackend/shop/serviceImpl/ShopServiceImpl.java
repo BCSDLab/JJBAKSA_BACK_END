@@ -1,6 +1,12 @@
 package com.jjbacsa.jjbacsabackend.shop.serviceImpl;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjbacsa.jjbacsabackend.shop.dto.ShopDto;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopApiDto;
 import com.jjbacsa.jjbacsabackend.shop.dto.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.mapper.ShopMapper;
@@ -8,9 +14,6 @@ import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
 import com.jjbacsa.jjbacsabackend.shop.service.ShopService;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -20,9 +23,9 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 
 @Service
 public class ShopServiceImpl implements ShopService {
@@ -31,12 +34,17 @@ public class ShopServiceImpl implements ShopService {
     private final WebClient webClient;
     private final String BASE_URL="https://maps.googleapis.com/maps/api/place";
 
+    private final ObjectMapper objectMapper;
+
     @Value("${external.api.key}")
     private String API_KEY;
 
-    private ShopServiceImpl(WebClient.Builder webclientBuilder, ShopRepository shopRepository) {
+    private ShopServiceImpl(WebClient.Builder webclientBuilder, ShopRepository shopRepository, ObjectMapper objectMapper) {
 
         this.shopRepository=shopRepository;
+        this.objectMapper=objectMapper;
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false);
+        this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         DefaultUriBuilderFactory factory=new DefaultUriBuilderFactory(BASE_URL);
         factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.TEMPLATE_AND_VALUES);
@@ -53,7 +61,7 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
-    public ShopResponse getShop(String placeId) throws ParseException {
+    public ShopResponse getShop(String placeId) throws JsonProcessingException {
 
         if(shopRepository.existsByPlaceId(placeId)){
             Optional<ShopEntity> shopEntity=shopRepository.findByPlaceId(placeId);
@@ -62,7 +70,8 @@ public class ShopServiceImpl implements ShopService {
             return shopResponse;
 
         }else{
-            ShopDto shopDto = getShopDetails(placeId);
+            ShopApiDto shopApiDto = getShopDetails(placeId);
+            ShopDto shopDto=ShopDto.ShopDto(shopApiDto);
             ShopEntity shopEntity=register(shopDto);
 
             return ShopMapper.INSTANCE.toShopResponse(shopEntity);
@@ -80,13 +89,12 @@ public class ShopServiceImpl implements ShopService {
 
     }
 
-
     private ShopEntity register(ShopDto shopDto) {
         ShopEntity shopEntity= ShopMapper.INSTANCE.toEntity(shopDto);
         return shopRepository.save(shopEntity);
     }
 
-    private ShopDto getShopDetails(String placeId) throws ParseException {
+    private ShopApiDto getShopDetails(String placeId) throws JsonProcessingException {
         String shopStr=webClient.get().uri(uriBuilder ->
                 uriBuilder.path("/details/json")
                         .queryParam("place_id",placeId)
@@ -99,63 +107,11 @@ public class ShopServiceImpl implements ShopService {
         return jsonToShop(shopStr);
     }
 
-    private ShopDto jsonToShop(String jsonStr) throws ParseException {
-        JSONParser jsonParser= new JSONParser();
-        JSONObject jsonObject=(JSONObject) jsonParser.parse(jsonStr);
+    private ShopApiDto jsonToShop(String jsonStr) throws JsonProcessingException {
+        Map<String,Object> map=objectMapper.readValue(jsonStr, new TypeReference<Map<String, Object>>() {});
+        String resultStr=objectMapper.writeValueAsString(map.get("result"));
+        ShopApiDto shopApiDto=objectMapper.readValue(resultStr, ShopApiDto.class);
 
-        String status=jsonObject.get("status").toString();
-        if(!status.equals("OK"))
-            throw new IllegalArgumentException("요청이 올바르지 않습니다.");
-
-        JSONObject jsonObject_result=(JSONObject) jsonObject.get("result");
-
-        String placeName= jsonObject_result.get("name").toString();
-        String placeId=jsonObject_result.get("place_id").toString();
-
-        JSONObject jsonObject_geometry=(JSONObject) jsonObject_result.get("geometry");
-        JSONObject jsonObject_location=(JSONObject) jsonObject_geometry.get("location");
-
-        String x= jsonObject_location.get("lat").toString();
-        String y= jsonObject_location.get("lng").toString();
-
-        JSONArray types_array=(JSONArray) jsonObject_result.get("types");
-        String categoryName=types_array.get(0).toString();
-
-        String address= jsonObject_result.get("formatted_address").toString();
-
-        String phoneNumber;
-        try{
-            phoneNumber=jsonObject_result.get("formatted_phone_number").toString();
-        }catch (NullPointerException e){
-            phoneNumber=null;
-        }
-
-        JSONObject opening_hours=(JSONObject) jsonObject_result.get("opening_hours");
-
-        String weekdayText;
-        try{
-            weekdayText=opening_hours.get("weekday_text").toString();
-        }catch (NullPointerException e){
-            weekdayText=null;
-        }
-
-        if(!(categoryName.equals("cafe")||categoryName.equals("restaurant")))
-            throw new RuntimeException("카페/맛집이 아닙니다.");
-
-
-        ShopDto shopDto = ShopDto.builder()
-                .placeId(placeId)
-                .placeName(placeName)
-                .x(x)
-                .y(y)
-                .address(address)
-                .phone(phoneNumber)
-                .businessDay(weekdayText)
-                .categoryName(categoryName)
-                .build();
-
-        return shopDto;
+        return shopApiDto;
     }
 }
-
-

@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.shop.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jjbacsa.jjbacsabackend.shop.dto.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.service.ShopService;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class ShopController {
     private final ShopService shopService;
 
     @GetMapping(value="/shop")
-    public ResponseEntity<ShopResponse> getShop(@RequestParam("place_id")String placeId) throws ParseException {
+    public ResponseEntity<ShopResponse> getShop(@RequestParam("place_id")String placeId) throws JsonProcessingException {
         return new ResponseEntity<>(shopService.getShop(placeId), HttpStatus.OK);
     }
 

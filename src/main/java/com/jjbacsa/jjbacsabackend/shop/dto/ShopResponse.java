@@ -3,10 +3,11 @@ package com.jjbacsa.jjbacsabackend.shop.dto;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopCount;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class ShopResponse {
     private Long shopId;
     private String placeId;
