@@ -3,6 +3,7 @@ package com.jjbacsa.jjbacsabackend.follow.controller;
 import com.jjbacsa.jjbacsabackend.etc.annotations.Auth;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequest;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
+import com.jjbacsa.jjbacsabackend.follow.dto.FollowResponse;
 import com.jjbacsa.jjbacsabackend.follow.service.FollowService;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import io.swagger.annotations.ApiOperation;
@@ -22,11 +23,9 @@ public class FollowController {
     @Auth
     @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
     @PostMapping(value = "/follow/requests")
-    public ResponseEntity<Void> requestFollow(@RequestBody FollowRequest request) throws Exception {
+    public ResponseEntity<FollowRequestResponse> requestFollow(@RequestBody FollowRequest request) throws Exception {
 
-        service.request(request);
-
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return new ResponseEntity<>(service.request(request), HttpStatus.CREATED);
     }
 
     @Auth
@@ -68,11 +67,9 @@ public class FollowController {
     @Auth
     @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
     @PostMapping(value = "/follow/requests/{request_id}/accept")
-    public ResponseEntity<Void> acceptFollow(@PathVariable("request_id") Long requestId) throws Exception {
+    public ResponseEntity<FollowResponse> acceptFollow(@PathVariable("request_id") Long requestId) throws Exception {
 
-        service.accept(requestId);
-
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return new ResponseEntity<>(service.accept(requestId), HttpStatus.CREATED);
     }
 
     @Auth
