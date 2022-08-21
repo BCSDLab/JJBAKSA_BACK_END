@@ -57,7 +57,7 @@ public class ScrapServiceImpl implements ScrapService {
     }
 
     @Override
-    public Page<ScrapResponse> getScraps(Long directoryId, String cursor, Integer pageSize) throws Exception {
+    public Page<ScrapResponse> getScraps(Long directoryId, Long cursor, Integer pageSize) throws Exception {
         return null;
     }
 

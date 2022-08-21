@@ -20,4 +20,5 @@ public class ScrapDirectoryResponse {
     private Date createdAt;
     private Date updatedAt;
     private String name;
+    private int scrapCount;
 }
