@@ -26,9 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class FollowServiceImpl implements FollowService {
 
-    private final int followerPageSize = 20;
-    private final int requestPageSize = 20;
-
     private final UserService userService;
 
     private final UserRepository userRepository;
@@ -106,28 +103,25 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public Page<FollowRequestResponse> getSendRequests(int page) throws Exception {
+    public Page<FollowRequestResponse> getSendRequests(Pageable pageable) throws Exception {
 
         UserEntity user = getLoginUser();
-        Pageable pageable = PageRequest.of(page, requestPageSize);
 
         return followRequestRepository.findAllByUser(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
     }
 
     @Override
-    public Page<FollowRequestResponse> getReceiveRequests(int page) throws Exception {
+    public Page<FollowRequestResponse> getReceiveRequests(Pageable pageable) throws Exception {
 
         UserEntity user = getLoginUser();
-        Pageable pageable = PageRequest.of(page, requestPageSize);
 
         return followRequestRepository.findAllByFollower(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
     }
 
     @Override
-    public Page<UserResponse> getFollowers(String cursor) throws Exception {
+    public Page<UserResponse> getFollowers(String cursor, Pageable pageable) throws Exception {
 
         UserEntity user = getLoginUser();
-        Pageable pageable = PageRequest.of(0, followerPageSize);
 
         return followRepository.findAllByUserWithCursor(user, cursor, pageable).map(follow -> UserMapper.INSTANCE.toUserResponse(follow.getFollower()));
     }

@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface FollowService {
 
@@ -18,9 +19,9 @@ public interface FollowService {
 
     void delete(FollowRequest request) throws Exception;
 
-    Page<FollowRequestResponse> getSendRequests(int page) throws Exception;
+    Page<FollowRequestResponse> getSendRequests(Pageable pageable) throws Exception;
 
-    Page<FollowRequestResponse> getReceiveRequests(int page) throws Exception;
+    Page<FollowRequestResponse> getReceiveRequests(Pageable pageable) throws Exception;
 
-    Page<UserResponse> getFollowers(String cursor) throws Exception;
+    Page<UserResponse> getFollowers(String cursor, Pageable pageable) throws Exception;
 }
