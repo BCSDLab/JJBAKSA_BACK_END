@@ -11,6 +11,6 @@ public interface ScrapDirectoryMapper {
 
     ScrapDirectoryMapper INSTANCE = Mappers.getMapper(ScrapDirectoryMapper.class);
 
-    @Mapping(source = "scrapCount", target = "scrapDirectoryCount.scrapCount")
+    @Mapping(target = "scrapCount", source = "scrapDirectoryCount.scrapCount")
     ScrapDirectoryResponse toScrapDirectoryResponse(ScrapDirectoryEntity directory);
 }

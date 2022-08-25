@@ -40,6 +40,10 @@ public class UserCount {
         --this.reviewCount;
     }
 
+    public void addScrapCount(int val) {
+        scrapCount += val;
+    }
+
     public void increaseScrapCount() {
         ++this.scrapCount;
     }

@@ -24,6 +24,10 @@ public class ScrapDirectoryCount {
     @Column(name = "scrap_count", nullable = false)
     private Integer scrapCount = 0;
 
+    public void addScrapCount(int val) {
+        scrapCount += val;
+    }
+
     public void increaseScrapCount() {
         ++this.scrapCount;
     }

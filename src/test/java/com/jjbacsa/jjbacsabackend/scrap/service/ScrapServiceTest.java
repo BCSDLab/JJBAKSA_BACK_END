@@ -158,7 +158,7 @@ class ScrapServiceTest {
 
         //then
         assertEquals(1, dir1.getIsDeleted());
-        assertEquals(1, scrap.getIsDeleted());
+        assertTrue(scrapRepository.findById(scrap.getId()).isEmpty());
         assertEquals(0, user1.getUserCount().getScrapCount());
     }
 
@@ -211,12 +211,12 @@ class ScrapServiceTest {
     void getScraps() throws Exception {
 
         //테스트 데이터 생성
-        var directory1 = scrapDirectoryRepository.save(getTestDirectory(user1, "dir1"));
-        var directory2 = scrapDirectoryRepository.save(getTestDirectory(user2, "dir2"));
+        ScrapDirectoryEntity directory1 = scrapDirectoryRepository.save(getTestDirectory(user1, "dir1"));
+        ScrapDirectoryEntity directory2 = scrapDirectoryRepository.save(getTestDirectory(user2, "dir2"));
         for (int i = 0; i < 10; ++i) {
 
-            var shop1 = shopRepository.save(getTestShop("shop0" + i));
-            var shop2 = shopRepository.save(getTestShop("shop1" + i));
+            ShopEntity shop1 = shopRepository.save(getTestShop("shop0" + i));
+            ShopEntity shop2 = shopRepository.save(getTestShop("shop1" + i));
             scrapRepository.save(getTestScrap(user1, shop1, null));
             scrapRepository.save(getTestScrap(user1, shop2, directory1));
         }
@@ -233,10 +233,10 @@ class ScrapServiceTest {
         );
 
         //스크랩 조회
-        var page1_1 = scrapService.getScraps(null, null, 10);
-        var page1_2 = scrapService.getScraps(null, page1_1.getContent().get(4).getId(), 10);
-        var page2_1 = scrapService.getScraps(directory1.getId(), null, 10);
-        var page2_2 = scrapService.getScraps(directory1.getId(), page2_1.getContent().get(4).getId(), 10);
+        Page<ScrapResponse> page1_1 = scrapService.getScraps(null, null, 10);
+        Page<ScrapResponse> page1_2 = scrapService.getScraps(null, page1_1.getContent().get(4).getId(), 10);
+        Page<ScrapResponse> page2_1 = scrapService.getScraps(directory1.getId(), null, 10);
+        Page<ScrapResponse> page2_2 = scrapService.getScraps(directory1.getId(), page2_1.getContent().get(4).getId(), 10);
 
         //then
         assertEquals(5, page1_2.getContent().size());
