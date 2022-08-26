@@ -1,9 +1,9 @@
 package com.jjbacsa.jjbacsabackend.review.dto.request;
 
-import com.jjbacsa.jjbacsabackend.review_image.dto.ReviewImageDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -12,7 +12,17 @@ import java.util.List;
 @NoArgsConstructor
 public class ReviewRequest {
 
+    private Long shopId;
     private String content;
     private int isTemp;
-    private List<ReviewImageDto> reviewImageDtos;
+    private List<MultipartFile> reviewImages;
+
+    public static ReviewRequest createReviewRequest(List<MultipartFile> reviewImages, ReviewRequestDto reviewRequestDto){
+        ReviewRequest reviewRequest = new ReviewRequest();
+        if(!reviewImages.isEmpty()) reviewRequest.setReviewImages(reviewImages);
+        reviewRequest.setShopId(reviewRequestDto.getShopId());
+        reviewRequest.setContent(reviewRequestDto.getContent());
+        reviewRequest.setIsTemp(reviewRequestDto.getIsTemp());
+        return reviewRequest;
+    }
 }

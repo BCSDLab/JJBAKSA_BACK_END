@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.user.dto;
+package com.jjbacsa.jjbacsabackend.image.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto {
+public class ImageResponse {
     private Long id;
-    private String account;
-    private String email;
-    private String nickname;
+    private String path;
 }
