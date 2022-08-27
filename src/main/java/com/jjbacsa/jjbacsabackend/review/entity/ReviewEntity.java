@@ -1,7 +1,6 @@
 package com.jjbacsa.jjbacsabackend.review.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
-import com.jjbacsa.jjbacsabackend.review.dto.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -48,6 +47,7 @@ public class ReviewEntity extends BaseEntity {
     private ShopEntity shop;
 
     @Setter
+    @Basic(optional = false)
     @Lob
     @Column(name = "content")
     private String content;
@@ -60,5 +60,11 @@ public class ReviewEntity extends BaseEntity {
     @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ReviewImageEntity> reviewImages = new ArrayList<>();
+
+    // 연관관계 메서드
+    public void addReviewImageEntity(ReviewImageEntity reviewImageEntity) {
+        reviewImages.add(reviewImageEntity);
+        reviewImageEntity.setReview(this);
+    }
 
 }
