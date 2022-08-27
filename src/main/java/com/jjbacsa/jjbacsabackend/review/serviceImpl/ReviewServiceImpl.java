@@ -1,20 +1,30 @@
 package com.jjbacsa.jjbacsabackend.review.serviceImpl;
 
+<<<<<<< HEAD
 import com.jjbacsa.jjbacsabackend.image.service.ImageService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
+=======
+import com.jjbacsa.jjbacsabackend.review.dto.ReviewDto;
+import com.jjbacsa.jjbacsabackend.review.dto.ReviewWithImageDto;
+import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
+import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewWithImageResponse;
+>>>>>>> review
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review.mapper.ReviewMapper;
 import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.service.ReviewService;
+<<<<<<< HEAD
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
+=======
+>>>>>>> review
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,13 +33,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+<<<<<<< HEAD
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+=======
+>>>>>>> review
 
 
 @Slf4j
 @RequiredArgsConstructor
+<<<<<<< HEAD
 @Service
 public class ReviewServiceImpl implements ReviewService {
     private final UserService userService;
@@ -74,14 +88,49 @@ public class ReviewServiceImpl implements ReviewService {
         reviewRepository.deleteById(reviewId);
         userEntity.getUserCount().decreaseReviewCount();
         return response;
+=======
+@Transactional
+@Service
+public class ReviewServiceImpl implements ReviewService {
+    private final ReviewRepository reviewRepository;
+
+    @Override
+    public ReviewWithImageResponse createReview(ReviewWithImageDto reviewWithImageDto) {
+        ReviewEntity review = reviewRepository.save(ReviewMapper.INSTANCE.toReviewEntity(reviewWithImageDto));
+        return ReviewMapper.INSTANCE.fromReviewEntityWithImages(review);
+    }
+
+    @Override
+    public ReviewWithImageResponse modifyReview(ReviewWithImageDto reviewWithImageDto) {
+        try {
+            ReviewEntity review = reviewRepository.getById(reviewWithImageDto.getId());
+            if (reviewWithImageDto.getContent() != null) review.setContent(reviewWithImageDto.getContent());  // not null 컬럼
+            return ReviewMapper.INSTANCE.fromReviewEntityWithImages(review);
+        }catch (EntityNotFoundException e){
+            log.warn("리뷰 업데이트 실패, 리뷰를 찾을 수 없습니다 - dto: {}", reviewWithImageDto);
+        }
+        return null;
+    }
+
+    @Override
+    public void deleteReview(Long reviewId) {
+        reviewRepository.deleteById(reviewId);
+>>>>>>> review
     }
 
     @Override
     @Transactional(readOnly = true)
+<<<<<<< HEAD
     public ReviewResponse getReview(Long reviewId) {
         ReviewResponse response = ReviewResponse.from(reviewRepository.findByReviewId(reviewId));
         if(response == null) throw new RuntimeException("존재하지 않는 리뷰입니다. review_id: "+reviewId);
         return response;
+=======
+    public ReviewWithImageResponse getReview(Long reviewId) {
+        return reviewRepository.findById(reviewId)
+                .map(ReviewMapper.INSTANCE::fromReviewEntityToReviewWithImages)
+                .orElseThrow(() -> new EntityNotFoundException("리뷰가 없습니다:" + reviewId));
+>>>>>>> review
     }
 
     @Override
@@ -95,6 +144,7 @@ public class ReviewServiceImpl implements ReviewService {
     public Page<ReviewResponse> searchWriterReviews(Long writerId, Pageable pageable){
         return reviewRepository.findAllByWriterId(writerId, pageable).map(ReviewMapper.INSTANCE::fromReviewEntity);
     }
+<<<<<<< HEAD
 
     private ReviewEntity createReviewEntity(ReviewRequest reviewRequest) throws Exception {
         UserEntity userEntity = userRepository.findById(userService.getLoginUser().getId())
@@ -117,4 +167,6 @@ public class ReviewServiceImpl implements ReviewService {
 
         return reviewEntity;
     }
+=======
+>>>>>>> review
 }
