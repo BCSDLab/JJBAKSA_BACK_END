@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReviewImageResponse {
     Long imageId;
+    String originalName;
     String path;
 }
