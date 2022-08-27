@@ -4,12 +4,15 @@ import com.jjbacsa.jjbacsabackend.etc.annotations.Auth;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
+    //TODO : uri 경로 register 삭제
     @PostMapping(value = "/user/register")
     public ResponseEntity<UserResponse> register(@RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.register(request), HttpStatus.CREATED);
@@ -27,10 +31,12 @@ public class UserController {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
-    @Auth
+    //@Auth
     @ApiOperation( value = "",notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
     @GetMapping(value = "/user/me")
-    public ResponseEntity<UserResponse> getMe() throws Exception{
-        return new ResponseEntity<>(userService.getLoginUser(), HttpStatus.OK);
+    public ResponseEntity<String> getMe() throws Exception{
+        //return new ResponseEntity<>(userService.getLoginUser(), HttpStatus.OK);
+        System.out.println(((UserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
+        return new ResponseEntity<>("success", HttpStatus.OK);
     }
 }

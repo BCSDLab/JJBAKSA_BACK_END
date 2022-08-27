@@ -11,7 +11,8 @@ import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -28,6 +29,8 @@ public class UserServiceImpl implements UserService {
 
     private final JwtUtil jwtUtil;
 
+    private final PasswordEncoder passwordEncoder;
+
     //TODO : OAuth별 작동
     @Override
     @Transactional
@@ -39,7 +42,7 @@ public class UserServiceImpl implements UserService {
 
         //TODO : Default Profile 등록하기
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
-                .password(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()))
+                .password(passwordEncoder.encode(request.getPassword()))
                 .userType(UserType.NORMAL)
                 .oAuthType(OAuthType.NONE)
                 .build();
@@ -53,12 +56,12 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
-        if(!BCrypt.checkpw(request.getPassword(), user.getPassword())){
+        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
             throw new Exception("User Not Founded");
         }
 
         //TODO : 토큰 전달 보안 강화
-        return new Token(jwtUtil.generateToken(user.getId()));
+        return new Token(jwtUtil.generateToken(user.getAccount()));
     }
 
     @Override
@@ -71,5 +74,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new Exception("Token is not valid"));
 
         return UserMapper.INSTANCE.toUserResponse(user);
+
     }
 }
