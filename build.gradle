@@ -42,7 +42,6 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
 	//querydsl
 	implementation 'com.querydsl:querydsl-jpa:5.0.0'

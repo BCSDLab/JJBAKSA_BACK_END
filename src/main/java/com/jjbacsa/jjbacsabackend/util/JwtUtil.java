@@ -23,32 +23,7 @@ public class JwtUtil {
 
     private UserDetailsService userDetailsService;
 
-    private final short BEARER_LENGTH = 7;
-
-    public String generateToken(Long id){
-        Map<String, Object> headers = new HashMap<String, Object>();
-        headers.put("typ", "JWT");
-        headers.put("alg", "HS256");
-
-        Map<String, Object> payloads = new HashMap<String, Object>();
-        payloads.put("id", id);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-
-        //TODO: refresh token 생성 구분
-        calendar.add(Calendar.HOUR_OF_DAY, 12);
-
-        Date exp = calendar.getTime();
-
-        //TODO: signWith에 key 사용
-        return Jwts.builder()
-                .setHeader(headers)
-                .setClaims(payloads)
-                .setExpiration(exp)
-                .signWith(SignatureAlgorithm.HS256, key.getBytes())
-                .compact();
-    }
+    public static final short BEARER_LENGTH = 7;
 
     public String generateToken(String account){
         Map<String, Object> headers = new HashMap<String, Object>();
@@ -83,10 +58,16 @@ public class JwtUtil {
         if(token.length() < BEARER_LENGTH + 1){
             throw new Exception("Not Invalid Token");
         }
-        //String authToken = token.substring(BEARER_LENGTH);
+        if(!token.startsWith("Bearer ")){
+            throw new Exception("Token is Not Bearer");
+        }
 
         try{
-            Jwts.parserBuilder().setSigningKey(key.getBytes()).build().parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(
+                    key.getBytes())
+                    .build()
+                    .parseClaimsJws(token.substring(BEARER_LENGTH)
+            );
             return true;
         } catch (ExpiredJwtException expiredJwtException){
             throw new Exception("Token Expired");
