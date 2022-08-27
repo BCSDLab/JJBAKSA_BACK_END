@@ -1,6 +1,5 @@
 package com.jjbacsa.jjbacsabackend.review.dto.response;
 
-<<<<<<< HEAD
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review.mapper.ReviewMapper;
@@ -42,22 +41,4 @@ public class ReviewResponse {
         }
         return response;
     }
-=======
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopDto;
-import com.jjbacsa.jjbacsabackend.user.dto.UserDto;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
-import java.time.LocalDateTime;
-
-@Data
-@AllArgsConstructor
-public class ReviewResponse {
-    private Long id;
-    private UserDto userDto;
-    private ShopDto shopDto;
-    private String content;
-    private int isTemp;
-    private LocalDateTime createdAt;
->>>>>>> review
 }

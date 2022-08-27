@@ -47,10 +47,7 @@ public class ReviewEntity extends BaseEntity {
     private ShopEntity shop;
 
     @Setter
-<<<<<<< HEAD
     @Basic(optional = false)
-=======
->>>>>>> review
     @Lob
     @Column(name = "content")
     private String content;
@@ -64,13 +61,10 @@ public class ReviewEntity extends BaseEntity {
     @Builder.Default
     private List<ReviewImageEntity> reviewImages = new ArrayList<>();
 
-<<<<<<< HEAD
     // 연관관계 메서드
     public void addReviewImageEntity(ReviewImageEntity reviewImageEntity) {
         reviewImages.add(reviewImageEntity);
         reviewImageEntity.setReview(this);
     }
 
-=======
->>>>>>> review
 }

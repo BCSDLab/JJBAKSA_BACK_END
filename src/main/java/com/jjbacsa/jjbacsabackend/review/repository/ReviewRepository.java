@@ -13,11 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-<<<<<<< HEAD
 public interface ReviewRepository extends JpaRepository<ReviewEntity, Long>, DslReviewRepository {
-=======
-public interface ReviewRepository extends JpaRepository<ReviewEntity, Long>{
->>>>>>> review
 
     Page<ReviewEntity> findAllByWriterId(Long writerId, Pageable pageable);
 
@@ -25,5 +21,4 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long>{
 
     // Todo: 페이지네이션
     List<ReviewEntity> findAllByWriterAndShop(UserEntity writer, ShopEntity shop);
-
 }
