@@ -19,7 +19,7 @@ public class ReviewRequest {
 
     public static ReviewRequest createReviewRequest(List<MultipartFile> reviewImages, ReviewRequestDto reviewRequestDto){
         ReviewRequest reviewRequest = new ReviewRequest();
-        if(!reviewImages.isEmpty()) reviewRequest.setReviewImages(reviewImages);
+        if(reviewImages != null) reviewRequest.setReviewImages(reviewImages);
         reviewRequest.setShopId(reviewRequestDto.getShopId());
         reviewRequest.setContent(reviewRequestDto.getContent());
         reviewRequest.setIsTemp(reviewRequestDto.getIsTemp());

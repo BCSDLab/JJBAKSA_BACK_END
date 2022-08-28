@@ -32,7 +32,7 @@ public class ReviewResponse {
     // 생성 메서드 //
     public static ReviewResponse from(ReviewEntity reviewEntity){
         ReviewResponse response = ReviewMapper.INSTANCE.fromReviewEntity(reviewEntity);
-        if(!reviewEntity.getReviewImages().isEmpty()) {
+        if(reviewEntity.getReviewImages() != null) {
             response.reviewImages = new ArrayList<>();
             for (ReviewImageEntity image : reviewEntity.getReviewImages()) {
                 ReviewImageResponse imageResponse = new ReviewImageResponse(image.getImage().getId(), image.getImage().getOriginalName(), image.getImage().getPath());

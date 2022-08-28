@@ -32,14 +32,12 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
         QShopEntity shop = QShopEntity.shopEntity;
         QReviewImageEntity reviewImageEntity = QReviewImageEntity.reviewImageEntity;
         QImageEntity image = QImageEntity.imageEntity;
-        QShopCount shopCount = QShopCount.shopCount;
 
         // ToOne 관계, ToMany 1개 페치조인
         ReviewEntity reviewEntity = queryFactory
                 .selectFrom(review)
                 .innerJoin(review.writer, user).fetchJoin()
                 .innerJoin(review.shop, shop).fetchJoin()
-                .innerJoin(review.reviewImages, reviewImageEntity).fetchJoin()
                 .where(review.id.eq(reviewId))
                 .fetchOne();
         // ToMany 관계 컬렉션에 대한 ToOne 페치 조인 -> 초기화

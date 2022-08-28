@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,29 +37,11 @@ public class ImageServiceImpl implements ImageService {
     @Override
     public List<ReviewImageEntity> createReviewImages(List<MultipartFile> images) throws IOException {
         List<ReviewImageEntity> result = new ArrayList<>();
-        if(images.isEmpty()) return null;
 
         for(MultipartFile image: images){
             // 파일의 확장자 추출
             String originalName = image.getOriginalFilename();
-            String originalFileExtension;
-            String contentType = image.getContentType();
-
-            // 확장자명이 존재하지 않을 경우 처리 x
-            if(ObjectUtils.isEmpty(contentType)) {
-                break;
-            }
-            else {  // 확장자가 jpeg, png인 파일들만 받아서 처리
-                if(contentType.contains("image/jpeg") || contentType.contains("image/jpg"))
-                    originalFileExtension = ".jpg";
-                else if(contentType.contains("image/png"))
-                    originalFileExtension = ".png";
-                else break;
-            }
-            // 파일명 중복 피하고자 나노초까지 얻어와 지정, yml에 설정한 root directory 아래 review 폴더에 저장되도록 함
-            String imagePath = "review\\" + System.nanoTime() + originalFileExtension;
-            File dest = new File(imagePath);
-            image.transferTo(dest);
+            String imagePath = createReviewFile(image);
 
             ImageEntity imageEntity = ImageMapper.INSTANCE.toImageEntity(new ImageRequest(imagePath, originalName));
             ReviewImageEntity reviewImageEntity = new ReviewImageEntity();

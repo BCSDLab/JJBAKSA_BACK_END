@@ -19,7 +19,7 @@ public class ReviewModifyRequest {
 
     public static ReviewModifyRequest createReviewModifyRequest(List<MultipartFile> reviewImages, ReviewModifyRequestDto reviewModifyRequestDto){
         ReviewModifyRequest reviewModifyRequest = new ReviewModifyRequest();
-        if(!reviewImages.isEmpty()) reviewModifyRequest.setReviewImages(reviewImages);
+        if(reviewImages != null) reviewModifyRequest.setReviewImages(reviewImages);
         reviewModifyRequest.setId(reviewModifyRequestDto.getId());
         reviewModifyRequest.setShopId(reviewModifyRequestDto.getShopId());
         reviewModifyRequest.setContent(reviewModifyRequestDto.getContent());
