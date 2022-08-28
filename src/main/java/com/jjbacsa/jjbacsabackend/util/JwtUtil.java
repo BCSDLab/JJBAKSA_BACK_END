@@ -8,6 +8,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Calendar;
@@ -20,8 +21,6 @@ import java.util.Map;
 public class JwtUtil {
     @Value("${jwt.key}")
     private String key;
-
-    private UserDetailsService userDetailsService;
 
     public static final short BEARER_LENGTH = 7;
 

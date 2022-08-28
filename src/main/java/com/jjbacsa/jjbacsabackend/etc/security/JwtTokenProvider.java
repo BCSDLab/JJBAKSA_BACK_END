@@ -15,7 +15,6 @@ public class JwtTokenProvider {
     private final UserDetailsService userDetailsService;
 
     public Authentication getAuthentication(String token) throws Exception {
-        String authToken = token.substring(jwtUtil.BEARER_LENGTH);
         String account = (String)jwtUtil.getPayloadsFromJwt(token).get("account");
         UserDetails userDetails = userDetailsService.loadUserByUsername(account);
 

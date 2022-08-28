@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.etc.filter;
 
 import com.jjbacsa.jjbacsabackend.etc.security.JwtTokenProvider;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -33,7 +34,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            request.setAttribute("exception", e.toString());
         }
 
         filterChain.doFilter(request, response);
