@@ -1,38 +1,62 @@
 package com.jjbacsa.jjbacsabackend.review.service;
 
-import com.jjbacsa.jjbacsabackend.review.dto.ReviewDto;
-import com.jjbacsa.jjbacsabackend.review.dto.ReviewWithImageDto;
+
+import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
+import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
+import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
-import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewWithImageResponse;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
-import com.jjbacsa.jjbacsabackend.review.mapper.ReviewMapper;
 import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.serviceImpl.ReviewServiceImpl;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopDto;
-import com.jjbacsa.jjbacsabackend.user.dto.UserDto;
+
+
+import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopReviewResponse;
+import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
+import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserReviewResponse;
+import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
+import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
+import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.user.serviceImpl.UserServiceImpl;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.TestConstructor;
+import org.springframework.test.context.jdbc.Sql;
 
-import java.time.LocalDateTime;
+import javax.persistence.EntityNotFoundException;
+import javax.transaction.Transactional;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 @Slf4j
-@DisplayName("비즈니스 로직 테스트 - 리뷰")
-@ExtendWith(MockitoExtension.class)
+@DisplayName("리뷰 통합 테스트")
+@SpringBootTest
+@Sql(scripts = {"classpath:db/test/test_insert.sql"})
+@RequiredArgsConstructor
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@Transactional
 public class ReviewServiceTest {
-    @InjectMocks private ReviewServiceImpl reviewService;
+    @Autowired
+    private final ReviewServiceImpl reviewService;
+    @MockBean
+    private final UserServiceImpl userService;
 
-    @Mock private ReviewRepository reviewRepository;
+    private final ShopRepository shopRepository;
+    private final UserRepository userRepository;
+
+    private static UserEntity user;
+    private static UserEntity user2;
+
 
     /*
         하나의 상점에 대해 테스트, Given, When, Then방식
@@ -49,38 +73,37 @@ public class ReviewServiceTest {
      */
     @DisplayName("리뷰 내용을 작성하면, 리뷰를 저장한다.")
     @Test
-    void givenReviewInfo_whenWritingReview_thenCreateReview(){
+    void givenReviewInfo_whenWritingReview_thenCreateReview() throws Exception {
         // Given
-        ReviewWithImageDto dto = createReviewWithImageDto();
-        given(reviewRepository.save(any(ReviewEntity.class))).willReturn(createReviewEntity(dto));
+        user = userRepository.getById(1L);
+        ReviewRequest dto = createReviewRequest();
 
         // When
-        ReviewWithImageResponse response = reviewService.createReview(dto);
+        testLogin(user);
+        ReviewResponse response = reviewService.createReview(dto);
 
         // Then
-        assertThat(response)
-                .hasFieldOrPropertyWithValue("content", dto.getContent());
-        then(reviewRepository).should().save(any(ReviewEntity.class));
-
+        assertThat(response.getShopReviewResponse().getId()).isEqualTo(dto.getShopId());
+        assertThat(response.getContent()).isEqualTo(dto.getContent());
     }
     @DisplayName("리뷰ID로 리뷰를 조회하면, 리뷰를 반환한다.")
     @Test
-    void givenReviewId_whenSearchingReview_thenReturnReview(){
+    void givenReviewId_whenSearchingReview_thenReturnReview() throws Exception {
         // Given
         Long reviewId = 1L;
-        ReviewWithImageDto dto = createReviewWithImageDto();
+        ReviewRequest dto = createReviewRequest();
         ReviewEntity review = createReviewEntity(dto);
-        given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review));
 
         // When
-        ReviewWithImageResponse response = reviewService.getReview(reviewId);
+        ReviewResponse response = reviewService.getReview(reviewId);
 
         // Then
         assertThat(response)
                 .hasFieldOrPropertyWithValue("id", review.getId())
                 .hasFieldOrPropertyWithValue("content", review.getContent())
                 .hasFieldOrPropertyWithValue("isTemp", review.getIsTemp());
-        then(reviewRepository).should().findById(reviewId);
+        // 없는 리뷰에 대한 요청
+        assertThrows(RuntimeException.class, ()-> reviewService.getReview(0L));
     }
     @DisplayName("특정 상점에대한 전체 리뷰를 조회하면, 리뷰 페이지를 반환한다.")
     @Test
@@ -88,13 +111,14 @@ public class ReviewServiceTest {
         // Given
         Long shopId = 1L;
         Pageable pageable = Pageable.ofSize(3);
-        given(reviewRepository.findAllByShopId(shopId, pageable)).willReturn(Page.empty());
         // When
         Page<ReviewResponse> reviews = reviewService.searchShopReviews(shopId, pageable);
+        Page<ReviewResponse> emptyReviews = reviewService.searchShopReviews(0L, pageable);
 
         // Then
-        assertThat(reviews).isEmpty();
-        then(reviewRepository).should().findAllByShopId(shopId, pageable);
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(review -> review.getId()>0);
+        assertThat(emptyReviews).isEmpty();     // 없는 상점에 대해선 empty
     }
 
     @DisplayName("작성자 ID로 리뷰를 조회하면, 사용자가 작성한 리뷰 페이지를 반환한다.")
@@ -103,60 +127,124 @@ public class ReviewServiceTest {
         // Given
         Long writerId = 1L;
         Pageable pageable = Pageable.ofSize(3);
-        given(reviewRepository.findAllByWriterId(writerId, pageable)).willReturn(Page.empty());
+
         // When
         Page<ReviewResponse> reviews = reviewService.searchWriterReviews(writerId, pageable);
+        Page<ReviewResponse> emptyReviews = reviewService.searchWriterReviews(0L, pageable);
 
         // Then
-        assertThat(reviews).isEmpty();
-        then(reviewRepository).should().findAllByWriterId(writerId, pageable);
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(review -> review.getUserReviewResponse().getId().equals(writerId));
+        assertThat(emptyReviews).isEmpty();     // 없는 사용자에 대해선 empty
     }
 
     @DisplayName("리뷰 내용을 수정하면, 리뷰를 수정한다.")
     @Test
-    void givenModifiedReviewInfo_whenUpdatingReview_thenUpdatesReview(){
+    void givenModifiedReviewInfo_whenUpdatingReview_thenUpdatesReview() throws Exception {
 
         // Given
-        ReviewEntity review = createReviewEntity(createReviewWithImageDto());
-        ReviewWithImageDto dto = createReviewWithImageDto("new content");
-        given(reviewRepository.getById(dto.getId())).willReturn(review);
+        user = userRepository.getById(1L);
+        String content = "new content";
+        ReviewEntity review = createReviewEntity(createReviewRequest());
+        ReviewModifyRequest dto = createReviewModifyRequest(content);
 
         // When
-        reviewService.modifyReview(dto);
+        testLogin(user);
+        ReviewResponse response = reviewService.modifyReview(dto);
 
         // Then
-        then(reviewRepository).should().getById(dto.getId());
+        assertThat(review.getId()).isEqualTo(response.getId());
+        assertThat(response.getContent()).isEqualTo(content);
+
+        // 작성자가 아닌 경우
+        user2 = userRepository.getById(2L);
+        testLogin(user2);
+        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto));
+
+        // 없는 리뷰에 대해
+        dto.setId(0L);
+        assertThrows(EntityNotFoundException.class, ()-> reviewService.modifyReview(dto));
+
 
     }
 
     @DisplayName("리뷰 아이디를 넘기면, 리뷰를 삭제한다.")
     @Test
-    void givenReviewId_whenDeletingReview_thenDeletesReview(){
+    void givenReviewId_whenDeletingReview_thenDeletesReview() throws Exception {
         // Given
+        user = userRepository.getById(1L);
         Long reviewId = 1L;
-        willDoNothing().given(reviewRepository).deleteById(reviewId);
+
         // When
-        reviewService.deleteReview(reviewId);
+        testLogin(user);
+        ReviewDeleteResponse response = reviewService.deleteReview(reviewId);
+
         // Then
-        then(reviewRepository).should().deleteById(reviewId);
+        assertThat(response.getId()).isEqualTo(reviewId);
+
+        // 없는 리뷰에 대해
+        assertThrows(RuntimeException.class, () -> reviewService.deleteReview(0L));
+        // 리뷰 작성자가 아닌경우
+        user2 = userRepository.getById(2L);
+        testLogin(user2);
+        assertThrows(RuntimeException.class, ()-> reviewService.deleteReview(2L));
+
     }
 
-    private ReviewEntity createReviewEntity(ReviewWithImageDto reviewWithImageDto){
-        return ReviewMapper.INSTANCE.toReviewEntity(reviewWithImageDto);
+    private ReviewEntity createReviewEntity(ReviewRequest request){
+        UserEntity userEntity = userRepository.findById(1L)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자 입니다."));
+        ShopEntity shopEntity = shopRepository.findById(1L)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 상점입니다."));
+        ReviewEntity reviewEntity = ReviewEntity.builder()
+                .id(1L)
+                .writer(userEntity)
+                .shop(shopEntity)
+                .content(request.getContent())
+                .isTemp(request.getIsTemp())
+                .build();
+
+        reviewEntity.getWriter().getUserCount().increaseReviewCount();
+
+        return reviewEntity;
     }
 
 
-    private UserDto createUserDto(){
-        return new UserDto(1L, "account", "email", "nickname");
+    private UserReviewResponse createUserResponse(){
+        return new UserReviewResponse(2L, "account", "nickname");
     }
-    private ShopDto createShopDto(){
-        return new ShopDto(1L, "placeId", "placeName", "categoryName");
+    private ShopReviewResponse createShopResponse(){
+        return new ShopReviewResponse(1L, "placeId", "placeName", "categoryName");
     }
-    private ReviewWithImageDto createReviewWithImageDto(){
-        return new ReviewWithImageDto(1L, createUserDto(), createShopDto(), "content", 0, LocalDateTime.now(), null);
+    private ReviewRequest createReviewRequest(){
+        return new ReviewRequest(1L, "content1", 0, null);
     }
-    private ReviewWithImageDto createReviewWithImageDto(String content){
-        return new ReviewWithImageDto(1L, createUserDto(), createShopDto(), content, 0, LocalDateTime.now(), null);
+    private ReviewModifyRequest createReviewModifyRequest(String content){
+        return new ReviewModifyRequest(1L, 1L, content, 0, null);
     }
+    private void testLogin(UserEntity user) throws Exception {
+
+        when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user));
+    }
+    private UserEntity getTestUser(String account) {
+
+        return UserEntity.builder()
+                .account(account)
+                .password("password")
+                .email("test2@google.com")
+                .nickname(account)
+                .userType(UserType.NORMAL)
+                .build();
+    }
+    private ShopEntity getTestShop(String placeName){
+        return ShopEntity.builder()
+                .placeId("placeId")
+                .placeName(placeName)
+                .x("0")
+                .y("0")
+                .categoryName("categoryName")
+                .build();
+    }
+
 
 }
