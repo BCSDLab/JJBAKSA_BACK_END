@@ -1,20 +1,16 @@
 package com.jjbacsa.jjbacsabackend.review.service;
 
 
-import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
-import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.serviceImpl.ReviewServiceImpl;
 
 
-import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopReviewResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
-import com.jjbacsa.jjbacsabackend.user.dto.response.UserReviewResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
@@ -32,7 +28,6 @@ import org.springframework.test.context.jdbc.Sql;
 
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -209,13 +204,6 @@ public class ReviewServiceTest {
         return reviewEntity;
     }
 
-
-    private UserReviewResponse createUserResponse(){
-        return new UserReviewResponse(2L, "account", "nickname");
-    }
-    private ShopReviewResponse createShopResponse(){
-        return new ShopReviewResponse(1L, "placeId", "placeName", "categoryName");
-    }
     private ReviewRequest createReviewRequest(){
         return new ReviewRequest(1L, "content1", 0, null);
     }
@@ -226,25 +214,5 @@ public class ReviewServiceTest {
 
         when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user));
     }
-    private UserEntity getTestUser(String account) {
-
-        return UserEntity.builder()
-                .account(account)
-                .password("password")
-                .email("test2@google.com")
-                .nickname(account)
-                .userType(UserType.NORMAL)
-                .build();
-    }
-    private ShopEntity getTestShop(String placeName){
-        return ShopEntity.builder()
-                .placeId("placeId")
-                .placeName(placeName)
-                .x("0")
-                .y("0")
-                .categoryName("categoryName")
-                .build();
-    }
-
 
 }
