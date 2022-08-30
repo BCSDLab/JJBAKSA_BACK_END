@@ -2,24 +2,26 @@ package com.jjbacsa.jjbacsabackend.follow.service;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequest;
+import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowRequestEntity;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRequestRepository;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.util.CursorUtil;
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.TestConstructor;
 
 import javax.transaction.Transactional;
@@ -40,49 +42,15 @@ class FollowServiceTest {
     private final FollowRepository followRepository;
     private final FollowRequestRepository followRequestRepository;
 
-    private static UserRequest userRequest1;
-    private static UserRequest userRequest2;
 
     private UserEntity user1;
     private UserEntity user2;
-    private FollowRequest followRequest;
-
-
-    @BeforeAll
-    static void init() {
-
-        userRequest1 = UserRequest.builder()
-                .account("testuser1")
-                .password("password")
-                .email("test1@google.com")
-                .nickname("testuser1")
-                .build();
-
-        userRequest2 = UserRequest.builder()
-                .account("testuser2")
-                .password("password")
-                .email("test2@google.com")
-                .nickname("testuser2")
-                .build();
-    }
 
     @BeforeEach
     void setup() {
 
-        user1 = UserMapper.INSTANCE.toUserEntity(userRequest1).toBuilder()
-                .userType(UserType.NORMAL)
-                .build();
-
-        user2 = UserMapper.INSTANCE.toUserEntity(userRequest2).toBuilder()
-                .userType(UserType.NORMAL)
-                .build();
-
-        user1 = userRepository.save(user1);
-        user2 = userRepository.save(user2);
-
-        followRequest = FollowRequest.builder()
-                .userAccount(user2.getAccount())
-                .build();
+        user1 = userRepository.save(getTestUser("testUser1"));
+        user2 = userRepository.save(getTestUser("testUser2"));
     }
 
     @DisplayName("팔로우 요청")
@@ -90,35 +58,29 @@ class FollowServiceTest {
     void request() throws Exception {
 
         //사용자를 찾을 수 없을 경우
-        FollowRequest followRequest2 = FollowRequest.builder()
-                .userAccount("")
-                .build();
         assertThrows(RuntimeException.class, () ->
-                followService.request(followRequest2)
+                followService.request(getFollowRequest(""))
         );
 
         //자기 자신인 경우
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user2));
+        testLogin(user2);
         assertThrows(RuntimeException.class, () ->
-                followService.request(followRequest)
+                followService.request(getFollowRequest(user2.getAccount()))
         );
 
         // 팔로우 요청
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
-        followService.request(followRequest);
+        testLogin(user1);
+        followService.request(getFollowRequest(user2.getAccount()));
 
         //중복 요청인 경우
         assertThrows(RuntimeException.class, () ->
-                followService.request(followRequest)
+                followService.request(getFollowRequest(user2.getAccount()))
         );
 
         //상대가 이미 나에게 팔로우 요청을 보낸 경우
-        FollowRequest followRequest3 = FollowRequest.builder()
-                .userAccount(user1.getAccount())
-                .build();
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user2));
+        testLogin(user2);
         assertThrows(RuntimeException.class, () ->
-                followService.request(followRequest3)
+                followService.request(getFollowRequest(user1.getAccount()))
         );
 
         //then
@@ -136,8 +98,8 @@ class FollowServiceTest {
         );
 
         //요청
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
-        followService.request(followRequest);
+        testLogin(user1);
+        followService.request(getFollowRequest(user2.getAccount()));
         FollowRequestEntity followRequestEntity = followRequestRepository.findByUserAndFollower(user1, user2).get();
 
         //나에게 온 요청이 아닌 경우
@@ -146,7 +108,7 @@ class FollowServiceTest {
         );
 
         //수락
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user2));
+        testLogin(user2);
         followService.accept(followRequestEntity.getId());
         FollowEntity follow1 = followRepository.findByUserAndFollower(user1, user2).get();
         FollowEntity follow2 = followRepository.findByUserAndFollower(user2, user1).get();
@@ -162,8 +124,8 @@ class FollowServiceTest {
     void acceptWithdrawalUser() throws Exception {
 
         //요청
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
-        followService.request(followRequest);
+        testLogin(user1);
+        followService.request(getFollowRequest(user2.getAccount()));
         FollowRequestEntity followRequestEntity = followRequestRepository.findByUserAndFollower(user1, user2).get();
 
         //탈퇴
@@ -171,7 +133,7 @@ class FollowServiceTest {
         user1.setIsDeleted(1);
 
         //탈퇴한 회원인 경우
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user2));
+        testLogin(user2);
         assertThrows(RuntimeException.class, () ->
                 followService.accept(followRequestEntity.getId())
         );
@@ -183,18 +145,18 @@ class FollowServiceTest {
     void requestAlreadyFollowed() throws Exception {
 
         //팔로우 요청
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
-        followService.request(followRequest);
+        testLogin(user1);
+        followService.request(getFollowRequest(user2.getAccount()));
 
         //팔로우 승인
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user2));
+        testLogin(user2);
         FollowRequestEntity followRequestEntity = followRequestRepository.findByUserAndFollower(user1, user2).get();
         followService.accept(followRequestEntity.getId());
 
         //이미 팔로우된 경우
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
+        testLogin(user1);
         assertThrows(RuntimeException.class, () ->
-                followService.request(followRequest)
+                followService.request(getFollowRequest(user2.getAccount()))
         );
     }
 
@@ -208,8 +170,8 @@ class FollowServiceTest {
         );
 
         //요청
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
-        followService.request(followRequest);
+        testLogin(user1);
+        followService.request(getFollowRequest(user2.getAccount()));
         FollowRequestEntity followRequestEntity = followRequestRepository.findByUserAndFollower(user1, user2).get();
 
         //나에게 온 요청이 아닌 경우
@@ -218,7 +180,7 @@ class FollowServiceTest {
         );
 
         //거절
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user2));
+        testLogin(user2);
         followService.reject(followRequestEntity.getId());
 
         //then
@@ -236,18 +198,18 @@ class FollowServiceTest {
         );
 
         //요청
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
-        followService.request(followRequest);
+        testLogin(user1);
+        followService.request(getFollowRequest(user2.getAccount()));
         FollowRequestEntity followRequestEntity = followRequestRepository.findByUserAndFollower(user1, user2).get();
 
         //내가 보낸 요청이 아닌 경우
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user2));
+        testLogin(user2);
         assertThrows(RuntimeException.class, () ->
                 followService.cancel(followRequestEntity.getId())
         );
 
         //취소
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
+        testLogin(user1);
         followService.cancel(followRequestEntity.getId());
 
         //then
@@ -259,35 +221,119 @@ class FollowServiceTest {
     void delete() throws Exception {
 
         //팔로우가 아닌 경우
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
+        testLogin(user1);
         assertThrows(RuntimeException.class, () ->
-                followService.delete(followRequest)
+                followService.delete(getFollowRequest(user2.getAccount()))
         );
 
         //사용자를 찾을 수 없는 경우
-        FollowRequest followRequest2 = FollowRequest.builder()
-                .userAccount("")
-                .build();
         assertThrows(RuntimeException.class, () ->
-                followService.request(followRequest2)
+                followService.request(getFollowRequest(""))
         );
 
         //요청
-        followService.request(followRequest);
+        followService.request(getFollowRequest(user2.getAccount()));
         FollowRequestEntity followRequestEntity = followRequestRepository.findByUserAndFollower(user1, user2).get();
 
         //수락
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user2));
+        testLogin(user2);
         followService.accept(followRequestEntity.getId());
         FollowEntity follow1 = followRepository.findByUserAndFollower(user1, user2).get();
         FollowEntity follow2 = followRepository.findByUserAndFollower(user2, user1).get();
 
         //제거
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user1));
-        followService.delete(followRequest);
+        testLogin(user1);
+        followService.delete(getFollowRequest(user2.getAccount()));
 
         //then
         assertEquals(1, follow1.getIsDeleted());
         assertEquals(1, follow2.getIsDeleted());
+    }
+
+    @DisplayName("보낸 팔로우 요청 목록 조회")
+    @Test
+    void getSendRequests() throws Exception {
+
+
+        //유저3 생성
+        UserEntity user3 = userRepository.save(getTestUser("testUser3"));
+
+        //요청
+        testLogin(user1);
+        followService.request(getFollowRequest(user2.getAccount()));
+        followService.request(getFollowRequest(user3.getAccount()));
+
+        //조회
+        Page<FollowRequestResponse> requests = followService.getSendRequests(PageRequest.of(0, 20));
+        assertEquals(user2.getId(), requests.getContent().get(0).getFollower().getId());
+        assertEquals(user3.getId(), requests.getContent().get(1).getFollower().getId());
+    }
+
+    @DisplayName("받은 팔로우 요청 목록 조회")
+    @Test
+    void getReceiveRequests() throws Exception {
+
+        //요청
+        testLogin(user1);
+        followService.request(getFollowRequest(user2.getAccount()));
+
+        //조회
+        testLogin(user2);
+        Page<FollowRequestResponse> requests = followService.getReceiveRequests(PageRequest.of(0, 20));
+        assertEquals(user1.getId(), requests.getContent().get(0).getUser().getId());
+    }
+
+    @DisplayName("팔로워 목록 조회")
+    @Test
+    void getFollowers() throws Exception {
+
+        //유저3 생성
+        UserEntity user3 = userRepository.save(getTestUser("testUser3"));
+
+        //요청
+        testLogin(user1);
+        followService.request(getFollowRequest(user2.getAccount()));
+        followService.request(getFollowRequest(user3.getAccount()));
+        FollowRequestEntity followRequest1 = followRequestRepository.findByUserAndFollower(user1, user2).get();
+        FollowRequestEntity followRequest2 = followRequestRepository.findByUserAndFollower(user1, user3).get();
+
+        //수락
+        testLogin(user2);
+        followService.accept(followRequest1.getId());
+        testLogin(user3);
+        followService.accept(followRequest2.getId());
+
+        //조회
+        testLogin(user1);
+        Page<UserResponse> followers1 = followService.getFollowers(null, PageRequest.of(0, 20));
+        Page<UserResponse> followers2 = followService.getFollowers(CursorUtil.getFollowerCursor(user2), PageRequest.of(0, 20));
+
+        //then
+        assertEquals(2, followers1.getContent().size());
+        assertEquals(user2.getId(), followers1.getContent().get(0).getId());
+        assertEquals(followers2.getContent().get(0).getId(), followers1.getContent().get(1).getId());
+    }
+
+
+    private UserEntity getTestUser(String account) {
+
+        return UserEntity.builder()
+                .account(account)
+                .password("password")
+                .email("test2@google.com")
+                .nickname(account)
+                .userType(UserType.NORMAL)
+                .build();
+    }
+
+    private FollowRequest getFollowRequest(String account) {
+        return FollowRequest.builder()
+                .userAccount(account)
+                .build();
+    }
+
+    private void testLogin(UserEntity user) throws Exception {
+
+        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user));
     }
 }

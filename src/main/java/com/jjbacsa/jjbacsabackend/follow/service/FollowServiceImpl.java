@@ -1,14 +1,23 @@
 package com.jjbacsa.jjbacsabackend.follow.service;
 
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequest;
+import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
+import com.jjbacsa.jjbacsabackend.follow.dto.FollowResponse;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowRequestEntity;
+import com.jjbacsa.jjbacsabackend.follow.mapper.FollowMapper;
+import com.jjbacsa.jjbacsabackend.follow.mapper.FollowRequestMapper;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRequestRepository;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
+import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,17 +33,18 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRequestRepository followRequestRepository;
 
     @Override
-    public void request(FollowRequest request) throws Exception {
+    public FollowRequestResponse request(FollowRequest request) throws Exception {
 
         UserEntity user = getLoginUser();
         UserEntity follower = getUserByAccount(request.getUserAccount());
 
         checkValidFollowRequest(user, follower);
-        saveFollowRequest(user, follower);
+
+        return FollowRequestMapper.INSTANCE.toFollowRequestResponse(saveFollowRequest(user, follower));
     }
 
     @Override
-    public void accept(Long requestId) throws Exception {
+    public FollowResponse accept(Long requestId) throws Exception {
 
         UserEntity user = getLoginUser();
         FollowRequestEntity followRequest = getFollowRequestById(requestId);
@@ -48,8 +58,9 @@ public class FollowServiceImpl implements FollowService {
         if (followRequest.getUser() == null || followRequest.getUser().getIsDeleted() == 1)
             throw new RuntimeException("User not exists.");
 
-        saveFollow(user, followRequest.getUser());
         saveFollow(followRequest.getUser(), user);
+
+        return FollowMapper.INSTANCE.toFollowResponse(saveFollow(user, followRequest.getUser()));
     }
 
     @Override
@@ -91,6 +102,30 @@ public class FollowServiceImpl implements FollowService {
         deleteFollow(follower, user);
     }
 
+    @Override
+    public Page<FollowRequestResponse> getSendRequests(Pageable pageable) throws Exception {
+
+        UserEntity user = getLoginUser();
+
+        return followRequestRepository.findAllByUser(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
+    }
+
+    @Override
+    public Page<FollowRequestResponse> getReceiveRequests(Pageable pageable) throws Exception {
+
+        UserEntity user = getLoginUser();
+
+        return followRequestRepository.findAllByFollower(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
+    }
+
+    @Override
+    public Page<UserResponse> getFollowers(String cursor, Pageable pageable) throws Exception {
+
+        UserEntity user = getLoginUser();
+
+        return followRepository.findAllByUserWithCursor(user, cursor, pageable).map(follow -> UserMapper.INSTANCE.toUserResponse(follow.getFollower()));
+    }
+
     private UserEntity getLoginUser() throws Exception {
 
         return userRepository.findById(userService.getLoginUser().getId())
@@ -124,24 +159,25 @@ public class FollowServiceImpl implements FollowService {
             throw new RuntimeException("Already followed.");
     }
 
-    private void saveFollowRequest(UserEntity user, UserEntity follower) {
+    private FollowRequestEntity saveFollowRequest(UserEntity user, UserEntity follower) {
 
         FollowRequestEntity followRequest = FollowRequestEntity.builder()
                 .user(user)
                 .follower(follower)
                 .build();
 
-        followRequestRepository.save(followRequest);
+        return followRequestRepository.save(followRequest);
     }
 
-    private void saveFollow(UserEntity user, UserEntity follower) {
+    private FollowEntity saveFollow(UserEntity user, UserEntity follower) {
 
         FollowEntity follow = FollowEntity.builder()
                 .user(user)
                 .follower(follower)
                 .build();
-        followRepository.save(follow);
         user.increaseFriendCount();
+
+        return followRepository.save(follow);
     }
 
 
