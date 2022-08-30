@@ -1,6 +1,5 @@
-package com.jjbacsa.jjbacsabackend.user.dto;
+package com.jjbacsa.jjbacsabackend.user.entity;
 
-import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -55,4 +54,6 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled(){
         return user.getIsDeleted() != 0;
     }
+
+    public UserEntity getUser(){return this.user;}
 }

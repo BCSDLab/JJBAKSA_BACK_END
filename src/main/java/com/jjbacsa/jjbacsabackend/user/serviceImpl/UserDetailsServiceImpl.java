@@ -1,6 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
-import com.jjbacsa.jjbacsabackend.user.dto.CustomUserDetails;
+import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
