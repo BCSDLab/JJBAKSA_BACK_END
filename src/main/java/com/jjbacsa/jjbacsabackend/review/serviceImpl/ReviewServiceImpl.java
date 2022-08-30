@@ -49,12 +49,11 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public ReviewResponse modifyReview(ReviewModifyRequest reviewModifyRequest) throws Exception {
-        UserEntity userEntity = userRepository.findById(userService.getLoginUser().getId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자 입니다."));
+        UserEntity userEntity = verifyUser();
         ReviewEntity review = reviewRepository.findByReviewId(reviewModifyRequest.getId());
 
-        if(review == null) throw new EntityNotFoundException("존재하지 않는 리뷰입니다. - review_id:" + reviewModifyRequest.getId());
-        if(review.getWriter().getId() != userEntity.getId()) throw new RuntimeException("리뷰 작성자가 아닙니다.");
+        if(review == null) throw new RuntimeException("존재하지 않는 리뷰입니다. - review_id:" + reviewModifyRequest.getId());
+        if(!review.getWriter().equals(userEntity)) throw new RuntimeException("리뷰 작성자가 아닙니다.");
         if (reviewModifyRequest.getContent() != null) review.setContent(reviewModifyRequest.getContent());  // not null 컬럼
 
         if(reviewModifyRequest.getReviewImages() != null) {
@@ -74,11 +73,10 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public ReviewDeleteResponse deleteReview(Long reviewId) throws Exception {
-        UserEntity userEntity = userRepository.findById(userService.getLoginUser().getId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자 입니다."));
+        UserEntity userEntity = verifyUser();
         ReviewEntity reviewEntity = reviewRepository.findByReviewId(reviewId);
         if(reviewEntity == null) throw new RuntimeException("존재하지 않는 리뷰입니다. review_id: "+reviewId);
-        if(reviewEntity.getWriter().getId() != userEntity.getId()) throw new RuntimeException("리뷰 작성자가 아닙니다.");
+        if(!reviewEntity.getWriter().equals(userEntity)) throw new RuntimeException("리뷰 작성자가 아닙니다.");
         reviewRepository.deleteById(reviewId);
         userEntity.getUserCount().decreaseReviewCount();
         return ReviewDeleteResponse.from(reviewEntity);
@@ -105,10 +103,8 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private ReviewEntity createReviewEntity(ReviewRequest reviewRequest) throws Exception {
-        UserEntity userEntity = userRepository.findById(userService.getLoginUser().getId())
-                                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자 입니다."));
-        ShopEntity shopEntity = shopRepository.findById(reviewRequest.getShopId())
-                                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 상점입니다."));
+        UserEntity userEntity = verifyUser();
+        ShopEntity shopEntity = verifyShop(reviewRequest.getShopId());
         ReviewEntity reviewEntity = ReviewEntity.builder()
                 .writer(userEntity)
                 .shop(shopEntity)
@@ -124,8 +120,17 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         // 리뷰 수 증가
-        reviewEntity.getWriter().getUserCount().increaseReviewCount();
+        userEntity.getUserCount().increaseReviewCount();
 
         return reviewEntity;
+    }
+
+    private UserEntity verifyUser() throws Exception {
+        return userRepository.findById(userService.getLoginUser().getId())
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자 입니다."));
+    }
+    private ShopEntity verifyShop(Long shopId){
+        return shopRepository.findById(shopId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 상점입니다."));
     }
 }
