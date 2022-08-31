@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+
 @RequiredArgsConstructor
 @RestController
 public class UserController {
@@ -24,8 +26,8 @@ public class UserController {
     }
 
     @PostMapping(value = "/user/login")
-    public ResponseEntity<Token> login(@RequestBody UserRequest request) throws Exception{
-        return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
+    public ResponseEntity<Token> login(@RequestBody UserRequest request, HttpServletResponse httpResponse) throws Exception{
+        return new ResponseEntity<>(userService.login(request, httpResponse), HttpStatus.OK);
     }
 
     //@Auth
@@ -37,5 +39,11 @@ public class UserController {
                 .getUser().getAccount());
         //return new ResponseEntity<>(userService.getLoginUser(), HttpStatus.OK);
         return new ResponseEntity<>("success", HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = "/user/logout")
+    public ResponseEntity<String> logout(HttpServletResponse httpResponse)throws Exception{
+        userService.logout(httpResponse);
+        return new ResponseEntity<>("success", HttpStatus.NO_CONTENT);
     }
 }

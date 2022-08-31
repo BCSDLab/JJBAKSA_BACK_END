@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
+import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
@@ -17,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 @Service
@@ -51,16 +54,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Token login(UserRequest request) throws Exception{
+    public Token login(UserRequest request, HttpServletResponse httpResponse) throws Exception{
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
-        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
+        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new Exception("User Not Founded");
         }
 
+        Cookie cookie = new Cookie("refresh",
+                jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
+        cookie.setMaxAge(14*24*60*60);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+
+        httpResponse.addCookie(cookie);
+
         //TODO : 토큰 전달 보안 강화
-        return new Token(jwtUtil.generateToken(user.getAccount()));
+        return new Token(jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS));
     }
 
     @Override
@@ -74,5 +86,14 @@ public class UserServiceImpl implements UserService {
 
         return UserMapper.INSTANCE.toUserResponse(user);
 
+    }
+
+    @Override
+    public void logout(HttpServletResponse httpResponse) throws Exception{
+        Cookie cookie = new Cookie("refresh", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+
+        httpResponse.addCookie(cookie);
     }
 }

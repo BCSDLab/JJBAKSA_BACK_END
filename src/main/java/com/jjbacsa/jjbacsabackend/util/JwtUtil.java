@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -16,9 +17,15 @@ public class JwtUtil {
     @Value("${jwt.key}")
     private String key;
 
+    @Value("${jwt.access}")
+    private String accessToken;
+
+    @Value("${jwt.refresh}")
+    private String refreshToken;
+
     public static final short BEARER_LENGTH = 7;
 
-    public String generateToken(String account){
+    public String generateToken(String account, TokenType type){
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("typ", "JWT");
         headers.put("alg", "HS256");
@@ -30,7 +37,7 @@ public class JwtUtil {
         calendar.setTime(new Date());
 
         //TODO: refresh token 생성 구분
-        calendar.add(Calendar.HOUR_OF_DAY, 12);
+        calendar.add(Calendar.HOUR_OF_DAY, type.getTokenRemainTime());
 
         Date exp = calendar.getTime();
 
@@ -38,6 +45,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setHeader(headers)
                 .setClaims(payloads)
+                .setSubject(type.isAccess() ? accessToken : refreshToken)
                 .setExpiration(exp)
                 .signWith(SignatureAlgorithm.HS256, key.getBytes())
                 .compact();
@@ -63,7 +71,7 @@ public class JwtUtil {
             );
             return true;
         } catch (ExpiredJwtException expiredJwtException){
-            throw new Exception("Token Expired");
+            throw expiredJwtException;
         }  catch (JwtException e){
             throw new Exception("Token Invalid");
         }
