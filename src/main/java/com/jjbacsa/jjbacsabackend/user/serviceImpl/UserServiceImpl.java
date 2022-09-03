@@ -62,17 +62,7 @@ public class UserServiceImpl implements UserService {
             throw new Exception("User Not Founded");
         }
 
-        Cookie cookie = new Cookie("refresh",
-                jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
-        cookie.setMaxAge(14*24*60*60);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-
-        httpResponse.addCookie(cookie);
-
-        //TODO : 토큰 전달 보안 강화
-        return new Token(jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS));
+        return getTokens(user, httpResponse);
     }
 
     @Override
@@ -85,7 +75,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new Exception("Token is not valid"));
 
         return UserMapper.INSTANCE.toUserResponse(user);
-
     }
 
     @Override
@@ -95,5 +84,32 @@ public class UserServiceImpl implements UserService {
         cookie.setPath("/");
 
         httpResponse.addCookie(cookie);
+    }
+
+    @Override
+    public Token refresh(String token, HttpServletResponse httpResponse) throws Exception{
+        //HttpOnly 쿠키는 공백을 담을 수 없고 클라이언트 접근 불가
+        String bearerToken = "Bearer " + token;
+        jwtUtil.isValid(bearerToken, TokenType.REFRESH);
+        String account = (String)jwtUtil.getPayloadsFromJwt(bearerToken).get("account");
+
+        UserEntity user = userRepository.findByAccount(account)
+                .orElseThrow(() -> new Exception("User Not Founded"));;
+
+        return getTokens(user, httpResponse);
+    }
+
+    //login, refresh 중복 로직
+    private Token getTokens(UserEntity user, HttpServletResponse httpResponse){
+        Cookie cookie = new Cookie("refresh",
+                jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
+        cookie.setMaxAge(14*24*60*60);
+        cookie.setHttpOnly(true);
+        //cookie.setSecure(true); //local 테스트시 https 미사용으로 Secure 미부여
+        cookie.setPath("/");
+
+        httpResponse.addCookie(cookie);
+
+        return new Token(jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS));
     }
 }

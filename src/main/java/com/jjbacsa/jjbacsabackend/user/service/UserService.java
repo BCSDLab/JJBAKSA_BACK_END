@@ -10,5 +10,6 @@ public interface UserService {
     UserResponse register(UserRequest request) throws Exception;
     Token login(UserRequest request, HttpServletResponse response) throws Exception;
     void logout(HttpServletResponse response) throws Exception;
+    Token refresh(String token, HttpServletResponse httpResponse) throws Exception;
     UserResponse getLoginUser() throws Exception;
 }

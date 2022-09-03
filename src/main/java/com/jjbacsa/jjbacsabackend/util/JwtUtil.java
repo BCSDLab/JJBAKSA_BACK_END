@@ -73,12 +73,11 @@ public class JwtUtil {
             throw new Exception("Token Invalid");
         }
 
-        if(claims == null || claims.getSubject() == null
-                || claims.get("account", String.class) == null){
+        if(claims.getSubject() == null || claims.get("account", String.class) == null){
             throw new Exception("Token Invalid");
         }
-        if(claims.get("account", String.class)
-                == (tokenType.isAccess()? accessToken:refreshToken)){
+
+        if(!claims.getSubject().equals(tokenType.isAccess()? accessToken:refreshToken)){
             throw new Exception("Token Type Invalid");
         }
 
