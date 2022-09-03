@@ -1,19 +1,23 @@
 package com.jjbacsa.jjbacsabackend.review.service;
 
 
+import com.jjbacsa.jjbacsabackend.image.service.ImageService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
+import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.serviceImpl.ReviewServiceImpl;
 
 
+import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +34,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.*;
 
 @Slf4j
@@ -41,7 +45,6 @@ import static org.mockito.BDDMockito.*;
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @Transactional
 public class ReviewServiceTest {
-    @Autowired
     private final ReviewServiceImpl reviewService;
     @MockBean
     private final UserServiceImpl userService;
@@ -61,10 +64,6 @@ public class ReviewServiceTest {
         리뷰 단건 조회
         리뷰 수정
         리뷰 삭제
-        //TODO:
-        리뷰 임시저장
-        임시저장 리뷰 조회
-        임시 저장 리뷰 목록 조회
      */
     @DisplayName("리뷰 내용을 작성하면, 리뷰를 저장한다.")
     @Test
@@ -158,7 +157,7 @@ public class ReviewServiceTest {
 
         // 없는 리뷰에 대해
         dto.setId(0L);
-        assertThrows(EntityNotFoundException.class, ()-> reviewService.modifyReview(dto));
+        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto));
 
 
     }
