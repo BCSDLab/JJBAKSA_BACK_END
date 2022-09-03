@@ -1,7 +1,7 @@
 package com.jjbacsa.jjbacsabackend.etc.filter;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.security.JwtTokenProvider;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,7 +28,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         //TODO : Filter Custom Error Handling
         try {
-            if (token != null && jwtTokenProvider.validateToken(token)) {
+            if (token != null && jwtTokenProvider.validateToken(token, TokenType.ACCESS)) {
                 Authentication auth = jwtTokenProvider.getAuthentication(token);
                 // 정상 토큰이면 토큰을 통해 생성한 Authentication 객체를 SecurityContext에 저장
                 SecurityContextHolder.getContext().setAuthentication(auth);

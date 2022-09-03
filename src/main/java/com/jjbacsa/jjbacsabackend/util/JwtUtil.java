@@ -3,10 +3,7 @@ package com.jjbacsa.jjbacsabackend.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -52,7 +49,7 @@ public class JwtUtil {
     }
 
     //TODO: refresh token 추가 로직 적용
-    public boolean isValid(String token) throws Exception {
+    public boolean isValid(String token, TokenType tokenType) throws Exception {
         if(token == null){
             throw new Exception("Token is null");
         }
@@ -63,18 +60,29 @@ public class JwtUtil {
             throw new Exception("Token is Not Bearer");
         }
 
+        Claims claims = null;
         try{
-            Jwts.parserBuilder().setSigningKey(
+            claims = Jwts.parserBuilder().setSigningKey(
                     key.getBytes())
                     .build()
-                    .parseClaimsJws(token.substring(BEARER_LENGTH)
-            );
-            return true;
+                    .parseClaimsJws(token.substring(BEARER_LENGTH))
+                    .getBody();
         } catch (ExpiredJwtException expiredJwtException){
             throw expiredJwtException;
         }  catch (JwtException e){
             throw new Exception("Token Invalid");
         }
+
+        if(claims == null || claims.getSubject() == null
+                || claims.get("account", String.class) == null){
+            throw new Exception("Token Invalid");
+        }
+        if(claims.get("account", String.class)
+                == (tokenType.isAccess()? accessToken:refreshToken)){
+            throw new Exception("Token Type Invalid");
+        }
+
+        return true;
     }
 
     public Map<String, Object> getPayloadsFromJwt(String token) throws Exception {

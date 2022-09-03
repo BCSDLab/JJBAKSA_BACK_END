@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.etc.security;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +22,7 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
-    public boolean validateToken(String token) throws Exception {
-        return jwtUtil.isValid(token);
+    public boolean validateToken(String token, TokenType tokenType) throws Exception {
+        return jwtUtil.isValid(token, tokenType);
     }
 }
