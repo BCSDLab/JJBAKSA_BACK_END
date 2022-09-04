@@ -9,6 +9,7 @@ import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -29,11 +30,11 @@ public class UserController {
     }
 
     //@Auth
+    @PreAuthorize("hasRole('NORMAL')")
     @ApiOperation( value = "",notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
     @GetMapping(value = "/user/me")
-    public ResponseEntity<String> getMe() throws Exception{
-        //return new ResponseEntity<>(userService.getLoginUser(), HttpStatus.OK);
-        return new ResponseEntity<>("success", HttpStatus.OK);
+    public ResponseEntity<UserResponse> getMe() throws Exception{
+        return new ResponseEntity<>(userService.getLoginUser(), HttpStatus.OK);
     }
 
     @DeleteMapping(value = "/user/logout")

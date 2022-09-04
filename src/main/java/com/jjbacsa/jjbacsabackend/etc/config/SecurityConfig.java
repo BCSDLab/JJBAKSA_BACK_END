@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final AccessDeniedHandler customAccessDeniedHandler;
@@ -43,7 +45,6 @@ public class SecurityConfig {
         // header에 id, pw가 아닌 token(jwt)을 달고 간다. 그래서 basic이 아닌 bearer를 사용한다.
         http.httpBasic().disable()
                 .authorizeRequests()// 요청에 대한 사용권한 체크
-                .antMatchers("/user/me").hasRole("NORMAL")
                 .antMatchers("/**").permitAll()
                 .and()
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider),
