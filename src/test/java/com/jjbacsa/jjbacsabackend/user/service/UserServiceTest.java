@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +62,7 @@ public class UserServiceTest {
     @DisplayName("로그인")
     @Test
     void login() throws Exception{
-        HttpServletResponse response = mock(HttpServletResponse.class);
+        MockHttpServletResponse response = new MockHttpServletResponse();
         userService.register(loginRequest);
 
         UserRequest loginInfo = new UserRequest("", loginRequest.getPassword(), "", "");
@@ -78,22 +79,59 @@ public class UserServiceTest {
         loginInfo.setPassword(loginRequest.getPassword());
         Token token = userService.login(loginInfo, response);
 
+        //토큰 타입 불일치
+        assertThrows(Exception.class, () ->
+                jwtUtil.isValid("Bearer " + token.getAccessToken(), TokenType.REFRESH));
+        assertThrows(Exception.class, () ->
+                jwtUtil.isValid("Bearer " + response.getCookie("refresh").getValue(), TokenType.ACCESS));
+
         assertEquals(jwtUtil.isValid("Bearer " + token.getAccessToken(), TokenType.ACCESS), true);
         assertEquals(
                 jwtUtil.getPayloadsFromJwt(token.getAccessToken()).get("account"),
                 loginRequest.getAccount());
+
+        assertEquals(jwtUtil.isValid(
+                "Bearer " + response.getCookie("refresh").getValue(), TokenType.REFRESH), true);
+        assertEquals(
+                jwtUtil.getPayloadsFromJwt(response.getCookie("refresh").getValue()).get("account"),
+                        loginRequest.getAccount());
     }
 
     @DisplayName("토큰 재발급")
     @Test
     void refresh() throws Exception {
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        userService.register(loginRequest);
 
+        Token token = userService.login(loginRequest, response);
+        Token refreshToken = userService.refresh(response.getCookie("refresh").getValue(), response);
+
+        //토큰 타입 불일치
+        assertThrows(Exception.class, () ->
+                jwtUtil.isValid("Bearer " + refreshToken.getAccessToken(), TokenType.REFRESH));
+        assertThrows(Exception.class, () ->
+                jwtUtil.isValid("Bearer " + response.getCookie("refresh").getValue(), TokenType.ACCESS));
+
+        assertEquals(jwtUtil.isValid("Bearer " + refreshToken.getAccessToken(), TokenType.ACCESS), true);
+        assertEquals(
+                jwtUtil.getPayloadsFromJwt(token.getAccessToken()).get("account"),
+                loginRequest.getAccount());
+
+        assertEquals(jwtUtil.isValid(
+                "Bearer " + response.getCookie("refresh").getValue(), TokenType.REFRESH), true);
+        assertEquals(
+                jwtUtil.getPayloadsFromJwt(response.getCookie("refresh").getValue()).get("account"),
+                loginRequest.getAccount());
     }
 
     @DisplayName("로그아웃")
     @Test
     void logout() throws Exception{
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        userService.logout(response);
 
+        assertEquals(response.getCookie("refresh").getValue(), null);
+        assertEquals(response.getCookie("refresh").getMaxAge(), 0);
     }
 
     //WithUserDetails에 존재하는 Account 값을 넣으면 됩니다.
