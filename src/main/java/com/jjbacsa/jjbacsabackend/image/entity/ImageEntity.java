@@ -24,4 +24,13 @@ public class ImageEntity extends BaseEntity {
     @Basic
     @Column(name = "path", nullable = false)
     private String path;
+
+    @Basic(optional = false)
+    @Column(name = "originalName")
+    private String originalName;
+
+    public void updateImage(String path, String originalName){
+        this.path = path;
+        this.originalName = originalName;
+    }
 }

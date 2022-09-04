@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS image
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
     is_deleted TINYINT   NOT NULL DEFAULT 0,
-    path       TEXT      NOT NULL
+    path       TEXT      NOT NULL,
+    original_name TEXT   NOT NULL
 ) default character set utf8mb4
   collate utf8mb4_bin;
 
@@ -92,7 +93,7 @@ CREATE TABLE IF NOT EXISTS review
     is_deleted TINYINT   NOT NULL DEFAULT 0,
     writer_id  BIGINT,
     shop_id    BIGINT,
-    content    TEXT,
+    content    TEXT     NOT NULL,
     is_temp    TINYINT   NOT NULL DEFAULT 0,
     FOREIGN KEY (writer_id) REFERENCES user (id) ON DELETE SET NULL,
     FOREIGN KEY (shop_id) REFERENCES shop (id) ON DELETE SET NULL
