@@ -6,12 +6,14 @@ import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,12 +69,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse getLoginUser() throws Exception{
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String token = request.getHeader("Authorization");
-
-        Map<String, Object> payloads = jwtUtil.getPayloadsFromJwt(token.substring(7));
-        UserEntity user = userRepository.findById(Long.valueOf(String.valueOf(payloads.get("id"))))
-                .orElseThrow(() -> new Exception("Token is not valid"));
+        UserEntity user = ((CustomUserDetails)SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getUser();
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
