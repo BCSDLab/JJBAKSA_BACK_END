@@ -80,6 +80,7 @@ public class ImageServiceImpl implements ImageService {
                         .review(reviewEntity)
                         .image(imageEntity)
                         .build();
+                reviewImageRepository.save(reviewImageEntity);
                 reviewEntity.getReviewImages().add(reviewImageEntity);
             }
         }
@@ -104,8 +105,8 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private void deleteReviewImage(ImageEntity imageEntity) {
-        File im = new File(path+imageEntity.getPath());
-        if(!im.delete()) throw new RuntimeException("존재하지 않는 이미지입니다. : "+path + imageEntity.getPath());
+        File im = new File(imageEntity.getPath());
+        if(!im.delete()) throw new RuntimeException("존재하지 않는 이미지입니다. : " + imageEntity.getPath());
     }
 
     private String createReviewFile(MultipartFile image) throws IOException {
@@ -123,7 +124,7 @@ public class ImageServiceImpl implements ImageService {
             else throw new RuntimeException("올바르지 못한 형식의 이미지 파일입니다. : "+contentType);
         }
         // 파일명 중복 피하고자 나노초까지 얻어와 지정, yml에 설정한 root directory 아래 review 폴더에 저장되도록 함
-        String imagePath = "review\\" + System.nanoTime() + originalFileExtension;
+        String imagePath = reviewPath + System.nanoTime() + originalFileExtension;
         File dest = new File(imagePath);
         image.transferTo(dest);
         return dest.getPath();
