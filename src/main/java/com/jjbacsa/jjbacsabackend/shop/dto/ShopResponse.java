@@ -2,10 +2,12 @@ package com.jjbacsa.jjbacsabackend.shop.dto;
 
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopCount;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class ShopResponse {

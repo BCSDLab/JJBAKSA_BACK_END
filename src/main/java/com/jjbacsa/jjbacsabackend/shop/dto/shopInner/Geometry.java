@@ -7,7 +7,7 @@ public class Geometry {
     private Location location;
 
     @Data
-    public class Location{
+    public static class Location{
         String lat;
         String lng;
     }

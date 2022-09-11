@@ -35,11 +35,13 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.projectlombok:lombok:1.18.22'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'mysql:mysql-connector-java'
 	annotationProcessor 'org.projectlombok:lombok'
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testAnnotationProcessor 'org.projectlombok:lombok'
 	//querydsl
 	implementation 'com.querydsl:querydsl-jpa:5.0.0'
 	implementation 'com.querydsl:querydsl-apt:5.0.0'
@@ -61,6 +63,8 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.mindrot/jbcrypt
 	implementation group: 'org.mindrot', name: 'jbcrypt', version: '0.4'
 
+	//spring redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 def querydslDir = "$buildDir/generated/querydsl"

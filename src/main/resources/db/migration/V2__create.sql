@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS shop
     x             VARCHAR(255) NOT NULL,
     y             VARCHAR(255) NOT NULL,
     category_name VARCHAR(255) NOT NULL,
+    address       VARCHAR(255) NOT NULL,
     phone         VARCHAR(255),
     business_day  VARCHAR(1000)
 ) default character set utf8mb4
@@ -176,3 +177,5 @@ CREATE TABLE IF NOT EXISTS post
     board_type VARCHAR(255) NOT NULL
 ) default character set utf8mb4
   collate utf8mb4_general_ci;
+
+ALTER TABLE shop ADD FULLTEXT INDEX ft_index (place_name,address) WITH PARSER ngram;

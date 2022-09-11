@@ -1,13 +1,17 @@
 package com.jjbacsa.jjbacsabackend.shop.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.dto.ShopResponse;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopSummary;
 import com.jjbacsa.jjbacsabackend.shop.service.ShopService;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
-import org.json.simple.parser.ParseException;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,5 +25,11 @@ public class ShopController {
     public ResponseEntity<ShopResponse> getShop(@RequestParam("place_id")String placeId) throws JsonProcessingException {
         return new ResponseEntity<>(shopService.getShop(placeId), HttpStatus.OK);
     }
+
+    @PostMapping(value="/shop/search")
+    public ResponseEntity<Page<ShopSummary>> searchShop(@RequestBody ShopRequest shopRequest){
+        return new ResponseEntity<>(shopService.searchShop(shopRequest),HttpStatus.OK);
+    }
+
 
 }

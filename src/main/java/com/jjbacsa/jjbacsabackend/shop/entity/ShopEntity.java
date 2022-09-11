@@ -54,6 +54,10 @@ public class ShopEntity extends BaseEntity {
     private String categoryName;
 
     @Basic
+    @Column(name="address",nullable = false)
+    private String address;
+
+    @Basic
     @Column(name="phone",nullable = true)
     private String phone;
 

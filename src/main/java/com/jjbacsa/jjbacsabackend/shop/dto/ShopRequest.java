@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.shop.dto;
 
 import lombok.*;
+import org.springframework.data.domain.Pageable;
 
 @Getter
 @Setter
@@ -8,10 +9,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ShopRequest {
-
-    private String placeId;
-    private String placeName;
-    private String x;
-    private String y;
-    private String categoryName;
+    private String keyword;
+    private double x;
+    private double y;
+    private Pageable pageable;
 }
