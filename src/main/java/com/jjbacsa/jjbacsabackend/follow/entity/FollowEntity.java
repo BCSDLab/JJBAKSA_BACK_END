@@ -9,6 +9,8 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
 @Getter
 @NoArgsConstructor

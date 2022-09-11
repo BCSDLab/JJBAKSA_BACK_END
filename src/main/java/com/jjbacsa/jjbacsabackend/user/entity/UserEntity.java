@@ -12,6 +12,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
@@ -27,6 +28,7 @@ public class UserEntity extends BaseEntity {
         @Override
         public UserEntity build() {
 
+            id(null);
             UserEntity user = new UserEntity(this);
             user.getUserCount().setUser(user);
 
@@ -80,5 +82,18 @@ public class UserEntity extends BaseEntity {
 
     public void decreaseFriendCount() {
         userCount.decreaseFriendCount();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserEntity)) return false;
+        UserEntity that = (UserEntity) o;
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getAccount(), that.getAccount()) && Objects.equals(getPassword(), that.getPassword()) && Objects.equals(getEmail(), that.getEmail()) && Objects.equals(getNickname(), that.getNickname());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getAccount(), getPassword(), getEmail(), getNickname());
     }
 }
