@@ -17,13 +17,4 @@ public class ReviewModifyRequest {
     private int isTemp;
     private List<MultipartFile> reviewImages;
 
-    public static ReviewModifyRequest createReviewModifyRequest(List<MultipartFile> reviewImages, ReviewModifyRequestDto reviewModifyRequestDto){
-        ReviewModifyRequest reviewModifyRequest = new ReviewModifyRequest();
-        if(reviewImages != null) reviewModifyRequest.setReviewImages(reviewImages);
-        reviewModifyRequest.setId(reviewModifyRequestDto.getId());
-        reviewModifyRequest.setShopId(reviewModifyRequestDto.getShopId());
-        reviewModifyRequest.setContent(reviewModifyRequestDto.getContent());
-        reviewModifyRequest.setIsTemp(reviewModifyRequestDto.getIsTemp());
-        return reviewModifyRequest;
-    }
 }
