@@ -12,5 +12,4 @@ public class ShopRequest {
     private String keyword;
     private double x;
     private double y;
-    private Pageable pageable;
 }

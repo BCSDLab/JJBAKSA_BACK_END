@@ -119,7 +119,7 @@ public class ShopServiceImpl implements ShopService {
     //DB내 상점검색
     //정확도 -> 거리순
     @Override
-    public Page<ShopSummary> searchShop(ShopRequest shopRequest) {
+    public Page<ShopSummary> searchShop(ShopRequest shopRequest, Pageable pageable) {
         //keyword Redis 저장
         redisTemplate.opsForZSet().incrementScore(KEY,shopRequest.getKeyword(),1);
 
@@ -128,13 +128,17 @@ public class ShopServiceImpl implements ShopService {
         //키워드 검색 타입 판별
         SearchType searchType=typeSetting(keyword);
 
-        //검색 정제
         List<ShopSummary> shopList=new ArrayList<>();
+
+        //키워드 정제
+        String keywordForQuery=getKeywordForQuery(keyword);
+
+        System.out.println("가공된 키워드: "+keywordForQuery);
 
         switch (searchType){
             case cafe:
             case restaurant:
-                shopList.addAll(shopRepository.searchWithCategory(keyword,searchType.name()).stream().map(t -> new ShopSummary(
+                shopList.addAll(shopRepository.searchWithCategory(keywordForQuery,searchType.name()).stream().map(t -> new ShopSummary(
                                 t.get(0,String.class),
                                 t.get(1,String.class),
                                 t.get(2,String.class),
@@ -146,7 +150,7 @@ public class ShopServiceImpl implements ShopService {
                 );
                 break;
             case NONE:
-                shopList.addAll(shopRepository.search(keyword).stream().map(t -> new ShopSummary(
+                shopList.addAll(shopRepository.search(keywordForQuery).stream().map(t -> new ShopSummary(
                                         t.get(0,String.class),
                                         t.get(1,String.class),
                                         t.get(2,String.class),
@@ -164,21 +168,19 @@ public class ShopServiceImpl implements ShopService {
             shop.setDist(shopRequest.getX(), shopRequest.getY());
         }
 
-        //거리순으로 정렬
-        Collections.sort(shopList);
-
-        //정확도 순으로 정렬
-        Comparator<ShopSummary> cp=new Comparator<ShopSummary>() {
+        //정확도 순으로 정렬(거리순은 2차 정렬)
+        Collections.sort(shopList,new Comparator<ShopSummary>() {
             @Override
-            public int compare(ShopSummary o1, ShopSummary o2) {
-                return (int) (o1.getDist()-o2.getDist());
+            public int compare(ShopSummary s1, ShopSummary s2) {
+                if(s1.getScore()<s2.getScore()) return 1;
+                else if(s1.getScore()==s2.getScore())
+                    return s1.compareTo(s2);
+                else
+                    return -1;
             }
-        };
-
-        Collections.sort(shopList,cp);
+        });
 
         //pagination
-        Pageable pageable=shopRequest.getPageable();
         int start=(int)pageable.getOffset();
         int end=(start+pageable.getPageSize()>shopList.size()? shopList.size() : (start+ pageable.getPageSize()));
 
@@ -200,6 +202,21 @@ public class ShopServiceImpl implements ShopService {
         }
 
         return SearchType.NONE;
+    }
+
+    //키워드 정제
+    private String getKeywordForQuery(String keyword){
+        String replaceKeyword=keyword.replace(" ","");
+        int length=replaceKeyword.length();
+
+        String resString="";
+
+        for(int i=0;i<length-1;i++){
+            resString+=keyword.substring(i,i+2);
+            resString+=" ";
+        }
+
+        return resString;
     }
 
 }

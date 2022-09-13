@@ -19,18 +19,18 @@ public interface ShopRepository extends JpaRepository<ShopEntity, Long>, ShopCus
 
     ShopEntity save(ShopEntity shopEntity);
 
-    //full text search (natural language mode)
+    //full text search (boolean mode)
     @Query(value="SELECT s.place_id as placeId,s.place_name as placeName,s.address as address," +
-            "s.x as x ,s.y as y ,MATCH(s.place_name,s.address) AGAINST(:keyword) as score "+
+            "s.x as x ,s.y as y ,MATCH(s.place_name,s.address) AGAINST(:keyword in boolean mode) as score "+
             "FROM shop s "+
-            "WHERE MATCH(s.place_name,s.address) AGAINST(:keyword) ", nativeQuery = true
+            "WHERE MATCH(s.place_name,s.address) AGAINST(:keyword in boolean mode) ", nativeQuery = true
     )
     List<Tuple> search(@Param("keyword") String keyword);
 
     @Query(value="SELECT s.place_id as placeId,s.place_name as placeName,s.address as address," +
-            "s.x as x ,s.y as y ,MATCH(s.place_name,s.address) AGAINST(:keyword) as score "+
+            "s.x as x ,s.y as y ,MATCH(s.place_name,s.address) AGAINST(:keyword in boolean mode) as score "+
             "FROM shop s "+
-            "WHERE MATCH(s.place_name,s.address) AGAINST(:keyword) and s.category_name=:category ", nativeQuery = true
+            "WHERE MATCH(s.place_name,s.address) AGAINST(:keyword in boolean mode) and s.category_name=:category ", nativeQuery = true
     )
     List<Tuple> searchWithCategory(@Param("keyword")String keyword, @Param("category")String category);
 
