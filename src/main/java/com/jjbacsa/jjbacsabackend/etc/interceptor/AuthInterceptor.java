@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.etc.interceptor;
 
 import com.jjbacsa.jjbacsabackend.etc.annotations.Auth;
+import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -37,7 +38,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             throw new Exception("Access Token is Null");
         }
 
-        return jwtUtil.isValid(accessToken);
+        return jwtUtil.isValid(accessToken, TokenType.ACCESS);
     }
 
 }

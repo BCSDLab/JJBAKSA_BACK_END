@@ -2,38 +2,39 @@ package com.jjbacsa.jjbacsabackend.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Calendar;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class JwtUtil {
     @Value("${jwt.key}")
     private String key;
 
-    private final short BEARER_LENGTH = 7;
+    @Value("${jwt.access}")
+    private String accessToken;
 
-    public String generateToken(Long id){
+    @Value("${jwt.refresh}")
+    private String refreshToken;
+
+    public static final short BEARER_LENGTH = 7;
+
+    public String generateToken(String account, TokenType type){
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("typ", "JWT");
         headers.put("alg", "HS256");
 
         Map<String, Object> payloads = new HashMap<String, Object>();
-        payloads.put("id", id);
+        payloads.put("account", account);
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
         //TODO: refresh token 생성 구분
-        calendar.add(Calendar.HOUR_OF_DAY, 12);
+        calendar.add(Calendar.HOUR_OF_DAY, type.getTokenRemainTime());
 
         Date exp = calendar.getTime();
 
@@ -41,13 +42,14 @@ public class JwtUtil {
         return Jwts.builder()
                 .setHeader(headers)
                 .setClaims(payloads)
+                .setSubject(type.isAccess() ? accessToken : refreshToken)
                 .setExpiration(exp)
                 .signWith(SignatureAlgorithm.HS256, key.getBytes())
                 .compact();
     }
 
     //TODO: refresh token 추가 로직 적용
-    public boolean isValid(String token) throws Exception {
+    public boolean isValid(String token, TokenType tokenType) throws Exception {
         if(token == null){
             throw new Exception("Token is null");
         }
@@ -55,18 +57,31 @@ public class JwtUtil {
             throw new Exception("Not Invalid Token");
         }
         if(!token.startsWith("Bearer ")){
-            throw new Exception("Token is not Bearer");
+            throw new Exception("Token is Not Bearer");
         }
-        String authToken = token.substring(BEARER_LENGTH);
 
+        Claims claims = null;
         try{
-            Jwts.parserBuilder().setSigningKey(key.getBytes()).build().parseClaimsJws(authToken);
-            return true;
+            claims = Jwts.parserBuilder().setSigningKey(
+                    key.getBytes())
+                    .build()
+                    .parseClaimsJws(token.substring(BEARER_LENGTH))
+                    .getBody();
         } catch (ExpiredJwtException expiredJwtException){
-            throw new Exception("Token Expired");
-        } catch (RuntimeException runtimeException){
+            throw expiredJwtException;
+        }  catch (JwtException e){
             throw new Exception("Token Invalid");
         }
+
+        if(claims.getSubject() == null || claims.get("account", String.class) == null){
+            throw new Exception("Token Invalid");
+        }
+
+        if(!claims.getSubject().equals(tokenType.isAccess()? accessToken:refreshToken)){
+            throw new Exception("Token Type Invalid");
+        }
+
+        return true;
     }
 
     public Map<String, Object> getPayloadsFromJwt(String token) throws Exception {

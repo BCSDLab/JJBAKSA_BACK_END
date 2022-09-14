@@ -2,23 +2,28 @@ package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
+import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +32,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     private final JwtUtil jwtUtil;
+
+    private final PasswordEncoder passwordEncoder;
 
     //TODO : OAuth별 작동
     @Override
@@ -39,7 +46,7 @@ public class UserServiceImpl implements UserService {
 
         //TODO : Default Profile 등록하기
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
-                .password(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()))
+                .password(passwordEncoder.encode(request.getPassword()))
                 .userType(UserType.NORMAL)
                 .build();
 
@@ -52,23 +59,48 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
-        if(!BCrypt.checkpw(request.getPassword(), user.getPassword())){
+        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new Exception("User Not Founded");
         }
 
-        //TODO : 토큰 전달 보안 강화
-        return new Token(jwtUtil.generateToken(user.getId()));
+        return getTokens(user);
     }
 
     @Override
     public UserResponse getLoginUser() throws Exception{
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String token = request.getHeader("Authorization");
-
-        Map<String, Object> payloads = jwtUtil.getPayloadsFromJwt(token.substring(7));
-        UserEntity user = userRepository.findById(Long.valueOf(String.valueOf(payloads.get("id"))))
-                .orElseThrow(() -> new Exception("Token is not valid"));
+        UserEntity user = ((CustomUserDetails)SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getUser();
 
         return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    @Override
+    public void logout() throws Exception{
+        //TODO : 로그아웃 로직 추가
+    }
+
+    @Override
+    public Token refresh() throws Exception{
+        HttpServletRequest request = ((ServletRequestAttributes) Objects
+                .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
+        String token = request.getHeader("Authorization");
+
+        jwtUtil.isValid(token, TokenType.REFRESH);
+        String account = (String)jwtUtil.getPayloadsFromJwt(token).get("account");
+
+        UserEntity user = userRepository.findByAccount(account)
+                .orElseThrow(() -> new Exception("User Not Founded"));
+
+        return getTokens(user);
+    }
+
+    //login, refresh 중복 로직
+    private Token getTokens(UserEntity user){
+        return new Token(
+                jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS),
+                jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
     }
 }
