@@ -1,8 +1,8 @@
 package com.jjbacsa.jjbacsabackend.shop.dto;
 
 
-import com.jjbacsa.jjbacsabackend.shop.dto.shopInner.Geometry;
-import com.jjbacsa.jjbacsabackend.shop.dto.shopInner.Opening_hours;
+import com.jjbacsa.jjbacsabackend.shop.dto.shopDtoInner.Geometry;
+import com.jjbacsa.jjbacsabackend.shop.dto.shopDtoInner.Opening_hours;
 import lombok.Builder;
 import lombok.Data;
 

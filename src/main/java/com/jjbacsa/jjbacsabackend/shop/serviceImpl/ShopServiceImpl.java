@@ -6,6 +6,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjbacsa.jjbacsabackend.shop.dto.*;
+import com.jjbacsa.jjbacsabackend.shop.dto.request.ShopRequest;
+import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
+import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
+import com.jjbacsa.jjbacsabackend.shop.entity.ShopCount;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.mapper.ShopMapper;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
@@ -72,7 +76,10 @@ public class ShopServiceImpl implements ShopService {
 
         if(shopRepository.existsByPlaceId(placeId)){
             Optional<ShopEntity> shopEntity=shopRepository.findByPlaceId(placeId);
+            ShopCount shopCount=shopEntity.get().getShopCount();
+
             ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity.get());
+            shopResponse.setShopCount(shopCount.getTotalRating(),shopCount.getRatingCount());
 
             return shopResponse;
 
@@ -81,7 +88,12 @@ public class ShopServiceImpl implements ShopService {
             ShopDto shopDto=ShopDto.ShopDto(shopApiDto);
             ShopEntity shopEntity=register(shopDto);
 
-            return ShopMapper.INSTANCE.toShopResponse(shopEntity);
+            ShopCount shopCount=shopEntity.getShopCount();
+
+            ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity);
+            shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
+
+            return shopResponse;
         }
     }
 
@@ -119,7 +131,7 @@ public class ShopServiceImpl implements ShopService {
     //DB내 상점검색
     //정확도 -> 거리순
     @Override
-    public Page<ShopSummary> searchShop(ShopRequest shopRequest, Pageable pageable) {
+    public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Pageable pageable) {
         //keyword Redis 저장
         redisTemplate.opsForZSet().incrementScore(KEY,shopRequest.getKeyword(),1);
 
@@ -128,17 +140,15 @@ public class ShopServiceImpl implements ShopService {
         //키워드 검색 타입 판별
         SearchType searchType=typeSetting(keyword);
 
-        List<ShopSummary> shopList=new ArrayList<>();
+        List<ShopSummaryResponse> shopList=new ArrayList<>();
 
         //키워드 정제
         String keywordForQuery=getKeywordForQuery(keyword);
 
-        System.out.println("가공된 키워드: "+keywordForQuery);
-
         switch (searchType){
             case cafe:
             case restaurant:
-                shopList.addAll(shopRepository.searchWithCategory(keywordForQuery,searchType.name()).stream().map(t -> new ShopSummary(
+                shopList.addAll(shopRepository.searchWithCategory(keywordForQuery,searchType.name()).stream().map(t -> new ShopSummaryResponse(
                                 t.get(0,String.class),
                                 t.get(1,String.class),
                                 t.get(2,String.class),
@@ -150,7 +160,7 @@ public class ShopServiceImpl implements ShopService {
                 );
                 break;
             case NONE:
-                shopList.addAll(shopRepository.search(keywordForQuery).stream().map(t -> new ShopSummary(
+                shopList.addAll(shopRepository.search(keywordForQuery).stream().map(t -> new ShopSummaryResponse(
                                         t.get(0,String.class),
                                         t.get(1,String.class),
                                         t.get(2,String.class),
@@ -164,14 +174,14 @@ public class ShopServiceImpl implements ShopService {
         }
 
         //거리 계산
-        for(ShopSummary shop:shopList){
+        for(ShopSummaryResponse shop:shopList){
             shop.setDist(shopRequest.getX(), shopRequest.getY());
         }
 
         //정확도 순으로 정렬(거리순은 2차 정렬)
-        Collections.sort(shopList,new Comparator<ShopSummary>() {
+        Collections.sort(shopList,new Comparator<ShopSummaryResponse>() {
             @Override
-            public int compare(ShopSummary s1, ShopSummary s2) {
+            public int compare(ShopSummaryResponse s1, ShopSummaryResponse s2) {
                 if(s1.getScore()<s2.getScore()) return 1;
                 else if(s1.getScore()==s2.getScore())
                     return s1.compareTo(s2);

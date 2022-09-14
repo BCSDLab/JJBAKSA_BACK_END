@@ -1,9 +1,9 @@
 package com.jjbacsa.jjbacsabackend.shop.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopResponse;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopSummary;
+import com.jjbacsa.jjbacsabackend.shop.dto.request.ShopRequest;
+import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
+import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
 import com.jjbacsa.jjbacsabackend.shop.service.ShopService;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +29,8 @@ public class ShopController {
     }
 
     @PostMapping(value="/shop/search")
-    public ResponseEntity<Page<ShopSummary>> searchShop(@RequestBody ShopRequest shopRequest,
-                                                        @RequestParam @PageableDefault(page =0,size=10) Pageable pageable){
+    public ResponseEntity<Page<ShopSummaryResponse>> searchShop(@RequestBody ShopRequest shopRequest,
+                                                                @RequestParam @PageableDefault(page =0,size=10) Pageable pageable){
         return new ResponseEntity<>(shopService.searchShop(shopRequest, pageable),HttpStatus.OK);
     }
 
