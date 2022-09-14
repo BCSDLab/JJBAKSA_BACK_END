@@ -7,5 +7,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 public interface UserService {
     UserResponse register(UserRequest request) throws Exception;
     Token login(UserRequest request) throws Exception;
+    void logout() throws Exception;
+    Token refresh() throws Exception;
     UserResponse getLoginUser() throws Exception;
 }

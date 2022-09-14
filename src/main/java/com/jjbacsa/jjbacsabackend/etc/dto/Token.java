@@ -11,4 +11,5 @@ import lombok.Getter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Token {
     private String accessToken;
+    private String refreshToken;
 }
