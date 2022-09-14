@@ -28,8 +28,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional
 public class ImageServiceImpl implements ImageService {
-    @Value("${image.path}")
-    private String path;
+    @Value("${image.review.path}")
+    private String reviewPath;
     private final ImageRepository imageRepository;
     private final ReviewImageRepository reviewImageRepository;
 
