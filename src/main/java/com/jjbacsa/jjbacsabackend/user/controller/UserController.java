@@ -26,7 +26,7 @@ public class UserController {
 
     @PostMapping(value = "/user/login")
     public ResponseEntity<Token> login(@RequestBody UserRequest request, HttpServletResponse httpResponse) throws Exception{
-        return new ResponseEntity<>(userService.login(request, httpResponse), HttpStatus.OK);
+        return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
     //@Auth
@@ -38,13 +38,13 @@ public class UserController {
     }
 
     @DeleteMapping(value = "/user/logout")
-    public ResponseEntity<String> logout(HttpServletResponse httpResponse)throws Exception{
-        userService.logout(httpResponse);
+    public ResponseEntity<String> logout()throws Exception{
+        userService.logout();
         return new ResponseEntity<>("success", HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/user/refresh")
-    public ResponseEntity<Token> refresh(@CookieValue(value="refresh")String token, HttpServletResponse httpResponse) throws Exception{
-        return new ResponseEntity<>(userService.refresh(token, httpResponse), HttpStatus.OK);
+    public ResponseEntity<Token> refresh() throws Exception{
+        return new ResponseEntity<>(userService.refresh(), HttpStatus.OK);
     }
 }

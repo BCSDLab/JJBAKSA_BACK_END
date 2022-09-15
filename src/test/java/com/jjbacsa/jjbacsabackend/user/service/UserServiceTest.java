@@ -14,16 +14,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.TestConstructor;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.servlet.http.HttpServletResponse;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
@@ -34,6 +35,7 @@ public class UserServiceTest {
     private final UserService userService;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final MockMvc mockMvc;
 
     private UserRequest request;
     private UserRequest loginRequest;
@@ -62,39 +64,36 @@ public class UserServiceTest {
     @DisplayName("로그인")
     @Test
     void login() throws Exception{
-        MockHttpServletResponse response = new MockHttpServletResponse();
         userService.register(loginRequest);
 
         UserRequest loginInfo = new UserRequest("", loginRequest.getPassword(), "", "");
         //아이디 틀린 경우
         assertThrows(Exception.class, () ->
-                userService.login(loginInfo, response));
+                userService.login(loginInfo));
 
         loginInfo.setAccount(loginRequest.getAccount());
         loginInfo.setPassword("");
         //비밀번호 틀린 경우
         assertThrows(Exception.class, () ->
-                userService.login(loginInfo, response));
+                userService.login(loginInfo));
 
         loginInfo.setPassword(loginRequest.getPassword());
-        Token token = userService.login(loginInfo, response);
+        Token token = userService.login(loginInfo);
 
         //토큰 타입 불일치
         assertThrows(Exception.class, () ->
                 jwtUtil.isValid("Bearer " + token.getAccessToken(), TokenType.REFRESH));
         assertThrows(Exception.class, () ->
-                jwtUtil.isValid("Bearer " + response.getCookie("refresh").getValue(), TokenType.ACCESS));
+                jwtUtil.isValid("Bearer " + token.getRefreshToken(), TokenType.ACCESS));
 
         assertEquals(jwtUtil.isValid("Bearer " + token.getAccessToken(), TokenType.ACCESS), true);
         assertEquals(
                 jwtUtil.getPayloadsFromJwt(token.getAccessToken()).get("account"),
                 loginRequest.getAccount());
-
-        assertEquals(jwtUtil.isValid(
-                "Bearer " + response.getCookie("refresh").getValue(), TokenType.REFRESH), true);
+        assertEquals(jwtUtil.isValid("Bearer " + token.getRefreshToken(), TokenType.REFRESH), true);
         assertEquals(
-                jwtUtil.getPayloadsFromJwt(response.getCookie("refresh").getValue()).get("account"),
-                        loginRequest.getAccount());
+                jwtUtil.getPayloadsFromJwt(token.getRefreshToken()).get("account"),
+                loginRequest.getAccount());
     }
 
     @DisplayName("토큰 재발급")
@@ -103,35 +102,19 @@ public class UserServiceTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         userService.register(loginRequest);
 
-        Token token = userService.login(loginRequest, response);
-        Token refreshToken = userService.refresh(response.getCookie("refresh").getValue(), response);
+        Token token = userService.login(loginRequest);
 
-        //토큰 타입 불일치
-        assertThrows(Exception.class, () ->
-                jwtUtil.isValid("Bearer " + refreshToken.getAccessToken(), TokenType.REFRESH));
-        assertThrows(Exception.class, () ->
-                jwtUtil.isValid("Bearer " + response.getCookie("refresh").getValue(), TokenType.ACCESS));
-
-        assertEquals(jwtUtil.isValid("Bearer " + refreshToken.getAccessToken(), TokenType.ACCESS), true);
-        assertEquals(
-                jwtUtil.getPayloadsFromJwt(token.getAccessToken()).get("account"),
-                loginRequest.getAccount());
-
-        assertEquals(jwtUtil.isValid(
-                "Bearer " + response.getCookie("refresh").getValue(), TokenType.REFRESH), true);
-        assertEquals(
-                jwtUtil.getPayloadsFromJwt(response.getCookie("refresh").getValue()).get("account"),
-                loginRequest.getAccount());
+        mockMvc.perform(MockMvcRequestBuilders.get("/user/refresh")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token.getRefreshToken()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$..['accessToken']").exists())
+                        .andExpect(jsonPath("$..['refreshToken']").exists());
     }
 
     @DisplayName("로그아웃")
     @Test
     void logout() throws Exception{
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        userService.logout(response);
-
-        assertEquals(response.getCookie("refresh").getValue(), null);
-        assertEquals(response.getCookie("refresh").getMaxAge(), 0);
+        userService.logout();
     }
 
     //WithUserDetails에 존재하는 Account 값을 넣으면 됩니다.

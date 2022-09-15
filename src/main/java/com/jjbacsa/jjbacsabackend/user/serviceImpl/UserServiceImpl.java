@@ -17,9 +17,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +55,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Token login(UserRequest request, HttpServletResponse httpResponse) throws Exception{
+    public Token login(UserRequest request) throws Exception{
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
@@ -59,7 +63,7 @@ public class UserServiceImpl implements UserService {
             throw new Exception("User Not Founded");
         }
 
-        return getTokens(user, httpResponse);
+        return getTokens(user);
     }
 
     @Override
@@ -74,38 +78,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void logout(HttpServletResponse httpResponse) throws Exception{
-        Cookie cookie = new Cookie("refresh", null);
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
-
-        httpResponse.addCookie(cookie);
+    public void logout() throws Exception{
+        //TODO : 로그아웃 로직 추가
     }
 
     @Override
-    public Token refresh(String token, HttpServletResponse httpResponse) throws Exception{
-        //HttpOnly 쿠키는 공백을 담을 수 없고 클라이언트 접근 불가
-        String bearerToken = "Bearer " + token;
-        jwtUtil.isValid(bearerToken, TokenType.REFRESH);
-        String account = (String)jwtUtil.getPayloadsFromJwt(bearerToken).get("account");
+    public Token refresh() throws Exception{
+        HttpServletRequest request = ((ServletRequestAttributes) Objects
+                .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
+        String token = request.getHeader("Authorization");
+
+        jwtUtil.isValid(token, TokenType.REFRESH);
+        String account = (String)jwtUtil.getPayloadsFromJwt(token).get("account");
 
         UserEntity user = userRepository.findByAccount(account)
-                .orElseThrow(() -> new Exception("User Not Founded"));;
+                .orElseThrow(() -> new Exception("User Not Founded"));
 
-        return getTokens(user, httpResponse);
+        return getTokens(user);
     }
 
     //login, refresh 중복 로직
-    private Token getTokens(UserEntity user, HttpServletResponse httpResponse){
-        Cookie cookie = new Cookie("refresh",
+    private Token getTokens(UserEntity user){
+        return new Token(
+                jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS),
                 jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
-        cookie.setMaxAge(14*24*60*60);
-        cookie.setHttpOnly(true);
-        //cookie.setSecure(true); //local 테스트시 https 미사용으로 Secure 미부여
-        cookie.setPath("/");
-
-        httpResponse.addCookie(cookie);
-
-        return new Token(jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS));
     }
 }
