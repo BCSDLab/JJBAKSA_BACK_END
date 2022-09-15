@@ -100,7 +100,7 @@ public class UserServiceImpl implements UserService {
     //login, refresh 중복 로직
     private Token getTokens(UserEntity user){
         return new Token(
-                jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS),
-                jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                jwtUtil.generateToken(user.getId(), TokenType.REFRESH));
     }
 }

@@ -2,6 +2,8 @@ package com.jjbacsa.jjbacsabackend.etc.config;
 
 import com.jjbacsa.jjbacsabackend.etc.filter.JwtTokenFilter;
 import com.jjbacsa.jjbacsabackend.etc.security.JwtTokenProvider;
+import com.jjbacsa.jjbacsabackend.etc.security.OAuth2SuccessHandler;
+import com.jjbacsa.jjbacsabackend.user.serviceImpl.OAuth2UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +27,8 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final AccessDeniedHandler customAccessDeniedHandler;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final OAuth2UserServiceImpl oAuth2UserService;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder(){
@@ -58,6 +62,15 @@ public class SecurityConfig {
                 .exceptionHandling()
                 .accessDeniedHandler(customAccessDeniedHandler)
                 .authenticationEntryPoint(authenticationEntryPoint);
+
+        http.oauth2Login()
+                .authorizationEndpoint()
+                    .baseUri("/snslogin") // snslogin/{OAuthType}, Default baseUri : oauth2/authorization/{OAuthType}
+                    .and()
+                .userInfoEndpoint()
+                    .userService(oAuth2UserService)
+                    .and()
+                .successHandler(oAuth2SuccessHandler);
 
         return http.build();
     }
