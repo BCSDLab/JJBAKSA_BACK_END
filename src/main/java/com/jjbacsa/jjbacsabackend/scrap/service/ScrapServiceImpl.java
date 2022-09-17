@@ -62,6 +62,7 @@ public class ScrapServiceImpl implements ScrapService {
         return ScrapDirectoryMapper.INSTANCE.toScrapDirectoryResponse(directory);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Page<ScrapDirectoryResponse> getDirectories(String cursor, Integer pageSize) throws Exception {
 
@@ -113,6 +114,7 @@ public class ScrapServiceImpl implements ScrapService {
         return ScrapMapper.INSTANCE.toScrapResponse(scrap);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Page<ScrapResponse> getScraps(Long directoryId, Long cursor, Integer pageSize) throws Exception {
 
