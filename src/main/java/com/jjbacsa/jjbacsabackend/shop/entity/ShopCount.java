@@ -29,6 +29,10 @@ public class ShopCount {
     @Column(name = "rating_count", nullable = false)
     private Integer ratingCount = 0;
 
+    public void increaseTotalRating(Integer rate){ this.totalRating += rate;}
+
+    public void decreaseTotalRating(Integer rate){ this.totalRating -= rate;}
+
     public void increaseRatingCount() {
         ++this.ratingCount;
     }

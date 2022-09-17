@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 
@@ -51,22 +52,11 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewResponse modifyReview(ReviewModifyRequest reviewModifyRequest) throws Exception {
         UserEntity userEntity = verifyUser();
         ReviewEntity review = reviewRepository.findByReviewId(reviewModifyRequest.getId());
-
         if(review == null) throw new RuntimeException("존재하지 않는 리뷰입니다. - review_id:" + reviewModifyRequest.getId());
         if(!review.getWriter().equals(userEntity)) throw new RuntimeException("리뷰 작성자가 아닙니다.");
-        if (reviewModifyRequest.getContent() != null) review.setContent(reviewModifyRequest.getContent());  // not null 컬럼
+        if(reviewModifyRequest.getContent() != null) review.setContent(reviewModifyRequest.getContent());  // not null 컬럼
+        modifyReviewInfo(review, reviewModifyRequest);
 
-        if(reviewModifyRequest.getReviewImages() != null) {
-            review = (imageService.modifyReviewImages(reviewModifyRequest.getReviewImages(), review));
-        }
-        else{
-            if(review.getReviewImages() != null){
-                for(ReviewImageEntity image: review.getReviewImages()){
-                    reviewImageRepository.deleteById(image.getId());
-                }
-                review.getReviewImages().clear();
-            }
-        }
         return ReviewResponse.from(review);
     }
 
@@ -78,7 +68,12 @@ public class ReviewServiceImpl implements ReviewService {
         if(reviewEntity == null) throw new RuntimeException("존재하지 않는 리뷰입니다. review_id: "+reviewId);
         if(!reviewEntity.getWriter().equals(userEntity)) throw new RuntimeException("리뷰 작성자가 아닙니다.");
         reviewRepository.deleteById(reviewId);
+
+        // 리뷰 수, 별점 처리
         userEntity.getUserCount().decreaseReviewCount();
+        reviewEntity.getShop().getShopCount().decreaseTotalRating(reviewEntity.getRate());
+        reviewEntity.getShop().getShopCount().decreaseRatingCount();
+
         return ReviewDeleteResponse.from(reviewEntity);
     }
 
@@ -109,7 +104,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .writer(userEntity)
                 .shop(shopEntity)
                 .content(reviewRequest.getContent())
-                .isTemp(reviewRequest.getIsTemp())
+                .rate(reviewRequest.getRate())
                 .build();
 
         if(reviewRequest.getReviewImages() != null) {
@@ -121,6 +116,9 @@ public class ReviewServiceImpl implements ReviewService {
 
         // 리뷰 수 증가
         userEntity.getUserCount().increaseReviewCount();
+        // 상점 별점 증가
+        shopEntity.getShopCount().increaseTotalRating(reviewRequest.getRate());
+        shopEntity.getShopCount().increaseRatingCount();
 
         return reviewEntity;
     }
@@ -132,5 +130,26 @@ public class ReviewServiceImpl implements ReviewService {
     private ShopEntity verifyShop(Long shopId){
         return shopRepository.findById(shopId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 상점입니다."));
+    }
+
+    private void modifyReviewInfo(ReviewEntity review, ReviewModifyRequest reviewModifyRequest) throws IOException {
+        Integer curRate = review.getRate();
+        Integer modRate = reviewModifyRequest.getRate();
+
+        review.getShop().getShopCount().decreaseTotalRating(curRate);
+        review.getShop().getShopCount().increaseTotalRating(modRate);
+        review.setRate(modRate);
+
+        if(reviewModifyRequest.getReviewImages() != null) {
+            imageService.modifyReviewImages(reviewModifyRequest.getReviewImages(), review);
+        }
+        else{
+            if(review.getReviewImages() != null){
+                for(ReviewImageEntity image: review.getReviewImages()){
+                    reviewImageRepository.deleteById(image.getId());
+                }
+                review.getReviewImages().clear();
+            }
+        }
     }
 }

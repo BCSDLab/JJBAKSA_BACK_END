@@ -14,6 +14,7 @@ import com.jjbacsa.jjbacsabackend.review.serviceImpl.ReviewServiceImpl;
 import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserReviewResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
@@ -23,15 +24,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
+
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -95,7 +101,7 @@ public class ReviewServiceTest {
         assertThat(response)
                 .hasFieldOrPropertyWithValue("id", review.getId())
                 .hasFieldOrPropertyWithValue("content", review.getContent())
-                .hasFieldOrPropertyWithValue("isTemp", review.getIsTemp());
+                .hasFieldOrPropertyWithValue("rate", review.getRate());
         // 없는 리뷰에 대한 요청
         assertThrows(RuntimeException.class, ()-> reviewService.getReview(0L));
     }
@@ -195,7 +201,7 @@ public class ReviewServiceTest {
                 .writer(userEntity)
                 .shop(shopEntity)
                 .content(request.getContent())
-                .isTemp(request.getIsTemp())
+                .rate(request.getRate())
                 .build();
 
         reviewEntity.getWriter().getUserCount().increaseReviewCount();
@@ -204,10 +210,10 @@ public class ReviewServiceTest {
     }
 
     private ReviewRequest createReviewRequest(){
-        return new ReviewRequest(1L, "content1", 0, null);
+        return new ReviewRequest(1L, "content1", 3, null);
     }
     private ReviewModifyRequest createReviewModifyRequest(String content){
-        return new ReviewModifyRequest(1L, 1L, content, 0, null);
+        return new ReviewModifyRequest(1L, 1L, content, 3, null);
     }
     private void testLogin(UserEntity user) throws Exception {
 
