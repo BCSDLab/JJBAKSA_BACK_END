@@ -52,9 +52,9 @@ public class ReviewEntity extends BaseEntity {
     @Column(name = "content")
     private String content;
 
-    @Basic(optional = false)
-    @Column(name = "is_temp")
-    private int isTemp;
+    @Setter
+    @Column(name="rate")
+    private Integer rate;
 
     @OrderBy("id asc")
     @OneToMany(mappedBy = "review", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
