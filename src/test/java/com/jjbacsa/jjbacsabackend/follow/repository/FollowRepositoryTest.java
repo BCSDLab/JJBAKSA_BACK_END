@@ -1,18 +1,21 @@
 package com.jjbacsa.jjbacsabackend.follow.repository;
 
-import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.util.CursorUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
-import java.util.List;
+import javax.persistence.EntityManager;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +29,8 @@ class FollowRepositoryTest {
     private UserRepository userRepository;
     @Autowired
     private FollowRepository followRepository;
+    @Autowired
+    private EntityManager em;
 
     private static UserEntity user1;
     private static UserEntity user2;
@@ -40,7 +45,6 @@ class FollowRepositoryTest {
                 .password("password")
                 .email("test@google.com")
                 .nickname("testuser")
-                .oAuthType(OAuthType.NONE)
                 .userType(UserType.NORMAL)
                 .build();
 
@@ -77,6 +81,7 @@ class FollowRepositoryTest {
     }
 
     @Test
+    @DisplayName("사용자& 팔로워 기준으로 검색")
     void findByUserAndFollower() {
 
         Optional<FollowEntity> dbFollow = followRepository.findByUserAndFollower(follow.getUser(), follow.getFollower());
@@ -86,9 +91,32 @@ class FollowRepositoryTest {
     }
 
     @Test
-    void findAllByUser() {
+    @DisplayName("커서 기반 페이징 테스트")
+    void findAllByUserWithCursor() {
 
-        List<FollowEntity> follows = followRepository.findAllByUser(follow.getUser());
-        assertEquals(follows.size(), 2);
+        for (int i = 1; i <= 5; ++i) {
+
+            UserEntity follower = user1.toBuilder()
+                    .account("user" + i)
+                    .nickname("follower")
+                    .build();
+            follower = userRepository.save(follower);
+
+            FollowEntity follow = FollowEntity.builder()
+                    .user(user1)
+                    .follower(follower)
+                    .build();
+            followRepository.save(follow);
+        }
+
+        em.clear();
+
+
+        Page<FollowEntity> page1 = followRepository.findAllByUserWithCursor(user1, null, PageRequest.of(0, 10));
+        Page<FollowEntity> page2 = followRepository.findAllByUserWithCursor(user1, CursorUtil.getFollowerCursor(page1.getContent().get(3).getFollower()), PageRequest.of(0, 10));
+
+        assertEquals(7, page1.getContent().size());
+        assertEquals(3, page2.getContent().size());
+        assertEquals(page1.getContent().get(4), page2.getContent().get(0));
     }
 }

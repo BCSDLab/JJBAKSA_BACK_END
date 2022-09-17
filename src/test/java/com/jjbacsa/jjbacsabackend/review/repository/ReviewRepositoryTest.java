@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -35,8 +37,13 @@ class ReviewRepositoryTest {
     private static ShopEntity shop2;
     private static ReviewEntity review1_1;
     private static ReviewEntity review1_2;
+    private static ReviewEntity review1_3;
+    private static ReviewEntity review1_4;
     private static ReviewEntity review2_1;
     private static ReviewEntity review2_2;
+    private static ReviewEntity review2_3;
+    private static ReviewEntity review2_4;
+
 
     @BeforeAll
     static void init() {
@@ -46,7 +53,6 @@ class ReviewRepositoryTest {
                 .password("password")
                 .email("test@google.com")
                 .nickname("testuser")
-                .oAuthType(OAuthType.NONE)
                 .userType(UserType.NORMAL)
                 .build();
 
@@ -84,9 +90,18 @@ class ReviewRepositoryTest {
                 .build();
 
         review1_2 = review1_1.toBuilder()
-                .shop(dbShop2)
+                .shop(dbShop1)
                 .content("review1_2")
                 .build();
+        review1_3 = review1_1.toBuilder()
+                .shop(dbShop1)
+                .content("review1_3")
+                .build();
+        review1_4 = review1_1.toBuilder()
+                .shop(dbShop1)
+                .content("review1_4")
+                .build();
+
 
         review2_1 = review1_1.toBuilder()
                 .writer(dbUser2)
@@ -97,18 +112,31 @@ class ReviewRepositoryTest {
                 .shop(dbShop2)
                 .content("review2_2")
                 .build();
+        review2_3 = review2_1.toBuilder()
+                .shop(dbShop2)
+                .content("review2_3")
+                .build();
+        review2_4 = review2_1.toBuilder()
+                .shop(dbShop2)
+                .content("review2_4")
+                .build();
 
         reviewRepository.save(review1_1);
         reviewRepository.save(review1_2);
+        reviewRepository.save(review1_3);
+        reviewRepository.save(review1_4);
         reviewRepository.save(review2_1);
         reviewRepository.save(review2_2);
+        reviewRepository.save(review2_3);
+        reviewRepository.save(review2_4);
+
     }
 
     @Test
     void findAllByWriter() {
-
-        List<ReviewEntity> reviews1 = reviewRepository.findAllByWriter(review1_1.getWriter());
-        List<ReviewEntity> reviews2 = reviewRepository.findAllByWriter(review2_1.getWriter());
+        Pageable pageable =Pageable.ofSize(3);
+        Page<ReviewEntity> reviews1 = reviewRepository.findAllByWriterId(review1_1.getWriter().getId(), pageable);
+        Page<ReviewEntity> reviews2 = reviewRepository.findAllByWriterId(review2_1.getWriter().getId(), pageable);
 
         for (ReviewEntity review : reviews1)
             assertEquals(review.getWriter(), review1_2.getWriter());
@@ -118,14 +146,14 @@ class ReviewRepositoryTest {
 
     @Test
     void findAllByShop() {
-
-        List<ReviewEntity> reviews1 = reviewRepository.findAllByShop(review1_1.getShop());
-        List<ReviewEntity> reviews2 = reviewRepository.findAllByShop(review1_2.getShop());
+        Pageable pageable =Pageable.ofSize(3);
+        Page<ReviewEntity> reviews1 = reviewRepository.findAllByShopId(review1_1.getShop().getId(), pageable);
+        Page<ReviewEntity> reviews2 = reviewRepository.findAllByShopId(review2_1.getShop().getId(), pageable);
 
         for (ReviewEntity review : reviews1)
-            assertEquals(review.getShop(), review2_1.getShop());
+            assertEquals(review.getShop(), review1_1.getShop());
         for (ReviewEntity review : reviews2)
-            assertEquals(review.getShop(), review2_2.getShop());
+            assertEquals(review.getShop(), review2_1.getShop());
     }
 
     @Test

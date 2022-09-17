@@ -4,9 +4,10 @@ CREATE TABLE IF NOT EXISTS image
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
     is_deleted TINYINT   NOT NULL DEFAULT 0,
-    path       TEXT      NOT NULL
+    path       TEXT      NOT NULL,
+    original_name TEXT   NOT NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS user
 (
@@ -14,16 +15,15 @@ CREATE TABLE IF NOT EXISTS user
     created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
     is_deleted       TINYINT      NOT NULL DEFAULT 0,
-    account          VARCHAR(255) NOT NULL,
-    password         VARCHAR(255) NOT NULL,
+    account          VARCHAR(255),
+    password         VARCHAR(255),
     email            VARCHAR(255) NOT NULL,
     nickname         VARCHAR(255) NOT NULL,
     profile_image_id BIGINT,
-    oauth_type       VARCHAR(255) NOT NULL,
     user_type        VARCHAR(255) NOT NULL,
     FOREIGN KEY (profile_image_id) REFERENCES image (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS user_count
 (
@@ -32,7 +32,21 @@ CREATE TABLE IF NOT EXISTS user_count
     friend_count INT    NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
+
+CREATE TABLE IF NOT EXISTS oauth_info
+(
+    id         BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+    is_deleted TINYINT      NOT NULL DEFAULT 0,
+    api_key    VARCHAR(255) NOT NULL,
+    oauth_type VARCHAR(255) NOT NULL,
+    user_id    BIGINT,
+    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL
+) default character set utf8mb4
+  collate utf8mb4_bin;
+
 
 CREATE TABLE IF NOT EXISTS shop
 (
@@ -46,7 +60,7 @@ CREATE TABLE IF NOT EXISTS shop
     y             VARCHAR(255) NOT NULL,
     category_name VARCHAR(255) NOT NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS shop_count
 (
@@ -55,7 +69,7 @@ CREATE TABLE IF NOT EXISTS shop_count
     rating_count INT    NOT NULL DEFAULT 0,
     FOREIGN KEY (shop_id) REFERENCES shop (id) ON DELETE CASCADE
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS rating
 (
@@ -69,7 +83,7 @@ CREATE TABLE IF NOT EXISTS rating
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL,
     FOREIGN KEY (shop_id) REFERENCES shop (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS review
 (
@@ -79,12 +93,12 @@ CREATE TABLE IF NOT EXISTS review
     is_deleted TINYINT   NOT NULL DEFAULT 0,
     writer_id  BIGINT,
     shop_id    BIGINT,
-    content    TEXT,
+    content    TEXT     NOT NULL,
     is_temp    TINYINT   NOT NULL DEFAULT 0,
     FOREIGN KEY (writer_id) REFERENCES user (id) ON DELETE SET NULL,
     FOREIGN KEY (shop_id) REFERENCES shop (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS review_image
 (
@@ -97,7 +111,7 @@ CREATE TABLE IF NOT EXISTS review_image
     FOREIGN KEY (review_id) REFERENCES review (id) ON DELETE SET NULL,
     FOREIGN KEY (image_id) REFERENCES image (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS follow
 (
@@ -110,7 +124,7 @@ CREATE TABLE IF NOT EXISTS follow
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL,
     FOREIGN KEY (follower_id) REFERENCES user (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS follow_request
 (
@@ -123,7 +137,7 @@ CREATE TABLE IF NOT EXISTS follow_request
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL,
     FOREIGN KEY (follower_id) REFERENCES user (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS scrap_directory
 (
@@ -133,7 +147,7 @@ CREATE TABLE IF NOT EXISTS scrap_directory
     is_deleted TINYINT      NOT NULL DEFAULT 0,
     name       VARCHAR(255) NOT NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS scrap
 (
@@ -148,7 +162,7 @@ CREATE TABLE IF NOT EXISTS scrap
     FOREIGN KEY (shop_id) REFERENCES shop (id) ON DELETE SET NULL,
     FOREIGN KEY (directory_id) REFERENCES scrap_directory (id) ON DELETE SET NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;
 
 CREATE TABLE IF NOT EXISTS post
 (
@@ -160,4 +174,4 @@ CREATE TABLE IF NOT EXISTS post
     content    TEXT         NOT NULL,
     board_type VARCHAR(255) NOT NULL
 ) default character set utf8mb4
-  collate utf8mb4_general_ci;
+  collate utf8mb4_bin;

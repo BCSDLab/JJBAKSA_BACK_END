@@ -11,6 +11,9 @@ spring:
     properties:
       hibernate.format_sql: true
       default_batch_fetch_size: 100
+  servlet:
+      multipart:
+        location: "D:\\"
 
 flyway:
   enabled: true
@@ -21,3 +24,6 @@ flyway:
 
 server:
   port: 8080
+
+image:
+  path:

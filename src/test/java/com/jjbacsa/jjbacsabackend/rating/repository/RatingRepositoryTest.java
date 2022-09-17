@@ -43,7 +43,6 @@ class RatingRepositoryTest {
                 .password("password")
                 .email("test@google.com")
                 .nickname("testuser")
-                .oAuthType(OAuthType.NONE)
                 .userType(UserType.NORMAL)
                 .build();
 

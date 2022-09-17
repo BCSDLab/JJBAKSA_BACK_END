@@ -1,7 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
-import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
@@ -13,6 +12,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
@@ -28,6 +28,7 @@ public class UserEntity extends BaseEntity {
         @Override
         public UserEntity build() {
 
+            id(null);
             UserEntity user = new UserEntity(this);
             user.getUserCount().setUser(user);
 
@@ -36,11 +37,11 @@ public class UserEntity extends BaseEntity {
     }
 
     @Basic
-    @Column(name = "account", nullable = false)
+    @Column(name = "account")
     private String account;
 
     @Basic
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
     private String password;
 
     @Basic
@@ -56,14 +57,10 @@ public class UserEntity extends BaseEntity {
     private ImageEntity profileImage;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "oauth_type", nullable = false)
-    private OAuthType oAuthType;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
     private UserType userType;
 
-    @OneToOne(mappedBy = "user", optional = false, cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
     @Builder.Default
     private UserCount userCount = new UserCount();
 
@@ -85,5 +82,18 @@ public class UserEntity extends BaseEntity {
 
     public void decreaseFriendCount() {
         userCount.decreaseFriendCount();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserEntity)) return false;
+        UserEntity that = (UserEntity) o;
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getAccount(), that.getAccount()) && Objects.equals(getPassword(), that.getPassword()) && Objects.equals(getEmail(), that.getEmail()) && Objects.equals(getNickname(), that.getNickname());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getAccount(), getPassword(), getEmail(), getNickname());
     }
 }

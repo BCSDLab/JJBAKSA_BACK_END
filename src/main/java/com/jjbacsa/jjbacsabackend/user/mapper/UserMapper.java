@@ -13,6 +13,5 @@ public interface UserMapper {
 
     UserEntity toUserEntity(UserRequest userRequest);
 
-    @Mapping(source = "OAuthType", target = "oAuthType")
     UserResponse toUserResponse(UserEntity userEntity);
 }
