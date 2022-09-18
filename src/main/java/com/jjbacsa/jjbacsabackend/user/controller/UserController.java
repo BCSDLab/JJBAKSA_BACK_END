@@ -77,6 +77,10 @@ public class UserController {
         return new ResponseEntity<>(userService.refresh(), HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "유저 목록 검색",
+            notes = "keyword가 포함된 유저 닉네임 검색"
+    )
     @GetMapping("/users")
     public ResponseEntity<Page<UserResponse>> searchUsers(
             @RequestParam String keyword,
