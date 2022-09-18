@@ -25,6 +25,10 @@ public class UserCount {
     private Integer reviewCount = 0;
 
     @Basic
+    @Column(name = "scrap_count", nullable = false)
+    private Integer scrapCount = 0;
+
+    @Basic
     @Column(name = "friend_count", nullable = false)
     private Integer friendCount = 0;
 
@@ -34,6 +38,18 @@ public class UserCount {
 
     public void decreaseReviewCount() {
         --this.reviewCount;
+    }
+
+    public void addScrapCount(int val) {
+        scrapCount += val;
+    }
+
+    public void increaseScrapCount() {
+        ++this.scrapCount;
+    }
+
+    public void decreaseScrapCount() {
+        --this.scrapCount;
     }
 
     public void increaseFriendCount() {

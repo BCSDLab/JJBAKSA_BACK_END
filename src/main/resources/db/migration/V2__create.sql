@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS user_count
 (
     user_id      BIGINT NOT NULL PRIMARY KEY,
     review_count INT    NOT NULL DEFAULT 0,
+    scrap_count  INT    NOT NULL DEFAULT 0,
     friend_count INT    NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 ) default character set utf8mb4
@@ -145,7 +146,17 @@ CREATE TABLE IF NOT EXISTS scrap_directory
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
     is_deleted TINYINT      NOT NULL DEFAULT 0,
-    name       VARCHAR(255) NOT NULL
+    user_id    BIGINT,
+    name       VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE SET NULL
+) default character set utf8mb4
+  collate utf8mb4_bin;
+
+CREATE TABLE IF NOT EXISTS scrap_directory_count
+(
+    directory_id BIGINT NOT NULL PRIMARY KEY,
+    scrap_count  INT    NOT NULL DEFAULT 0,
+    FOREIGN KEY (directory_id) REFERENCES scrap_directory (id) ON DELETE CASCADE
 ) default character set utf8mb4
   collate utf8mb4_bin;
 
