@@ -23,6 +23,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -38,12 +39,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
-        if(userRepository.existsByAccount(request.getAccount())){
-            throw new Exception();
-        }
         //TODO : 이메일 인증 확인 절차 추가
 
         //TODO : Default Profile 등록하기
+        //TODO : Validation 추가하면서 수정
+        request.setNickname(UUID.randomUUID().toString());
+
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
                 .password(passwordEncoder.encode(request.getPassword()))
                 .userType(UserType.NORMAL)
@@ -51,6 +52,14 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    @Override
+    public String checkDuplicateAccount(String account) throws Exception{
+        if(userRepository.existsByAccount(account)){
+            throw new Exception();
+        }
+        return "OK";
     }
 
     @Override

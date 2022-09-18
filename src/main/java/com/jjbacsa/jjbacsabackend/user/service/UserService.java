@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface UserService {
     UserResponse register(UserRequest request) throws Exception;
+    String checkDuplicateAccount(String account) throws Exception;
     Token login(UserRequest request) throws Exception;
     void logout() throws Exception;
     Token refresh() throws Exception;

@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -29,6 +29,14 @@ public class UserController {
     @PostMapping(value = "/user")
     public ResponseEntity<UserResponse> register(@RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.register(request), HttpStatus.CREATED);
+    }
+
+    @ApiOperation(
+            value = "아이디 중복 확인",
+            notes = "아이디 중복을 확인합니다.")
+    @GetMapping(value = "/user/exists")
+    public ResponseEntity<String> checkDuplicateAccount(@RequestParam String account) throws Exception {
+        return new ResponseEntity<>(userService.checkDuplicateAccount(account), HttpStatus.OK);
     }
 
     @ApiOperation(
