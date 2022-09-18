@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponse> searchUsers(String keyword, String cursor, Pageable pageable) throws Exception{
-        return userRepository.findAllByUserByNameWithCursor(keyword, cursor, pageable).map(UserMapper.INSTANCE::toUserResponse);
+    public Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception{
+        return userRepository.findAllByUserByNameWithCursor(keyword, pageable, cursor).map(UserMapper.INSTANCE::toUserResponse);
     }
 }

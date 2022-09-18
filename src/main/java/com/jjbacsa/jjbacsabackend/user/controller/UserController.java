@@ -84,9 +84,8 @@ public class UserController {
     @GetMapping("/users")
     public ResponseEntity<Page<UserResponse>> searchUsers(
             @RequestParam String keyword,
-            @RequestParam(required = false) String cursor,
-            @PageableDefault(size = 20) Pageable pageable) throws Exception{
-        System.out.println(keyword);
-        return new ResponseEntity<>(userService.searchUsers(keyword, cursor, pageable), HttpStatus.OK);
+            @PageableDefault(size = 20) Pageable pageable,
+            @RequestParam(required = false) Long cursor) throws Exception{
+        return new ResponseEntity<>(userService.searchUsers(keyword, pageable, cursor), HttpStatus.OK);
     }
 }

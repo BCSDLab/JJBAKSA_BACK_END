@@ -13,5 +13,5 @@ public interface UserService {
     void logout() throws Exception;
     Token refresh() throws Exception;
     UserResponse getLoginUser() throws Exception;
-    Page<UserResponse> searchUsers(String keyword, String cursor, Pageable pageable) throws Exception;
+    Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception;
 }
