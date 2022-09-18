@@ -1,7 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
-import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
@@ -13,6 +12,8 @@ import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,9 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Objects;
 
 @Service
@@ -102,5 +101,10 @@ public class UserServiceImpl implements UserService {
         return new Token(
                 jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS),
                 jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
+    }
+
+    @Override
+    public Page<UserResponse> searchUsers(String keyword, String cursor, Pageable pageable) throws Exception{
+        return userRepository.findAllByUserByNameWithCursor(keyword, cursor, pageable).map(UserMapper.INSTANCE::toUserResponse);
     }
 }

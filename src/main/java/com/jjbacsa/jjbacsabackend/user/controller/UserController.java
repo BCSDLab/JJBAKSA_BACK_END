@@ -6,12 +6,16 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -63,5 +67,14 @@ public class UserController {
     @GetMapping("/user/refresh")
     public ResponseEntity<Token> refresh() throws Exception{
         return new ResponseEntity<>(userService.refresh(), HttpStatus.OK);
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<Page<UserResponse>> searchUsers(
+            @RequestParam String keyword,
+            @RequestParam(required = false) String cursor,
+            @PageableDefault(size = 20) Pageable pageable) throws Exception{
+        System.out.println(keyword);
+        return new ResponseEntity<>(userService.searchUsers(keyword, cursor, pageable), HttpStatus.OK);
     }
 }
