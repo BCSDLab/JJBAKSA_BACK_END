@@ -18,7 +18,7 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
     public DslUserRepositoryImpl(){ super(UserEntity.class); }
 
     @Override
-    public Page<UserEntity> findAllByUserByNameWithCursor(String keyword, Pageable pageable, Long cursor){
+    public Page<UserEntity> findAllByUserNameWithCursor(String keyword, Pageable pageable, Long cursor){
         List<UserEntity> users = from(f).select(f)
                 .join(f.userCount).fetchJoin()
                 .where(f.nickname.contains(keyword), f.id.gt(cursor == null ? 0 : cursor))
