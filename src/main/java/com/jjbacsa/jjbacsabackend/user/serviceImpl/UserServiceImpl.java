@@ -105,15 +105,33 @@ public class UserServiceImpl implements UserService {
         return getTokens(user);
     }
 
+    @Override
+    public Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception{
+        return userRepository.findAllByUserByNameWithCursor(keyword, pageable, cursor).map(UserMapper.INSTANCE::toUserResponse);
+    }
+
+    @Override
+    public UserResponse modifyUser(UserRequest request) throws Exception {
+        UserEntity user = ((CustomUserDetails)SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getUser();
+
+        if(request.getPassword() != null)
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        if(request.getNickname() != null)
+            user.setNickname(request.getNickname());
+        //TODO : email 변경시 인증된 이메일 확인
+
+        userRepository.save(user);
+        return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
     //login, refresh 중복 로직
     private Token getTokens(UserEntity user){
         return new Token(
                 jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS),
                 jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
-    }
-
-    @Override
-    public Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception{
-        return userRepository.findAllByUserByNameWithCursor(keyword, pageable, cursor).map(UserMapper.INSTANCE::toUserResponse);
     }
 }

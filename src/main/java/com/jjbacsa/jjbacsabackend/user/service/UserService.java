@@ -14,4 +14,5 @@ public interface UserService {
     Token refresh() throws Exception;
     UserResponse getLoginUser() throws Exception;
     Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception;
+    UserResponse modifyUser(UserRequest request) throws Exception;
 }

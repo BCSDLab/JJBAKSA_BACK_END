@@ -4,8 +4,8 @@ import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
-import io.swagger.annotations.*;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -87,5 +87,11 @@ public class UserController {
             @PageableDefault(size = 20) Pageable pageable,
             @RequestParam(required = false) Long cursor) throws Exception{
         return new ResponseEntity<>(userService.searchUsers(keyword, pageable, cursor), HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('NORMAL')")
+    @PatchMapping("/users/me")
+    public ResponseEntity<UserResponse> modifyUser(@RequestBody UserRequest request) throws Exception{
+        return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
     }
 }
