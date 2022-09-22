@@ -94,12 +94,12 @@ public class UserServiceImpl implements UserService {
     public Token refresh() throws Exception{
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
-        String token = request.getHeader("Authorization");
+        String token = request.getHeader("RefreshToken");
 
         jwtUtil.isValid(token, TokenType.REFRESH);
-        String account = (String)jwtUtil.getPayloadsFromJwt(token).get("account");
+        Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(token).get("id")));
 
-        UserEntity user = userRepository.findByAccount(account)
+        UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
         return getTokens(user);
