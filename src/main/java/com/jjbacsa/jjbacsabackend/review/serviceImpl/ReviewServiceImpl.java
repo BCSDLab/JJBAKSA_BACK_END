@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.review.serviceImpl;
 
+import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.image.service.ImageService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
@@ -13,6 +14,7 @@ import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
+import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
@@ -26,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.io.IOException;
 import java.util.List;
-
+import java.util.Optional;
 
 
 @Slf4j
@@ -39,6 +41,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ShopRepository shopRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final ReviewRepository reviewRepository;
+    private final FollowRepository followRepository;
 
     @Override
     @Transactional
@@ -96,6 +99,39 @@ public class ReviewServiceImpl implements ReviewService {
     public Page<ReviewResponse> searchWriterReviews(Long writerId, Pageable pageable){
         return reviewRepository.findAllByWriterId(writerId, pageable).map(ReviewMapper.INSTANCE::fromReviewEntity);
     }
+    // TODO : searchWriterReviews와 searchShopReviews 필요한지??
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReviewResponse> getMyReviews(Pageable pageable) throws Exception {
+        UserEntity user = verifyUser();
+        return reviewRepository.findAllByWriterId(user.getId(), pageable).map(ReviewMapper.INSTANCE::fromReviewEntity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReviewResponse> getFollowersReviews(Pageable pageable) throws Exception {
+        UserEntity user = verifyUser();
+        return reviewRepository.findAllFriendsReview(user.getId(), pageable).map(ReviewResponse::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReviewResponse> searchFollowerReviews(String followerAccount, Pageable pageable) throws Exception {
+        UserEntity user = verifyUser();
+        UserEntity follower = userRepository.findByAccount(followerAccount)
+                .orElseThrow(() -> new RuntimeException("Follower not found. account : "+followerAccount));
+        if(followRepository.existsByUserAndFollower(user, follower)){
+            return reviewRepository.findAllByFollowerId(follower.getId(), pageable).map(ReviewResponse::from);
+        }
+        else throw new RuntimeException("친구 관계가 아닙니다. followerId : "+follower.getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReviewResponse> searchFollowersShopReviews(Long shopId, Pageable pageable) throws Exception {
+        UserEntity user = verifyUser();
+        return reviewRepository.findAllFollowersReviewsByShopId(user.getId(), shopId, pageable).map(ReviewResponse::from);
+    }
 
     private ReviewEntity createReviewEntity(ReviewRequest reviewRequest) throws Exception {
         UserEntity userEntity = verifyUser();
@@ -136,9 +172,11 @@ public class ReviewServiceImpl implements ReviewService {
         Integer curRate = review.getRate();
         Integer modRate = reviewModifyRequest.getRate();
 
-        review.getShop().getShopCount().decreaseTotalRating(curRate);
-        review.getShop().getShopCount().increaseTotalRating(modRate);
-        review.setRate(modRate);
+        if(modRate != null) {
+            review.getShop().getShopCount().decreaseTotalRating(curRate);
+            review.getShop().getShopCount().increaseTotalRating(modRate);
+            review.setRate(modRate);
+        }
 
         if(reviewModifyRequest.getReviewImages() != null) {
             imageService.modifyReviewImages(reviewModifyRequest.getReviewImages(), review);
