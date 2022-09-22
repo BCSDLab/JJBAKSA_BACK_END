@@ -1,6 +1,8 @@
 package com.jjbacsa.jjbacsabackend.review.service;
 
 
+import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
+import com.jjbacsa.jjbacsabackend.follow.service.FollowServiceImpl;
 import com.jjbacsa.jjbacsabackend.image.service.ImageService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
@@ -56,12 +58,17 @@ public class ReviewServiceTest {
     private final ReviewServiceImpl reviewService;
     @MockBean
     private final UserServiceImpl userService;
+    @MockBean
+    private final FollowServiceImpl followService;
 
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
+
 
     private static UserEntity user;
     private static UserEntity user2;
+    private static UserEntity user3;
 
 
     /*
@@ -190,6 +197,81 @@ public class ReviewServiceTest {
         user2 = userRepository.getById(2L);
         testLogin(user2);
         assertThrows(RuntimeException.class, ()-> reviewService.deleteReview(2L));
+
+    }
+
+    @DisplayName("팔로잉한 친구의 id를 주면, 친구가 작성한 리뷰 페이지를 반환한다.")
+    @Test
+    void givenFollowerId_whenSearchFollowerReview_thenReturnReviewPage() throws Exception {
+        // Given
+        user = userRepository.getById(1L);
+        user2 = userRepository.getById(2L);
+        Pageable pageable = Pageable.ofSize(3);
+        // When
+        testLogin(user);
+        Page<ReviewResponse> reviews = reviewService.searchFollowerReviews(user2.getAccount(), pageable);
+        // Then
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(review -> review.getUserReviewResponse().getId().equals(user2.getId()));
+
+        // 팔로워가 아닌 경우
+        user3 = userRepository.getById(3L);
+        assertThrows(RuntimeException.class, () -> reviewService.searchFollowerReviews(user3.getAccount(), pageable));
+    }
+
+    @DisplayName("사용자의 모든 친구에 대해 리뷰 페이지를 반환한다.")
+    @Test
+    void givenUser_whenSearchFollowerReviews_thenReturnReviewPage() throws Exception {
+        // Given
+        user = userRepository.getById(1L);
+        Pageable pageable = Pageable.ofSize(3);
+        // When
+        testLogin(user);
+        Page<ReviewResponse> reviews = reviewService.getFollowersReviews(pageable);
+        // Then
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(
+                review -> followRepository.existsByUserAndFollower(user, userRepository.getById(review.getUserReviewResponse().getId()))
+        );
+    }
+    @DisplayName("사용자가 작성한 리뷰에 대해 리뷰 페이지를 반환한다.")
+    @Test
+    void givenNothing_whenGetMyReviews_thenReturnReviewPage() throws Exception {
+        // Given
+        user = userRepository.getById(1L);
+        Pageable pageable = Pageable.ofSize(3);
+        // When
+        testLogin(user);
+        Page<ReviewResponse> reviews = reviewService.getMyReviews(pageable);
+        // Then
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(
+                review -> review.getUserReviewResponse().getId().equals(user.getId())
+        );
+    }
+    @DisplayName("특정상점에서 내 친구의 리뷰를 조회하면, 친구가 작성한 리뷰 페이지를 반환한다.")
+    @Test
+    void givenShopId_whenSearchFollowersReviews_thenReturnReviewPage() throws Exception {
+        // Given
+        user = userRepository.getById(1L);
+        Long shopId = 1L;
+        Pageable pageable = Pageable.ofSize(3);
+        // When
+        testLogin(user);
+        Page<ReviewResponse> reviews = reviewService.searchFollowersShopReviews(shopId, pageable);
+        // Then
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(
+                review -> followRepository.existsByUserAndFollower(user, userRepository.getById(review.getUserReviewResponse().getId()))
+        );
+        assertThat(reviews).allMatch(
+                review -> review.getShopReviewResponse().getId().equals(shopId)
+        );
+
+        // 친구가 작성한 리뷰가 없는 경우
+        Long shopId2 = 2L;
+        Page<ReviewResponse> emptyReviews = reviewService.searchFollowersShopReviews(shopId2, pageable);
+        assertThat(emptyReviews).isEmpty();
 
     }
 
