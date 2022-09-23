@@ -7,6 +7,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -42,18 +43,22 @@ public class UserEntity extends BaseEntity {
 
     @Basic
     @Column(name = "password")
+    @Setter
     private String password;
 
     @Basic
     @Column(name = "email", nullable = false)
+    @Setter
     private String email;
 
     @Basic
     @Column(name = "nickname", nullable = false)
+    @Setter
     private String nickname;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "profile_image_id")
+    @Setter
     private ImageEntity profileImage;
 
     @Enumerated(EnumType.STRING)

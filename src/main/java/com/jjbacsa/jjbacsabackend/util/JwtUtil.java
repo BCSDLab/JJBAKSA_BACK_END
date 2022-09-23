@@ -22,13 +22,13 @@ public class JwtUtil {
 
     public static final short BEARER_LENGTH = 7;
 
-    public String generateToken(String account, TokenType type){
+    public String generateToken(Long id, TokenType type){
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("typ", "JWT");
         headers.put("alg", "HS256");
 
         Map<String, Object> payloads = new HashMap<String, Object>();
-        payloads.put("account", account);
+        payloads.put("id", id);
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
@@ -73,7 +73,7 @@ public class JwtUtil {
             throw new Exception("Token Invalid");
         }
 
-        if(claims.getSubject() == null || claims.get("account", String.class) == null){
+        if(claims.getSubject() == null || claims.get("id", Long.class) == null){
             throw new Exception("Token Invalid");
         }
 

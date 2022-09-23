@@ -1,7 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
-import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
@@ -13,6 +12,8 @@ import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,12 +39,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
-        if(userRepository.existsByAccount(request.getAccount())){
-            throw new Exception();
-        }
         //TODO : 이메일 인증 확인 절차 추가
 
         //TODO : Default Profile 등록하기
+        //TODO : Validation 추가하면서 수정
+        request.setNickname(UUID.randomUUID().toString());
+
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
                 .password(passwordEncoder.encode(request.getPassword()))
                 .userType(UserType.NORMAL)
@@ -52,6 +52,14 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    @Override
+    public String checkDuplicateAccount(String account) throws Exception{
+        if(userRepository.existsByAccount(account)){
+            throw new Exception();
+        }
+        return "OK";
     }
 
     @Override
@@ -86,21 +94,44 @@ public class UserServiceImpl implements UserService {
     public Token refresh() throws Exception{
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
-        String token = request.getHeader("Authorization");
+        String token = request.getHeader("RefreshToken");
 
         jwtUtil.isValid(token, TokenType.REFRESH);
-        String account = (String)jwtUtil.getPayloadsFromJwt(token).get("account");
+        Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(token).get("id")));
 
-        UserEntity user = userRepository.findByAccount(account)
+        UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
         return getTokens(user);
     }
 
+    @Override
+    public Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception{
+        return userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor).map(UserMapper.INSTANCE::toUserResponse);
+    }
+
+    @Override
+    public UserResponse modifyUser(UserRequest request) throws Exception {
+        UserEntity user = ((CustomUserDetails)SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getUser();
+
+        if(request.getPassword() != null)
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        if(request.getNickname() != null)
+            user.setNickname(request.getNickname());
+        //TODO : email 변경시 인증된 이메일 확인
+
+        userRepository.save(user);
+        return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
     //login, refresh 중복 로직
     private Token getTokens(UserEntity user){
         return new Token(
-                jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS),
-                jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                jwtUtil.generateToken(user.getId(), TokenType.REFRESH));
     }
 }
