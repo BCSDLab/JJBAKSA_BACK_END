@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -29,6 +30,7 @@ public class ScrapEntity extends BaseEntity {
     @JoinColumn(name = "shop_id")
     private ShopEntity shop;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "directory_id")
     private ScrapDirectoryEntity directory;

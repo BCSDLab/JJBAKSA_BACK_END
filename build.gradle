@@ -69,6 +69,9 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.mindrot/jbcrypt
 	implementation group: 'org.mindrot', name: 'jbcrypt', version: '0.4'
 
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-oauth2-client
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
 }
 
 def querydslDir = "$buildDir/generated/querydsl"

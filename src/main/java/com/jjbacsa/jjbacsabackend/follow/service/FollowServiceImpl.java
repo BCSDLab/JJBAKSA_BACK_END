@@ -1,5 +1,7 @@
 package com.jjbacsa.jjbacsabackend.follow.service;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequest;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowResponse;
@@ -16,7 +18,6 @@ import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,8 +40,9 @@ public class FollowServiceImpl implements FollowService {
         UserEntity follower = getUserByAccount(request.getUserAccount());
 
         checkValidFollowRequest(user, follower);
+        FollowRequestEntity followRequest = saveFollowRequest(user, follower);
 
-        return FollowRequestMapper.INSTANCE.toFollowRequestResponse(saveFollowRequest(user, follower));
+        return FollowRequestMapper.INSTANCE.toFollowRequestResponse(followRequest);
     }
 
     @Override
@@ -49,18 +51,13 @@ public class FollowServiceImpl implements FollowService {
         UserEntity user = getLoginUser();
         FollowRequestEntity followRequest = getFollowRequestById(requestId);
 
-        if (!followRequest.getFollower().equals(user))
-            throw new RuntimeException("Request not exists.");
-
-        followRequestRepository.delete(followRequest);
-        followRequest.setIsDeleted(1);
-
-        if (followRequest.getUser() == null || followRequest.getUser().getIsDeleted() == 1)
-            throw new RuntimeException("User not exists.");
-
+        checkRequestForMe(followRequest, user);
+        deleteFollowRequest(followRequest);
+        checkRequestSenderExists(followRequest);
         saveFollow(followRequest.getUser(), user);
+        FollowEntity follow = saveFollow(user, followRequest.getUser());
 
-        return FollowMapper.INSTANCE.toFollowResponse(saveFollow(user, followRequest.getUser()));
+        return FollowMapper.INSTANCE.toFollowResponse(follow);
     }
 
     @Override
@@ -69,11 +66,8 @@ public class FollowServiceImpl implements FollowService {
         UserEntity user = getLoginUser();
         FollowRequestEntity followRequest = getFollowRequestById(requestId);
 
-        if (!followRequest.getFollower().equals(user))
-            throw new RuntimeException("Request not exists.");
-
-        followRequestRepository.delete(followRequest);
-        followRequest.setIsDeleted(1);
+        checkRequestForMe(followRequest, user);
+        deleteFollowRequest(followRequest);
     }
 
     @Override
@@ -82,11 +76,8 @@ public class FollowServiceImpl implements FollowService {
         UserEntity user = getLoginUser();
         FollowRequestEntity followRequest = getFollowRequestById(requestId);
 
-        if (!followRequest.getUser().equals(user))
-            throw new RuntimeException("Request not exists.");
-
-        followRequestRepository.delete(followRequest);
-        followRequest.setIsDeleted(1);
+        checkRequestByMe(followRequest, user);
+        deleteFollowRequest(followRequest);
     }
 
     @Override
@@ -95,9 +86,7 @@ public class FollowServiceImpl implements FollowService {
         UserEntity user = getLoginUser();
         UserEntity follower = getUserByAccount(request.getUserAccount());
 
-        if (!followRepository.existsByUserAndFollower(user, follower))
-            throw new RuntimeException("Not followed.");
-
+        checkUserIsFollower(user, follower);
         deleteFollow(user, follower);
         deleteFollow(follower, user);
     }
@@ -129,34 +118,58 @@ public class FollowServiceImpl implements FollowService {
     private UserEntity getLoginUser() throws Exception {
 
         return userRepository.findById(userService.getLoginUser().getId())
-                .orElseThrow(() -> new RuntimeException("User not logged in."));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
     }
 
-    private UserEntity getUserByAccount(String account) {
+    private UserEntity getUserByAccount(String account) throws RequestInputException {
 
         return userRepository.findByAccount(account)
-                .orElseThrow(() -> new RuntimeException("User not found."));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
     }
 
-    private FollowRequestEntity getFollowRequestById(Long id) {
+    private FollowRequestEntity getFollowRequestById(Long id) throws RequestInputException {
 
         return followRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Request not exists."));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.FOLLOW_REQUEST_NOT_EXISTS_EXCEPTION));
     }
 
-    private void checkValidFollowRequest(UserEntity user, UserEntity follower) {
+    private void checkValidFollowRequest(UserEntity user, UserEntity follower) throws RequestInputException {
 
         if (user.equals(follower))
-            throw new RuntimeException("Not request to yourself.");
+            throw new RequestInputException(ErrorMessage.FOLLOW_REQUEST_MYSELF_EXCEPTION);
 
         if (followRequestRepository.existsByUserAndFollower(user, follower))
-            throw new RuntimeException("Request Duplicated.");
+            throw new RequestInputException(ErrorMessage.FOLLOW_REQUEST_DUPLICATION_EXCEPTION);
 
         if (followRequestRepository.existsByUserAndFollower(follower, user))
-            throw new RuntimeException("Already exists request.");
+            throw new RequestInputException(ErrorMessage.ALREADY_FOLLOW_REQUESTED_EXCEPTION);
 
         if (followRepository.existsByUserAndFollower(user, follower))
-            throw new RuntimeException("Already followed.");
+            throw new RequestInputException(ErrorMessage.ALREADY_FOLLOWED_EXCEPTION);
+    }
+
+    private void checkRequestForMe(FollowRequestEntity followRequest, UserEntity user) throws RequestInputException {
+
+        if (!followRequest.getFollower().equals(user))
+            throw new RequestInputException(ErrorMessage.FOLLOW_REQUEST_NOT_EXISTS_EXCEPTION);
+    }
+
+    private void checkRequestByMe(FollowRequestEntity followRequest, UserEntity user) {
+
+        if (!followRequest.getUser().equals(user))
+            throw new RequestInputException(ErrorMessage.FOLLOW_REQUEST_NOT_EXISTS_EXCEPTION);
+    }
+
+    private void checkRequestSenderExists(FollowRequestEntity followRequest) {
+
+        if (followRequest.getUser() == null || followRequest.getUser().getIsDeleted() == 1)
+            throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+    }
+
+    private void checkUserIsFollower(UserEntity user, UserEntity follower) {
+
+        if (!followRepository.existsByUserAndFollower(user, follower))
+            throw new RequestInputException(ErrorMessage.NOT_FOLLOWED_EXCEPTION);
     }
 
     private FollowRequestEntity saveFollowRequest(UserEntity user, UserEntity follower) {
@@ -180,6 +193,11 @@ public class FollowServiceImpl implements FollowService {
         return followRepository.save(follow);
     }
 
+    private void deleteFollowRequest(FollowRequestEntity followRequest) {
+
+        followRequestRepository.delete(followRequest);
+        followRequest.setIsDeleted(1);
+    }
 
     private void deleteFollow(UserEntity user, UserEntity follower) {
 
