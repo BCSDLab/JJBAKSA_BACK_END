@@ -35,4 +35,12 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
 
         return PageableExecutionUtils.getPage(users, pageable, countQuery::fetchCount);
     }
+
+    @Override
+    public UserEntity findUserByIdWithCount(Long id){
+        return from(f).select(f)
+                .join(f.userCount).fetchJoin()
+                .where(f.id.eq(id))
+                .fetchOne();
+    }
 }

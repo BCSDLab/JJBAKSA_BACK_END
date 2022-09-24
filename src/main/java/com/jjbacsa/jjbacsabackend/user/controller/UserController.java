@@ -89,6 +89,11 @@ public class UserController {
         return new ResponseEntity<>(userService.searchUsers(keyword, pageable, cursor), HttpStatus.OK);
     }
 
+    @GetMapping("/user/{id}")
+    public ResponseEntity<UserResponse> getUser(@PathVariable Long id) throws Exception {
+        return new ResponseEntity<>(userService.getUser(id), HttpStatus.OK);
+    }
+
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping("/users/me")
     public ResponseEntity<UserResponse> modifyUser(@RequestBody UserRequest request) throws Exception{
