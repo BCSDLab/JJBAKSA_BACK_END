@@ -1,0 +1,5 @@
+ALTER TABLE shop ADD address VARCHAR(255) NOT NULL;
+ALTER TABLE shop ADD phone VARCHAR(255);
+ALTER TABLE shop ADD business_day VARCHAR(1000);
+
+ALTER TABLE shop ADD FULLTEXT INDEX ft_index (place_name,address) WITH PARSER NGRAM;

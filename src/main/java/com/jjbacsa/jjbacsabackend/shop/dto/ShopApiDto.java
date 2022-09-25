@@ -9,7 +9,6 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-@Builder
 public class ShopApiDto {
     private String place_id;
     private String name;
@@ -18,5 +17,5 @@ public class ShopApiDto {
     private Geometry geometry;
 
     private String formatted_phone_number;
-    private Opening_hours opening_hours=new Opening_hours();
+    private Opening_hours opening_hours;
 }

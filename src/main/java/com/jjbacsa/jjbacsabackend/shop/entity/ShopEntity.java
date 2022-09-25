@@ -1,11 +1,13 @@
 package com.jjbacsa.jjbacsabackend.shop.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
 import com.jjbacsa.jjbacsabackend.shop.dto.ShopDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -85,4 +87,5 @@ public class ShopEntity extends BaseEntity {
     public void decreaseRatingCount() {
         shopCount.decreaseRatingCount();
     }
+
 }

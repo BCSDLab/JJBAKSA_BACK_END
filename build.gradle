@@ -41,10 +41,10 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+	implementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	testImplementation 'org.springframework.security:spring-security-test'
-
 
 	//querydsl
 	implementation 'com.querydsl:querydsl-jpa:5.0.0'
@@ -71,7 +71,6 @@ dependencies {
 
 	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-oauth2-client
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-
 }
 
 def querydslDir = "$buildDir/generated/querydsl"

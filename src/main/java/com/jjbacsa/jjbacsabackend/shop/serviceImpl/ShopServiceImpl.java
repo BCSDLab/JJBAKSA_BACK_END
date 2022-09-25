@@ -5,6 +5,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
+import com.jjbacsa.jjbacsabackend.etc.exception.CriticalException;
 import com.jjbacsa.jjbacsabackend.shop.dto.*;
 import com.jjbacsa.jjbacsabackend.shop.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
@@ -21,8 +24,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.netty.http.client.HttpClient;
@@ -41,21 +46,21 @@ public class ShopServiceImpl implements ShopService {
     private final StringRedisTemplate redisTemplate;
     private final String KEY="ranking";
 
-    private final List<String>cafe= Arrays.asList("카페","디저트","커피");
+    private final List<String>cafe= Arrays.asList("카페","디저트","커피","후식");
     private final List<String>restaurant=Arrays.asList("맛집","식당","레스토랑");
 
     private final ObjectMapper objectMapper;
 
-    @Value("${external.api.key}")
     private String API_KEY;
 
-    private ShopServiceImpl(WebClient.Builder webclientBuilder, ShopRepository shopRepository, ObjectMapper objectMapper,StringRedisTemplate redisTemplate) {
+    public ShopServiceImpl(ShopRepository shopRepository, ObjectMapper objectMapper,StringRedisTemplate redisTemplate,@Value("${external.api.key}") String key) {
 
         this.shopRepository=shopRepository;
         this.redisTemplate=redisTemplate;
         this.objectMapper=objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false);
-        this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        this.objectMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
+        this.API_KEY=key;
 
         DefaultUriBuilderFactory factory=new DefaultUriBuilderFactory(BASE_URL);
         factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.TEMPLATE_AND_VALUES);
@@ -66,13 +71,16 @@ public class ShopServiceImpl implements ShopService {
                 .doOnConnected(conn ->
                         conn.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS)));
 
-        this.webClient = webclientBuilder.uriBuilderFactory(factory).baseUrl(BASE_URL)
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
+        ClientHttpConnector clientHttpConnector=new ReactorClientHttpConnector(httpClient);
+
+        this.webClient = WebClient.builder().clientConnector(clientHttpConnector)
+                .uriBuilderFactory(factory).baseUrl(BASE_URL)
                 .build();
     }
 
+    @Transactional
     @Override
-    public ShopResponse getShop(String placeId) throws JsonProcessingException {
+    public ShopResponse getShop(String placeId){
 
         if(shopRepository.existsByPlaceId(placeId)){
             Optional<ShopEntity> shopEntity=shopRepository.findByPlaceId(placeId);
@@ -84,7 +92,16 @@ public class ShopServiceImpl implements ShopService {
             return shopResponse;
 
         }else{
-            ShopApiDto shopApiDto = getShopDetails(placeId);
+            ShopApiDto shopApiDto;
+
+            try{
+                shopApiDto=getShopDetails(placeId);
+            }catch(JsonProcessingException e){
+                throw new CriticalException(ErrorMessage.JSON_PROCESSING_EXCEPTION);
+            }catch(ApiException apiException){
+                throw apiException;
+            }
+
             ShopDto shopDto=ShopDto.ShopDto(shopApiDto);
             ShopEntity shopEntity=register(shopDto);
 
@@ -99,6 +116,7 @@ public class ShopServiceImpl implements ShopService {
 
     private ShopEntity register(ShopDto shopDto) {
         ShopEntity shopEntity= ShopMapper.INSTANCE.toEntity(shopDto);
+
         return shopRepository.save(shopEntity);
     }
 
@@ -116,11 +134,27 @@ public class ShopServiceImpl implements ShopService {
     }
 
     private ShopApiDto jsonToShop(String jsonStr) throws JsonProcessingException {
-        Map<String,Object> map=objectMapper.readValue(jsonStr, new TypeReference<Map<String, Object>>() {});
+
+        Map<String,Object> map=objectMapper.readValue(jsonStr, new TypeReference<HashMap<String, Object>>() {});
+
         String status=(String)map.get("status");
 
-        if(!status.equals("OK"))
-            throw new IllegalArgumentException("place_id가 유효하지 않습니다.");
+        if(!status.equals("OK")) {
+            switch(status){
+                case "ZERO_RESULTS":
+                    throw new ApiException(ErrorMessage.ZERO_RESULTS_EXCEPTION);
+                case "NOT_FOUND":
+                    throw new ApiException(ErrorMessage.NOT_FOUND_EXCEPTION);
+                case "INVALID_REQUEST":
+                    throw new ApiException(ErrorMessage.INVALID_REQUEST_EXCEPTION);
+                case "OVER_QUERY_LIMIT":
+                    throw new ApiException(ErrorMessage.OVER_QUERY_LIMIT_EXCEPTION);
+                case "REQUEST_DENIED":
+                    throw new ApiException(ErrorMessage.REQUEST_DENIEDE_EXCEPTION);
+                case "UNKNOWN_ERROR":
+                    throw new ApiException(ErrorMessage.UNDEFINED_EXCEPTION);
+            }
+        }
 
         String resultStr=objectMapper.writeValueAsString(map.get("result"));
         ShopApiDto shopApiDto=objectMapper.readValue(resultStr, ShopApiDto.class);
@@ -128,8 +162,7 @@ public class ShopServiceImpl implements ShopService {
         return shopApiDto;
     }
 
-    //DB내 상점검색
-    //정확도 -> 거리순
+    @Transactional(readOnly = true)
     @Override
     public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Pageable pageable) {
         //keyword Redis 저장
@@ -190,8 +223,9 @@ public class ShopServiceImpl implements ShopService {
             }
         });
 
+
         //pagination
-        int start=(int)pageable.getOffset();
+        int start=Math.min((int)pageable.getOffset(),shopList.size());
         int end=(start+pageable.getPageSize()>shopList.size()? shopList.size() : (start+ pageable.getPageSize()));
 
         return new PageImpl<>(shopList.subList(start,end),pageable,shopList.size());
@@ -226,7 +260,7 @@ public class ShopServiceImpl implements ShopService {
             resString+=" ";
         }
 
-        return resString;
+        return resString.substring(0,resString.length()-1);
     }
 
 }

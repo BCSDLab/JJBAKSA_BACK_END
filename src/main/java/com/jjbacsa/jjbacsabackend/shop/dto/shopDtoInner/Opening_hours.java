@@ -7,5 +7,5 @@ import java.util.List;
 
 @Data
 public class Opening_hours {
-    List<String> weekday_text=new ArrayList<>();
+    List<String> weekday_text;
 }

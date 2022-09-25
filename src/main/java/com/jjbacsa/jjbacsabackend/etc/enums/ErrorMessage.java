@@ -13,6 +13,12 @@ public enum ErrorMessage {
     ALREADY_FOLLOW_REQUESTED_EXCEPTION(7, "이미 팔로우를 요청받은 사용자입니다.", HttpStatus.BAD_REQUEST),
     ALREADY_FOLLOWED_EXCEPTION(8, "이미 팔로우된 사용자입니다.", HttpStatus.BAD_REQUEST),
     NOT_FOLLOWED_EXCEPTION(9, "팔로우가 아닙니다.", HttpStatus.BAD_REQUEST),
+    ZERO_RESULTS_EXCEPTION(10,"해당 가게에 대해 요청할 수 없습니다.",HttpStatus.FORBIDDEN),
+    NOT_FOUND_EXCEPTION(11,"정보를 가져올 수 없습니다.",HttpStatus.NOT_FOUND),
+    INVALID_REQUEST_EXCEPTION(12,"API 요쳥 형식이 올바르지 않습니다.",HttpStatus.BAD_REQUEST),
+    OVER_QUERY_LIMIT_EXCEPTION(13,"API 요청을 수행할 수 없습니다.",HttpStatus.FORBIDDEN),
+    REQUEST_DENIEDE_EXCEPTION(14,"API 요청이 거절됩니다.",HttpStatus.UNAUTHORIZED),
+    JSON_PROCESSING_EXCEPTION(15,"JSON 변환 과정에서 에러가 발생합니다.",HttpStatus.UNPROCESSABLE_ENTITY),
     ;
 
     Integer code;
