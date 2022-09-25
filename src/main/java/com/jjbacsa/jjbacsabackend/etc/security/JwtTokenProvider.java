@@ -16,8 +16,8 @@ public class JwtTokenProvider {
     private final UserDetailsService userDetailsService;
 
     public Authentication getAuthentication(String token) throws Exception {
-        String account = (String)jwtUtil.getPayloadsFromJwt(token).get("account");
-        UserDetails userDetails = userDetailsService.loadUserByUsername(account);
+        Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(token).get("id")));
+        UserDetails userDetails = userDetailsService.loadUserByUsername(String.valueOf(id));
 
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }

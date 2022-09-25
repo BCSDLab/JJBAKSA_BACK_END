@@ -98,12 +98,12 @@ public class UserServiceImpl implements UserService {
     public Token refresh() throws Exception{
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
-        String token = request.getHeader("Authorization");
+        String token = request.getHeader("RefreshToken");
 
         jwtUtil.isValid(token, TokenType.REFRESH);
-        String account = (String)jwtUtil.getPayloadsFromJwt(token).get("account");
+        Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(token).get("id")));
 
-        UserEntity user = userRepository.findByAccount(account)
+        UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
         return getTokens(user);
@@ -139,15 +139,15 @@ public class UserServiceImpl implements UserService {
 
     //login, refresh 중복 로직
     private Token getTokens(UserEntity user){
-        String existToken = redisTemplate.opsForValue().get(user.getId().toString());
+        String existToken = redisTemplate.opsForValue().get(user.getAccount());
 
         if(existToken == null) {
-            existToken = jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH);
-            redisTemplate.opsForValue().set(user.getId().toString(), existToken, 14, TimeUnit.DAYS);
+            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH);
+            redisTemplate.opsForValue().set(user.getAccount(), existToken, 14, TimeUnit.DAYS);
         }
 
         Token token = new Token(
-                jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS),
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
                 existToken);
 
         return token;

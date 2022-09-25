@@ -13,4 +13,6 @@ public interface OAuthInfoRepository extends JpaRepository<OAuthInfoEntity, Long
     Optional<OAuthInfoEntity> findByApiKeyAndOauthType(String apiKey, OAuthType oauthType);
 
     boolean existsByApiKeyAndOauthType(String apiKey, OAuthType oauthType);
+
+    OAuthInfoEntity findByApiKey(String apiKey);
 }
