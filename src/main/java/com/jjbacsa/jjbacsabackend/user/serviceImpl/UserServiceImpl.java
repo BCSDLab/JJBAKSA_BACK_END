@@ -75,7 +75,18 @@ public class UserServiceImpl implements UserService {
             throw new Exception("User Not Founded");
         }
 
-        return getTokens(user);
+        String existToken = redisTemplate.opsForValue().get(user.getAccount());
+
+        if(existToken == null) {
+            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH);
+            redisTemplate.opsForValue().set(user.getAccount(), existToken, 14, TimeUnit.DAYS);
+        }
+
+        Token token = new Token(
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                existToken);
+
+        return token;
     }
 
     @Override
@@ -106,7 +117,15 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new Exception("User Not Founded"));
 
-        return getTokens(user);
+        if(!redisTemplate.opsForValue().get(user.getAccount()).equals(token))
+            throw new Exception("RefreshToken Error");
+
+        String refreshToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH);
+        redisTemplate.opsForValue().set(user.getAccount(), refreshToken, 14, TimeUnit.DAYS);
+
+        return new Token(
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                refreshToken);
     }
 
     @Override
@@ -135,21 +154,5 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
-    }
-
-    //login, refresh 중복 로직
-    private Token getTokens(UserEntity user){
-        String existToken = redisTemplate.opsForValue().get(user.getAccount());
-
-        if(existToken == null) {
-            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH);
-            redisTemplate.opsForValue().set(user.getAccount(), existToken, 14, TimeUnit.DAYS);
-        }
-
-        Token token = new Token(
-                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
-                existToken);
-
-        return token;
     }
 }
