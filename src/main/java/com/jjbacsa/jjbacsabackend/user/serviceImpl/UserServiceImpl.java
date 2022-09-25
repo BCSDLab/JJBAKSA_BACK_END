@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
@@ -34,11 +35,9 @@ import java.util.concurrent.TimeUnit;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-
+    private final FollowRepository followRepository;
     private final JwtUtil jwtUtil;
-
     private final PasswordEncoder passwordEncoder;
-
     private final RedisTemplate<String, String> redisTemplate;
 
     //TODO : OAuth별 작동
@@ -141,7 +140,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getUser(Long id) throws Exception {
+    public UserResponse getAccountInfo(Long id) throws Exception {
         UserEntity user = userRepository.findUserByIdWithCount(id);
 
         if(user == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);

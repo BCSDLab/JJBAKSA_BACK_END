@@ -59,16 +59,6 @@ public class UserController {
     }
 
     @ApiOperation(
-            value = "로그아웃",
-            notes = "로그아웃합니다.",
-            authorizations = @Authorization(value = "Bearer + accessToken"))
-    @DeleteMapping(value = "/user/logout")
-    public ResponseEntity<String> logout() throws Exception{
-        userService.logout();
-        return new ResponseEntity<>("success", HttpStatus.NO_CONTENT);
-    }
-
-    @ApiOperation(
             value = "토큰 재발급",
             notes = "accessToken과 refreshToken을 재발급합니다.",
             authorizations = @Authorization(value = "Bearer + refreshToken"))
@@ -90,12 +80,12 @@ public class UserController {
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<UserResponse> getUser(@PathVariable Long id) throws Exception {
-        return new ResponseEntity<>(userService.getUser(id), HttpStatus.OK);
+    public ResponseEntity<UserResponse> getAccountInfo(@PathVariable Long id) throws Exception {
+        return new ResponseEntity<>(userService.getAccountInfo(id), HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('NORMAL')")
-    @PatchMapping("/users/me")
+    @PatchMapping("/user/me")
     public ResponseEntity<UserResponse> modifyUser(@RequestBody UserRequest request) throws Exception{
         return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
     }

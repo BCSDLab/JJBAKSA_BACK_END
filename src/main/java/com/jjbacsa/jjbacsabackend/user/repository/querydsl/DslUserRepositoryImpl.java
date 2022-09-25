@@ -2,7 +2,6 @@ package com.jjbacsa.jjbacsabackend.user.repository.querydsl;
 
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPQLQuery;
 import org.springframework.data.domain.Page;
