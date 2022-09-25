@@ -33,7 +33,6 @@ public class JwtUtil {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
-        //TODO: refresh token 생성 구분
         calendar.add(Calendar.HOUR_OF_DAY, type.getTokenRemainTime());
 
         Date exp = calendar.getTime();

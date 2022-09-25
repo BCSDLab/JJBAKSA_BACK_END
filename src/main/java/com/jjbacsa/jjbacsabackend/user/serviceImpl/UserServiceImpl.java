@@ -14,6 +14,7 @@ import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +36,8 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final RedisTemplate<String, String> redisTemplate;
 
     //TODO : OAuth별 작동
     @Override
@@ -135,8 +139,17 @@ public class UserServiceImpl implements UserService {
 
     //login, refresh 중복 로직
     private Token getTokens(UserEntity user){
-        return new Token(
+        String existToken = redisTemplate.opsForValue().get(user.getId().toString());
+
+        if(existToken == null) {
+            existToken = jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH);
+            redisTemplate.opsForValue().set(user.getId().toString(), existToken, 14, TimeUnit.DAYS);
+        }
+
+        Token token = new Token(
                 jwtUtil.generateToken(user.getAccount(), TokenType.ACCESS),
-                jwtUtil.generateToken(user.getAccount(), TokenType.REFRESH));
+                existToken);
+
+        return token;
     }
 }
