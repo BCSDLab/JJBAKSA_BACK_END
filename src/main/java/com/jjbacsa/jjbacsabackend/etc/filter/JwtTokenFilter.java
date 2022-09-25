@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.etc.filter;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
+import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.etc.security.JwtTokenProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,8 +34,11 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 // 정상 토큰이면 토큰을 통해 생성한 Authentication 객체를 SecurityContext에 저장
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
-        } catch (Exception e) {
-            request.setAttribute("exception", e.toString());
+        } catch (BaseException ne) {
+            request.setAttribute("exception", ne);
+        } catch (Exception exception) {
+            //TODO : slack noti
+            request.setAttribute("exception", exception);
         }
 
         filterChain.doFilter(request, response);

@@ -1,8 +1,10 @@
 package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
@@ -61,7 +63,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public String checkDuplicateAccount(String account) throws Exception{
         if(userRepository.existsByAccount(account)){
-            throw new Exception();
+            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
         return "OK";
     }
@@ -69,10 +71,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public Token login(UserRequest request) throws Exception{
         UserEntity user = userRepository.findByAccount(request.getAccount())
-                .orElseThrow(() -> new Exception("User Not Founded"));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new Exception("User Not Founded");
+            throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
         }
 
         String existToken = redisTemplate.opsForValue().get(user.getAccount());
@@ -115,10 +117,10 @@ public class UserServiceImpl implements UserService {
         Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(token).get("id")));
 
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new Exception("User Not Founded"));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
         if(!redisTemplate.opsForValue().get(user.getAccount()).equals(token))
-            throw new Exception("RefreshToken Error");
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
 
         String refreshToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH);
         redisTemplate.opsForValue().set(user.getAccount(), refreshToken, 14, TimeUnit.DAYS);
@@ -130,12 +132,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception {
-        return userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor).map(UserMapper.INSTANCE::toUserResponse);
+        Page<UserResponse> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor)
+                .map(UserMapper.INSTANCE::toUserResponse);
+
+        if(result == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+
+        return result;
     }
 
     @Override
     public UserResponse getUser(Long id) throws Exception {
-        return UserMapper.INSTANCE.toUserResponse(userRepository.findUserByIdWithCount(id));
+        UserEntity user = userRepository.findUserByIdWithCount(id);
+
+        if(user == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+
+        return UserMapper.INSTANCE.toUserResponse(user);
     }
 
     @Override
