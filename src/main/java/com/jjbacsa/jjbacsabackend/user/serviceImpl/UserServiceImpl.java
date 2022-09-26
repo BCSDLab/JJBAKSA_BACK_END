@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final FollowRepository followRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
@@ -118,15 +117,15 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
-        if(!redisTemplate.opsForValue().get(user.getAccount()).equals(token))
-            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
+        String existToken = redisTemplate.opsForValue().get(user.getAccount());
 
-        String refreshToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH);
-        redisTemplate.opsForValue().set(user.getAccount(), refreshToken, 14, TimeUnit.DAYS);
+        //null인 경우에는 다시 로그인 필요
+        if(existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH)))
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
 
         return new Token(
                 jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
-                refreshToken);
+                existToken);
     }
 
     @Override
