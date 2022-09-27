@@ -2,7 +2,9 @@ package com.jjbacsa.jjbacsabackend.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -33,7 +35,6 @@ public class JwtUtil {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
-        //TODO: refresh token 생성 구분
         calendar.add(Calendar.HOUR_OF_DAY, type.getTokenRemainTime());
 
         Date exp = calendar.getTime();
@@ -51,13 +52,13 @@ public class JwtUtil {
     //TODO: refresh token 추가 로직 적용
     public boolean isValid(String token, TokenType tokenType) throws Exception {
         if(token == null){
-            throw new Exception("Token is null");
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
         }
-        if(token.length() < BEARER_LENGTH + 1){
-            throw new Exception("Not Invalid Token");
+        if(token.length() < BEARER_LENGTH + 1) {
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
         }
         if(!token.startsWith("Bearer ")){
-            throw new Exception("Token is Not Bearer");
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
         }
 
         Claims claims = null;
@@ -68,17 +69,17 @@ public class JwtUtil {
                     .parseClaimsJws(token.substring(BEARER_LENGTH))
                     .getBody();
         } catch (ExpiredJwtException expiredJwtException){
-            throw expiredJwtException;
+            throw new RequestInputException(ErrorMessage.EXPIRED_TOKEN);
         }  catch (JwtException e){
-            throw new Exception("Token Invalid");
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
         }
 
         if(claims.getSubject() == null || claims.get("id", Long.class) == null){
-            throw new Exception("Token Invalid");
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
         }
 
         if(!claims.getSubject().equals(tokenType.isAccess()? accessToken:refreshToken)){
-            throw new Exception("Token Type Invalid");
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN_TYPE);
         }
 
         return true;
@@ -92,7 +93,7 @@ public class JwtUtil {
         try {
             map = new ObjectMapper().readValue(payloads, HashMap.class);
         } catch (JsonProcessingException e) {
-            throw new Exception("Token Invalid");
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
         }
         return map;
     }

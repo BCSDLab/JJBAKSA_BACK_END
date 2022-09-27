@@ -6,6 +6,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.CriticalException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +46,10 @@ public class GlobalExceptionHandler {
         else if (e instanceof BindException) {
             baseException = convertBindToBase((BindException) e);
         }
+        //Method Security 예외인 경우
+        else if (e instanceof AccessDeniedException){
+            baseException = convertDeniedToBase((AccessDeniedException) e);
+        }
         //정의되지 않은 예외인 경우
         else {
 
@@ -78,6 +83,12 @@ public class GlobalExceptionHandler {
         baseException.setErrorMessage(message.toString());
         baseException.setErrorTrace(e.getStackTrace()[0].toString());
 
+        return baseException;
+    }
+
+    private BaseException convertDeniedToBase(AccessDeniedException e) {
+        BaseException baseException = new BaseException(e.getClass().getSimpleName(), ErrorMessage.INVALID_TOKEN);
+        baseException.setErrorTrace(e.getStackTrace()[0].toString());
         return baseException;
     }
 
