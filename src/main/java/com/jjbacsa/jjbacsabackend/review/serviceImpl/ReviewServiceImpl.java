@@ -1,5 +1,7 @@
 package com.jjbacsa.jjbacsabackend.review.serviceImpl;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.image.service.ImageService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
@@ -52,8 +54,8 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewResponse modifyReview(ReviewRequest reviewRequest, Long reviewId) throws Exception {
         UserEntity userEntity = verifyUser();
         ReviewEntity review = reviewRepository.findByReviewId(reviewId);
-        if(review == null) throw new RuntimeException("존재하지 않는 리뷰입니다. - review_id:" + reviewId);
-        if(!review.getWriter().equals(userEntity)) throw new RuntimeException("리뷰 작성자가 아닙니다.");
+        if(review == null) throw new RequestInputException(ErrorMessage.REVIEW_NOT_EXISTS_EXCEPTION);
+        if(!review.getWriter().equals(userEntity)) throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_REVIEW);
         if(reviewRequest.getContent() != null) review.setContent(reviewRequest.getContent());  // not null 컬럼
         modifyReviewInfo(review, reviewRequest);
 
@@ -65,8 +67,8 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewDeleteResponse deleteReview(Long reviewId) throws Exception {
         UserEntity userEntity = verifyUser();
         ReviewEntity reviewEntity = reviewRepository.findByReviewId(reviewId);
-        if(reviewEntity == null) throw new RuntimeException("존재하지 않는 리뷰입니다. review_id: "+reviewId);
-        if(!reviewEntity.getWriter().equals(userEntity)) throw new RuntimeException("리뷰 작성자가 아닙니다.");
+        if(reviewEntity == null) throw new RequestInputException(ErrorMessage.REVIEW_NOT_EXISTS_EXCEPTION);
+        if(!reviewEntity.getWriter().equals(userEntity)) throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_REVIEW);
         reviewRepository.deleteById(reviewId);
 
         // 리뷰 수, 별점 처리
@@ -81,7 +83,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional(readOnly = true)
     public ReviewResponse getReview(Long reviewId) {
         ReviewEntity review = reviewRepository.findByReviewId(reviewId);
-        if(review == null) throw new RuntimeException("존재하지 않는 리뷰입니다. review_id: "+reviewId);
+        if(review == null) throw new RequestInputException(ErrorMessage.REVIEW_NOT_EXISTS_EXCEPTION);
         return ReviewResponse.from(review);
     }
 
@@ -116,11 +118,11 @@ public class ReviewServiceImpl implements ReviewService {
     public Page<ReviewResponse> searchFollowerReviews(String followerAccount, Pageable pageable) throws Exception {
         UserEntity user = verifyUser();
         UserEntity follower = userRepository.findByAccount(followerAccount)
-                .orElseThrow(() -> new RuntimeException("Follower not found. account : "+followerAccount));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
         if(followRepository.existsByUserAndFollower(user, follower)){
             return reviewRepository.findAllByFollowerId(follower.getId(), pageable).map(ReviewResponse::from);
         }
-        else throw new RuntimeException("친구 관계가 아닙니다. followerId : "+follower.getId());
+        else throw new RequestInputException(ErrorMessage.NOT_FOLLOWED_EXCEPTION);
     }
 
     @Override
@@ -158,11 +160,11 @@ public class ReviewServiceImpl implements ReviewService {
 
     private UserEntity verifyUser() throws Exception {
         return userRepository.findById(userService.getLoginUser().getId())
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자 입니다."));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
     }
     private ShopEntity verifyShop(Long shopId){
         return shopRepository.findById(shopId)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 상점입니다."));
+                .orElseThrow(() -> new  RequestInputException(ErrorMessage.SHOP_NOT_EXISTS_EXCEPTION));
     }
 
     private void modifyReviewInfo(ReviewEntity review, ReviewRequest reviewRequest) throws IOException {
