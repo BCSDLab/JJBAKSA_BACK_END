@@ -1,7 +1,6 @@
 package com.jjbacsa.jjbacsabackend.review.controller;
 
 import com.jjbacsa.jjbacsabackend.etc.annotations.Auth;
-import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
@@ -17,9 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 // TODO: pageable객체로 받는 부분 수정하기 - page와 size를 받아와 서비스에서 생성하도록 변경
 @RequiredArgsConstructor
@@ -35,8 +31,8 @@ public class ReviewController {
     }
     @Auth
     @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
-    @GetMapping(value = "/review/{review_id}")
-    public ResponseEntity<ReviewResponse> getReview(@PathVariable("review_id") Long reviewId){
+    @GetMapping(value = "/review/{review-id}")
+    public ResponseEntity<ReviewResponse> getReview(@PathVariable("review-id") Long reviewId){
         return new ResponseEntity<>(reviewService.getReview(reviewId), HttpStatus.OK);
     }
     @Auth
@@ -64,9 +60,9 @@ public class ReviewController {
     }
     @Auth
     @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
-    @PatchMapping(value="/review", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ReviewResponse> modifyReview(@ModelAttribute @RequestBody ReviewModifyRequest reviewModifyRequest) throws Exception {
-        return new ResponseEntity<>(reviewService.modifyReview(reviewModifyRequest), HttpStatus.OK);
+    @PatchMapping(value="/review/{review-id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ReviewResponse> modifyReview(@ModelAttribute @RequestBody ReviewRequest reviewRequest, @PathVariable(name = "review-id") Long reviewId) throws Exception {
+        return new ResponseEntity<>(reviewService.modifyReview(reviewRequest, reviewId), HttpStatus.OK);
     }
 
     @Auth

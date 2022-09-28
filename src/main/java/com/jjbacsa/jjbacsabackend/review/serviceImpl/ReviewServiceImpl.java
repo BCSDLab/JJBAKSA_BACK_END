@@ -2,7 +2,6 @@ package com.jjbacsa.jjbacsabackend.review.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.image.service.ImageService;
-import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
@@ -14,7 +13,6 @@ import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
-import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
@@ -28,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 
 @Slf4j
@@ -52,13 +49,13 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional
-    public ReviewResponse modifyReview(ReviewModifyRequest reviewModifyRequest) throws Exception {
+    public ReviewResponse modifyReview(ReviewRequest reviewRequest, Long reviewId) throws Exception {
         UserEntity userEntity = verifyUser();
-        ReviewEntity review = reviewRepository.findByReviewId(reviewModifyRequest.getId());
-        if(review == null) throw new RuntimeException("존재하지 않는 리뷰입니다. - review_id:" + reviewModifyRequest.getId());
+        ReviewEntity review = reviewRepository.findByReviewId(reviewId);
+        if(review == null) throw new RuntimeException("존재하지 않는 리뷰입니다. - review_id:" + reviewId);
         if(!review.getWriter().equals(userEntity)) throw new RuntimeException("리뷰 작성자가 아닙니다.");
-        if(reviewModifyRequest.getContent() != null) review.setContent(reviewModifyRequest.getContent());  // not null 컬럼
-        modifyReviewInfo(review, reviewModifyRequest);
+        if(reviewRequest.getContent() != null) review.setContent(reviewRequest.getContent());  // not null 컬럼
+        modifyReviewInfo(review, reviewRequest);
 
         return ReviewResponse.from(review);
     }
@@ -168,9 +165,9 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 상점입니다."));
     }
 
-    private void modifyReviewInfo(ReviewEntity review, ReviewModifyRequest reviewModifyRequest) throws IOException {
+    private void modifyReviewInfo(ReviewEntity review, ReviewRequest reviewRequest) throws IOException {
         Integer curRate = review.getRate();
-        Integer modRate = reviewModifyRequest.getRate();
+        Integer modRate = reviewRequest.getRate();
 
         if(modRate != null) {
             review.getShop().getShopCount().decreaseTotalRating(curRate);
@@ -178,8 +175,8 @@ public class ReviewServiceImpl implements ReviewService {
             review.setRate(modRate);
         }
 
-        if(reviewModifyRequest.getReviewImages() != null) {
-            imageService.modifyReviewImages(reviewModifyRequest.getReviewImages(), review);
+        if(reviewRequest.getReviewImages() != null) {
+            imageService.modifyReviewImages(reviewRequest.getReviewImages(), review);
         }
         else{
             if(review.getReviewImages() != null){

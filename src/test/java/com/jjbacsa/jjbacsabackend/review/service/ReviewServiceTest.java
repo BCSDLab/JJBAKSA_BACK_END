@@ -3,35 +3,23 @@ package com.jjbacsa.jjbacsabackend.review.service;
 
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.follow.service.FollowServiceImpl;
-import com.jjbacsa.jjbacsabackend.image.service.ImageService;
-import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
-import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.serviceImpl.ReviewServiceImpl;
-
-
-import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
-import com.jjbacsa.jjbacsabackend.user.dto.response.UserReviewResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
-import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -39,8 +27,6 @@ import org.springframework.test.context.jdbc.Sql;
 
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
-
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -154,12 +140,13 @@ public class ReviewServiceTest {
         // Given
         user = userRepository.getById(1L);
         String content = "new content";
-        ReviewEntity review = createReviewEntity(createReviewRequest());
-        ReviewModifyRequest dto = createReviewModifyRequest(content);
+        ReviewRequest dto = createReviewRequest();
+        ReviewEntity review = createReviewEntity(dto);
 
         // When
         testLogin(user);
-        ReviewResponse response = reviewService.modifyReview(dto);
+        dto.setContent(content);
+        ReviewResponse response = reviewService.modifyReview(dto, review.getId());
 
         // Then
         assertThat(review.getId()).isEqualTo(response.getId());
@@ -168,11 +155,11 @@ public class ReviewServiceTest {
         // 작성자가 아닌 경우
         user2 = userRepository.getById(2L);
         testLogin(user2);
-        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto));
+        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto, review.getId()));
 
         // 없는 리뷰에 대해
-        dto.setId(0L);
-        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto));
+        Long reviewId = 0L;
+        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto, reviewId));
 
 
     }
@@ -295,9 +282,6 @@ public class ReviewServiceTest {
 
     private ReviewRequest createReviewRequest(){
         return new ReviewRequest(1L, "content1", 3, null);
-    }
-    private ReviewModifyRequest createReviewModifyRequest(String content){
-        return new ReviewModifyRequest(1L, 1L, content, 3, null);
     }
     private void testLogin(UserEntity user) throws Exception {
 
