@@ -3,10 +3,7 @@ package com.jjbacsa.jjbacsabackend.user.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
@@ -21,4 +18,5 @@ public class UserResponse {
     //private Long profileImage;
     private OAuthType oAuthType;
     private UserType userType;
+    private UserCountResponse userCountResponse;
 }

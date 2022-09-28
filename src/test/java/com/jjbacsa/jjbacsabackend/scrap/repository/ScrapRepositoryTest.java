@@ -1,9 +1,6 @@
 package com.jjbacsa.jjbacsabackend.scrap.repository;
 
-import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
-import com.jjbacsa.jjbacsabackend.rating.entity.RatingEntity;
-import com.jjbacsa.jjbacsabackend.rating.repository.RatingRepository;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapDirectoryEntity;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapEntity;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
@@ -12,15 +9,9 @@ import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -81,21 +72,5 @@ class ScrapRepositoryTest {
 
         scrapRepository.save(scrap1);
         scrapRepository.save(scrap2);
-    }
-
-    @Test
-    void findAllByUserAndDirectory() {
-
-        List<ScrapEntity> scraps = scrapRepository.findAllByUserAndDirectory(scrap2.getUser(),scrap2.getDirectory());
-
-        assertEquals(scraps.get(0).getShop(),scrap2.getShop());
-    }
-
-    @Test
-    void findAllByUserAndDirectoryIsNull() {
-
-        List<ScrapEntity> scraps = scrapRepository.findAllByUserAndDirectoryIsNull(scrap1.getUser());
-
-        assertEquals(scraps.get(0).getShop(),scrap1.getShop());
     }
 }

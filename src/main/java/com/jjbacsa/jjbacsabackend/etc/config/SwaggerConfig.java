@@ -51,7 +51,12 @@ public class SwaggerConfig {
         AuthorizationScope authorizationScope = new AuthorizationScope("global", "accessEverything");
         AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
         authorizationScopes[0] = authorizationScope;
-        return List.of(new SecurityReference("Authorization", authorizationScopes));
+
+        List<SecurityReference> result = new ArrayList<>();
+        result.add(new SecurityReference("Authorization", authorizationScopes));
+        result.add(new SecurityReference("RefreshToken", authorizationScopes));
+
+        return result;
     }
 
     private List<SecurityScheme> apiKey() {
