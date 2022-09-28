@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+// TODO: pageable객체로 받는 부분 수정하기 - page와 size를 받아와 서비스에서 생성하도록 변경
 @RequiredArgsConstructor
 @RestController
 public class ReviewController {
@@ -37,6 +38,12 @@ public class ReviewController {
     @GetMapping(value = "/review/{review_id}")
     public ResponseEntity<ReviewResponse> getReview(@PathVariable("review_id") Long reviewId){
         return new ResponseEntity<>(reviewService.getReview(reviewId), HttpStatus.OK);
+    }
+    @Auth
+    @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @GetMapping(value = "/review")
+    public ResponseEntity<Page<ReviewResponse>> getMyReviews(@PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable) throws Exception {
+        return new ResponseEntity<>(reviewService.getMyReviews(pageable), HttpStatus.OK);
     }
 
     @GetMapping(value = "/review/search/shop")
@@ -62,4 +69,24 @@ public class ReviewController {
         return new ResponseEntity<>(reviewService.modifyReview(reviewModifyRequest), HttpStatus.OK);
     }
 
+    @Auth
+    @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @GetMapping(value="/review/search/follower")
+    public ResponseEntity<Page<ReviewResponse>> searchFollowerReview(@RequestParam("follower-account") String account, @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable) throws Exception {
+        return new ResponseEntity<>(reviewService.searchFollowerReviews(account, pageable), HttpStatus.OK);
+    }
+
+    @Auth
+    @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @GetMapping(value="/review/follower")
+    public ResponseEntity<Page<ReviewResponse>> getFollowersReviews(@PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable) throws Exception {
+        return new ResponseEntity<>(reviewService.getFollowersReviews(pageable), HttpStatus.OK);
+    }
+
+    @Auth
+    @ApiOperation(value = "", notes = "", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @GetMapping(value="/review/search/shop/{shop-id}/follower")
+    public ResponseEntity<Page<ReviewResponse>> searchFollowersShopReviews(@PathVariable("shop-id") Long shopId, @PageableDefault(size = 3, sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable) throws Exception {
+        return new ResponseEntity<>(reviewService.searchFollowersShopReviews(shopId, pageable), HttpStatus.OK);
+    }
 }

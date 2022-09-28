@@ -15,4 +15,9 @@ public interface ReviewService {
     ReviewResponse getReview(Long reviewId);
     Page<ReviewResponse> searchShopReviews(Long shopId, Pageable pageable);
     Page<ReviewResponse> searchWriterReviews(Long writerId, Pageable pageable);
+
+    Page<ReviewResponse> getMyReviews(Pageable pageable) throws Exception;
+    Page<ReviewResponse> getFollowersReviews(Pageable pageable) throws Exception;
+    Page<ReviewResponse> searchFollowerReviews(String followerAccount, Pageable pageable) throws Exception;
+    Page<ReviewResponse> searchFollowersShopReviews(Long shopId, Pageable pageable) throws Exception;
 }
