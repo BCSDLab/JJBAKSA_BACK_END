@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.shop.dto.request;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 import org.springframework.data.domain.Pageable;
 

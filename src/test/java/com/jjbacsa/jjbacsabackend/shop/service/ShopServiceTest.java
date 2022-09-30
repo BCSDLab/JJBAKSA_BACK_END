@@ -10,10 +10,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +32,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ShopServiceTest {
     @Autowired
     private ShopService shopService;
+
+    @Autowired
+    StringRedisTemplate redisTemplate;
+
+    private final String KEY="ranking";
 
     @Order(1)
     @DisplayName("상점정보 가져오기(성공)")
@@ -120,4 +129,12 @@ public class ShopServiceTest {
         assertThat(res.stream().collect(Collectors.toList()).size()).isNotEqualTo(0);
     }
 
+    @Order(6)
+    @DisplayName("인기검색어")
+    @Test
+    public void getTranding(){
+        //then
+        assertThat(shopService.getTrending().getTrendings().size()).isEqualTo(2);
+        redisTemplate.opsForZSet().removeRange(KEY,0,-1); //redis KEY=ranking 삭제
+    }
 }

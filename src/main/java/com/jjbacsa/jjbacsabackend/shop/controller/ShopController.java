@@ -3,6 +3,7 @@ package com.jjbacsa.jjbacsabackend.shop.controller;
 import com.jjbacsa.jjbacsabackend.shop.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
+import com.jjbacsa.jjbacsabackend.shop.dto.response.TrendingResponse;
 import com.jjbacsa.jjbacsabackend.shop.service.ShopService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -39,5 +40,10 @@ public class ShopController {
         return new ResponseEntity<>(shopService.searchShop(shopRequest, pageable),HttpStatus.OK);
     }
 
+    @GetMapping(value="/trending")
+    @ApiOperation(value="인기 검색어 조회",notes="현재 시점의 인기 검색어를 조회한다.")
+    public ResponseEntity<TrendingResponse> getTrending(){
+        return new ResponseEntity<>(shopService.getTrending(),HttpStatus.OK);
+    }
 
 }

@@ -12,6 +12,7 @@ import com.jjbacsa.jjbacsabackend.shop.dto.*;
 import com.jjbacsa.jjbacsabackend.shop.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
+import com.jjbacsa.jjbacsabackend.shop.dto.response.TrendingResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopCount;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.mapper.ShopMapper;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
@@ -166,7 +168,7 @@ public class ShopServiceImpl implements ShopService {
     @Override
     public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Pageable pageable) {
         //keyword Redis 저장
-        redisTemplate.opsForZSet().incrementScore(KEY,shopRequest.getKeyword(),1);
+        saveRedis(shopRequest.getKeyword());
 
         String keyword=shopRequest.getKeyword();
 
@@ -261,6 +263,32 @@ public class ShopServiceImpl implements ShopService {
         }
 
         return resString.substring(0,resString.length()-1);
+    }
+
+    private void saveRedis(String keyword){
+        List<String> rankingList=redisTemplate.opsForZSet().reverseRange(KEY,0,-1).stream().collect(Collectors.toList());
+
+        redisTemplate.opsForZSet().incrementScore(KEY,keyword,2);
+
+        for(String ranking:rankingList){
+            if(!ranking.equals(keyword)){
+                redisTemplate.opsForZSet().incrementScore(KEY,ranking,-1);
+            }
+        }
+
+        long size=redisTemplate.opsForZSet().zCard(KEY);
+        if(size>10){
+            long offset=size-10;
+            redisTemplate.opsForZSet().removeRange(KEY,0,offset-1);
+        }
+
+    }
+
+    @Override
+    public TrendingResponse getTrending() {
+        return TrendingResponse.builder().
+                trendings(redisTemplate.opsForZSet().reverseRange(KEY,0,-1).stream().collect(Collectors.toList()))
+                .build();
     }
 
 }

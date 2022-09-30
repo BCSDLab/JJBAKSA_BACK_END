@@ -1,5 +1,7 @@
 package com.jjbacsa.jjbacsabackend.shop.dto;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.exception.CriticalException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,12 +27,10 @@ public class ShopDto {
 
     public static ShopDto ShopDto(ShopApiDto shopApiDto) {
 
-        /** place_name, address, placeId, x, y, categoryName 없으면 예외처리 발생*/
-        //예외규정 다시 확인하기
         if (shopApiDto.getName() == null || shopApiDto.getGeometry() == null ||
             shopApiDto.getTypes().isEmpty() || shopApiDto.getPlace_id()==null ||
                 shopApiDto.getFormatted_address()==null )
-            throw new IllegalArgumentException("필수 속성이 없습니다.");
+            throw new CriticalException(ErrorMessage.REQUIRED_ATTRIBUTE_MISSING_EXCEPTION);
 
         if(shopApiDto.getOpening_hours()==null){
             return ShopDto.builder()
