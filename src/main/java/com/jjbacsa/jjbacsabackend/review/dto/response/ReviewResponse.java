@@ -22,7 +22,7 @@ import java.util.List;
 public class ReviewResponse {
     private Long id;
     private String content;
-    private int isTemp;
+    private Integer rate;
     private LocalDateTime createdAt;
     private List<ReviewImageResponse> reviewImages;
     private UserReviewResponse userReviewResponse;

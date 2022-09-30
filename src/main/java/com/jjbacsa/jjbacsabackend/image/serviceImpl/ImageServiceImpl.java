@@ -58,7 +58,6 @@ public class ImageServiceImpl implements ImageService {
         int origin_size = reviewEntity.getReviewImages().size();
         int new_size = images.size();
         String filePath;
-
         if(origin_size<= new_size) {   // 업데이트된 이미지가 기존과 같거나 많을 때
             for (int i = 0; i < origin_size; i++) {
                 MultipartFile image = images.get(i);
@@ -81,7 +80,7 @@ public class ImageServiceImpl implements ImageService {
                         .image(imageEntity)
                         .build();
                 reviewImageRepository.save(reviewImageEntity);
-                reviewEntity.getReviewImages().add(reviewImageEntity);
+                reviewEntity.addReviewImageEntity(reviewImageEntity);
             }
         }
         else{   // 업데이트 된 images가 기존보다 더 적을 때

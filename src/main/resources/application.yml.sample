@@ -5,6 +5,30 @@ spring:
     username: username
     password: password
 
+    security:
+      oauth2:
+        client:
+          registration:
+            kakao:
+              client-id:
+              client-secret:
+              scope:
+                - profile_nickname
+                - account_email
+                - profile_image
+              client-authentication-method: POST
+              authorization-grant-type: authorization_code
+              #redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
+              redirect-uri: "https://api.stage.jjbaksa.com/oauth2/code/kakao"
+              client-name: kakao
+
+          provider:
+            kakao:
+              authorization-uri: https://kauth.kakao.com/oauth/authorize
+              token-uri: https://kauth.kakao.com/oauth/token
+              user-info-uri: https://kapi.kakao.com/v2/user/me
+              user-name-attribute: id
+
   jpa:
     show-sql: true
     database-platform: org.hibernate.dialect.MySQL8Dialect
@@ -14,6 +38,11 @@ spring:
   servlet:
       multipart:
         location: "D:\\"
+
+  redis:
+    host: 127.0.0.1
+    port: 6379
+
 
 flyway:
   enabled: true
@@ -26,4 +55,36 @@ server:
   port: 8080
 
 image:
-  path:
+  review:
+    path:
+
+jwt:
+  key: Secret Key Random String
+  access: access
+  refresh: refresh
+
+external:
+  api:
+    key: asdfasddf
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=MySQL
+    username: sa
+    password:
+  flyway:
+    enabled: false

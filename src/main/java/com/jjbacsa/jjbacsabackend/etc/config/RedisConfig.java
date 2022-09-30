@@ -20,23 +20,15 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory(){
-        return new LettuceConnectionFactory(redisHost,redisPort);
-    }
-
-    @Bean
-    public RedisTemplate<Object,Object> redisTemplate(){
-        RedisTemplate<Object, Object> redisTemplate=new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory());
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new StringRedisSerializer());
-        return redisTemplate;
+        return new LettuceConnectionFactory(redisHost, redisPort);
     }
 
     @Bean
     public StringRedisTemplate stringRedisTemplate(){
-        StringRedisTemplate stringRedisTemplate=new StringRedisTemplate();
-        stringRedisTemplate.setKeySerializer(new StringRedisSerializer());
-        stringRedisTemplate.setValueSerializer(new StringRedisSerializer());
+        StringRedisTemplate stringRedisTemplate = new StringRedisTemplate();
+//        stringRedisTemplate.setKeySerializer(new StringRedisSerializer());
+//        stringRedisTemplate.setValueSerializer(new StringRedisSerializer());
+        stringRedisTemplate.setDefaultSerializer(new StringRedisSerializer());
         stringRedisTemplate.setConnectionFactory(redisConnectionFactory());
         return stringRedisTemplate;
     }

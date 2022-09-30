@@ -1,8 +1,11 @@
 package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
@@ -14,6 +17,7 @@ import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,16 +28,16 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-
     private final JwtUtil jwtUtil;
-
     private final PasswordEncoder passwordEncoder;
+    private final RedisTemplate<String, String> redisTemplate;
 
     //TODO : OAuth별 작동
     @Override
@@ -57,7 +61,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public String checkDuplicateAccount(String account) throws Exception{
         if(userRepository.existsByAccount(account)){
-            throw new Exception();
+            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
         return "OK";
     }
@@ -65,13 +69,24 @@ public class UserServiceImpl implements UserService {
     @Override
     public Token login(UserRequest request) throws Exception{
         UserEntity user = userRepository.findByAccount(request.getAccount())
-                .orElseThrow(() -> new Exception("User Not Founded"));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new Exception("User Not Founded");
+            throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
         }
 
-        return getTokens(user);
+        String existToken = redisTemplate.opsForValue().get(user.getAccount());
+
+        if(existToken == null) {
+            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH);
+            redisTemplate.opsForValue().set(user.getAccount(), existToken, 14, TimeUnit.DAYS);
+        }
+
+        Token token = new Token(
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                existToken);
+
+        return token;
     }
 
     @Override
@@ -100,14 +115,36 @@ public class UserServiceImpl implements UserService {
         Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(token).get("id")));
 
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new Exception("User Not Founded"));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
-        return getTokens(user);
+        String existToken = redisTemplate.opsForValue().get(user.getAccount());
+
+        //null인 경우에는 다시 로그인 필요
+        if(existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH)))
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
+
+        return new Token(
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                existToken);
     }
 
     @Override
-    public Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception{
-        return userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor).map(UserMapper.INSTANCE::toUserResponse);
+    public Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception {
+        Page<UserResponse> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor)
+                .map(UserMapper.INSTANCE::toUserResponse);
+
+        if(result == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+
+        return result;
+    }
+
+    @Override
+    public UserResponse getAccountInfo(Long id) throws Exception {
+        UserEntity user = userRepository.findUserByIdWithCount(id);
+
+        if(user == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+
+        return UserMapper.INSTANCE.toUserResponse(user);
     }
 
     @Override
@@ -126,12 +163,5 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
-    }
-
-    //login, refresh 중복 로직
-    private Token getTokens(UserEntity user){
-        return new Token(
-                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
-                jwtUtil.generateToken(user.getId(), TokenType.REFRESH));
     }
 }

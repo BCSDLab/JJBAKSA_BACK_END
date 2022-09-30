@@ -6,4 +6,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface DslUserRepository {
     Page<UserEntity> findAllByUserNameWithCursor(String keyword, Pageable pageable, Long cursor);
+    UserEntity findUserByIdWithCount(Long id);
 }

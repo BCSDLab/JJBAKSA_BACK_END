@@ -45,6 +45,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	testImplementation 'org.springframework.security:spring-security-test'
+	runtimeOnly 'com.h2database:h2:1.4.199'
 
 	//querydsl
 	implementation 'com.querydsl:querydsl-jpa:5.0.0'

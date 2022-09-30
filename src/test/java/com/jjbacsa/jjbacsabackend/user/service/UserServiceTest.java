@@ -22,6 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,10 +53,6 @@ public class UserServiceTest {
     void register() throws Exception{
         UserResponse response = userService.register(request);
 
-        //중복 요청 검사
-        assertThrows(Exception.class, () ->
-               userService.register(request));
-
         UserEntity testUser = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new Exception("Not Found"));
 
@@ -64,7 +62,7 @@ public class UserServiceTest {
     @DisplayName("로그인")
     @Test
     void login() throws Exception{
-        userService.register(loginRequest);
+        UserResponse userResponse = userService.register(loginRequest);
 
         UserRequest loginInfo = new UserRequest("", loginRequest.getPassword(), "", "");
         //아이디 틀린 경우
@@ -88,40 +86,28 @@ public class UserServiceTest {
 
         assertEquals(jwtUtil.isValid("Bearer " + token.getAccessToken(), TokenType.ACCESS), true);
         assertEquals(
-                jwtUtil.getPayloadsFromJwt(token.getAccessToken()).get("account"),
-                loginRequest.getAccount());
+                jwtUtil.getPayloadsFromJwt(token.getAccessToken()).get("id").toString(),
+                userResponse.getId().toString());
         assertEquals(jwtUtil.isValid("Bearer " + token.getRefreshToken(), TokenType.REFRESH), true);
-        assertEquals(
-                jwtUtil.getPayloadsFromJwt(token.getRefreshToken()).get("account"),
-                loginRequest.getAccount());
     }
 
-    @DisplayName("토큰 재발급")
-    @Test
-    void refresh() throws Exception {
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        userService.register(loginRequest);
-
-        Token token = userService.login(loginRequest);
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/user/refresh")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token.getRefreshToken()))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$..['accessToken']").exists())
-                        .andExpect(jsonPath("$..['refreshToken']").exists());
-    }
-
-    @DisplayName("로그아웃")
-    @Test
-    void logout() throws Exception{
-        userService.logout();
-    }
 
     //WithUserDetails에 존재하는 Account 값을 넣으면 됩니다.
     @DisplayName("로그인 유저 정보 확인")
     @Test
-    @WithUserDetails(value = "12345")
+    @WithUserDetails(value = "4")
     void getLoginUser() throws Exception {
         assertEquals(userService.getLoginUser().getAccount(), "12345");
+    }
+
+    @DisplayName("유저 수정")
+    @Test
+    @WithUserDetails(value = "4")
+    void modifyUser() throws Exception{
+        UserRequest request = new UserRequest();
+        request.setNickname("Test");
+
+        userService.modifyUser(request);
+        assertEquals(userService.getLoginUser().getNickname(), "Test");
     }
 }

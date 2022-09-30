@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.etc.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -20,11 +21,12 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
         response.setContentType("application/json");
         response.setCharacterEncoding("utf-8");
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        BaseException exception = (BaseException)request.getAttribute("exception");
+        response.setStatus(HttpStatus.OK.value());
 
         try(OutputStream os = response.getOutputStream()){
             ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.writeValue(os, new Exception("AccessDenied"));
+            objectMapper.writeValue(os, exception);
             os.flush();
         }
     }
