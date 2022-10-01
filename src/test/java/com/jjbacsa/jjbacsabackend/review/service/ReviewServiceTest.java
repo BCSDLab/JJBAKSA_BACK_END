@@ -105,10 +105,11 @@ public class ReviewServiceTest {
     void givenShopId_whenSearchingReviews_thenReturnsReviewPage(){
         // Given
         Long shopId = 1L;
-        Pageable pageable = Pageable.ofSize(3);
+        Integer page = 0;
+        Integer size = 3;
         // When
-        Page<ReviewResponse> reviews = reviewService.searchShopReviews(shopId, pageable);
-        Page<ReviewResponse> emptyReviews = reviewService.searchShopReviews(0L, pageable);
+        Page<ReviewResponse> reviews = reviewService.searchShopReviews(shopId, page, size);
+        Page<ReviewResponse> emptyReviews = reviewService.searchShopReviews(0L, page, size);
 
         // Then
         assertThat(reviews).isNotEmpty();
@@ -121,11 +122,12 @@ public class ReviewServiceTest {
     void givenUserId_whenSearchingReviews_thenReturnsReviewPage(){
         // Given
         Long writerId = 1L;
-        Pageable pageable = Pageable.ofSize(3);
+        Integer page = 0;
+        Integer size = 3;
 
         // When
-        Page<ReviewResponse> reviews = reviewService.searchWriterReviews(writerId, pageable);
-        Page<ReviewResponse> emptyReviews = reviewService.searchWriterReviews(0L, pageable);
+        Page<ReviewResponse> reviews = reviewService.searchWriterReviews(writerId, page, size);
+        Page<ReviewResponse> emptyReviews = reviewService.searchWriterReviews(0L, page, size);
 
         // Then
         assertThat(reviews).isNotEmpty();
@@ -193,17 +195,18 @@ public class ReviewServiceTest {
         // Given
         user = userRepository.getById(1L);
         user2 = userRepository.getById(2L);
-        Pageable pageable = Pageable.ofSize(3);
+        Integer page = 0;
+        Integer size = 3;
         // When
         testLogin(user);
-        Page<ReviewResponse> reviews = reviewService.searchFollowerReviews(user2.getAccount(), pageable);
+        Page<ReviewResponse> reviews = reviewService.searchFollowerReviews(user2.getAccount(), page, size);
         // Then
         assertThat(reviews).isNotEmpty();
         assertThat(reviews).allMatch(review -> review.getUserReviewResponse().getId().equals(user2.getId()));
 
         // 팔로워가 아닌 경우
         user3 = userRepository.getById(3L);
-        assertThrows(RuntimeException.class, () -> reviewService.searchFollowerReviews(user3.getAccount(), pageable));
+        assertThrows(RuntimeException.class, () -> reviewService.searchFollowerReviews(user3.getAccount(), page, size));
     }
 
     @DisplayName("사용자의 모든 친구에 대해 리뷰 페이지를 반환한다.")
@@ -211,10 +214,11 @@ public class ReviewServiceTest {
     void givenUser_whenSearchFollowerReviews_thenReturnReviewPage() throws Exception {
         // Given
         user = userRepository.getById(1L);
-        Pageable pageable = Pageable.ofSize(3);
+        Integer page = 0;
+        Integer size = 3;
         // When
         testLogin(user);
-        Page<ReviewResponse> reviews = reviewService.getFollowersReviews(pageable);
+        Page<ReviewResponse> reviews = reviewService.getFollowersReviews(page, size);
         // Then
         assertThat(reviews).isNotEmpty();
         assertThat(reviews).allMatch(
@@ -226,10 +230,11 @@ public class ReviewServiceTest {
     void givenNothing_whenGetMyReviews_thenReturnReviewPage() throws Exception {
         // Given
         user = userRepository.getById(1L);
-        Pageable pageable = Pageable.ofSize(3);
+        Integer page = 0;
+        Integer size = 3;
         // When
         testLogin(user);
-        Page<ReviewResponse> reviews = reviewService.getMyReviews(pageable);
+        Page<ReviewResponse> reviews = reviewService.getMyReviews(page, size);
         // Then
         assertThat(reviews).isNotEmpty();
         assertThat(reviews).allMatch(
@@ -242,10 +247,11 @@ public class ReviewServiceTest {
         // Given
         user = userRepository.getById(1L);
         Long shopId = 1L;
-        Pageable pageable = Pageable.ofSize(3);
+        Integer page = 0;
+        Integer size = 3;
         // When
         testLogin(user);
-        Page<ReviewResponse> reviews = reviewService.searchFollowersShopReviews(shopId, pageable);
+        Page<ReviewResponse> reviews = reviewService.searchFollowersShopReviews(shopId, page, size);
         // Then
         assertThat(reviews).isNotEmpty();
         assertThat(reviews).allMatch(
@@ -257,7 +263,7 @@ public class ReviewServiceTest {
 
         // 친구가 작성한 리뷰가 없는 경우
         Long shopId2 = 2L;
-        Page<ReviewResponse> emptyReviews = reviewService.searchFollowersShopReviews(shopId2, pageable);
+        Page<ReviewResponse> emptyReviews = reviewService.searchFollowersShopReviews(shopId2, page, size);
         assertThat(emptyReviews).isEmpty();
 
     }

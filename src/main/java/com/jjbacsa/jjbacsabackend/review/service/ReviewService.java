@@ -12,11 +12,11 @@ public interface ReviewService {
     ReviewResponse modifyReview(ReviewRequest reviewRequest, Long reviewId) throws Exception;
     ReviewDeleteResponse deleteReview(Long reviewId) throws Exception;
     ReviewResponse getReview(Long reviewId);
-    Page<ReviewResponse> searchShopReviews(Long shopId, Pageable pageable);
-    Page<ReviewResponse> searchWriterReviews(Long writerId, Pageable pageable);
+    Page<ReviewResponse> searchShopReviews(Long shopId, Integer page, Integer size);
+    Page<ReviewResponse> searchWriterReviews(Long writerId, Integer page, Integer size);
 
-    Page<ReviewResponse> getMyReviews(Pageable pageable) throws Exception;
-    Page<ReviewResponse> getFollowersReviews(Pageable pageable) throws Exception;
-    Page<ReviewResponse> searchFollowerReviews(String followerAccount, Pageable pageable) throws Exception;
-    Page<ReviewResponse> searchFollowersShopReviews(Long shopId, Pageable pageable) throws Exception;
+    Page<ReviewResponse> getMyReviews(Integer page, Integer size) throws Exception;
+    Page<ReviewResponse> getFollowersReviews(Integer page, Integer size) throws Exception;
+    Page<ReviewResponse> searchFollowerReviews(String followerAccount, Integer page, Integer size) throws Exception;
+    Page<ReviewResponse> searchFollowersShopReviews(Long shopId, Integer page, Integer size) throws Exception;
 }
