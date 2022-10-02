@@ -181,7 +181,7 @@ public class ScrapServiceImpl implements ScrapService {
 
     private ScrapDirectoryEntity getDirectoryOrNull(Long directoryId) {
 
-        if (directoryId == null)
+        if (directoryId == 0L)
             return null;
 
         return getDirectory(directoryId);
