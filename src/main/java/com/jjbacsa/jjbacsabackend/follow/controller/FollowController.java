@@ -9,17 +9,21 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.constraints.Min;
 
 @RequiredArgsConstructor
 @RestController
-//Todo: Pageable을 service에서 생성하기
+@Validated
 //Todo: cursor를 String으로 받지 않고 parameter로 받아서 생성하기
 public class FollowController {
 
@@ -45,9 +49,10 @@ public class FollowController {
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value = "/follow/requests/send")
     public ResponseEntity<Page<FollowRequestResponse>> getSendRequests(
-            @PageableDefault(size = 20) Pageable pageable) throws Exception {
+            @ApiParam("가져올 데이터 수(1~100)") @Min(0) @RequestParam(required = false, defaultValue = "0") Integer page,
+            @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "20") Integer pageSize) throws Exception {
 
-        return new ResponseEntity<>(service.getSendRequests(pageable), HttpStatus.OK);
+        return new ResponseEntity<>(service.getSendRequests(page, pageSize), HttpStatus.OK);
     }
 
     @ApiOperation(
@@ -57,9 +62,10 @@ public class FollowController {
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value = "/follow/requests/receive")
     public ResponseEntity<Page<FollowRequestResponse>> getReceiveRequests(
-            @PageableDefault(size = 20) Pageable pageable) throws Exception {
+            @ApiParam("가져올 데이터 수(1~100)") @Min(0) @RequestParam(required = false, defaultValue = "0") Integer page,
+            @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "20") Integer pageSize) throws Exception {
 
-        return new ResponseEntity<>(service.getReceiveRequests(pageable), HttpStatus.OK);
+        return new ResponseEntity<>(service.getReceiveRequests(page, pageSize), HttpStatus.OK);
     }
 
     @ApiOperation(
@@ -107,9 +113,9 @@ public class FollowController {
     @GetMapping(value = "/follow/followers")
     public ResponseEntity<Page<UserResponse>> getFollowers(
             @RequestParam(required = false) String cursor,
-            @PageableDefault(size = 20) Pageable pageable) throws Exception {
+            @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "20") Integer pageSize) throws Exception {
 
-        return new ResponseEntity<>(service.getFollowers(cursor, pageable), HttpStatus.OK);
+        return new ResponseEntity<>(service.getFollowers(cursor, pageSize), HttpStatus.OK);
     }
 
     @ApiOperation(

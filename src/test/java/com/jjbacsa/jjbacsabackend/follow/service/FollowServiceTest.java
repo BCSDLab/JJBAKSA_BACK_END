@@ -262,7 +262,7 @@ class FollowServiceTest {
         followService.request(getFollowRequest(user3.getAccount()));
 
         //조회
-        Page<FollowRequestResponse> requests = followService.getSendRequests(PageRequest.of(0, 20));
+        Page<FollowRequestResponse> requests = followService.getSendRequests(0, 20);
         assertEquals(user2.getId(), requests.getContent().get(0).getFollower().getId());
         assertEquals(user3.getId(), requests.getContent().get(1).getFollower().getId());
     }
@@ -277,7 +277,7 @@ class FollowServiceTest {
 
         //조회
         testLogin(user2);
-        Page<FollowRequestResponse> requests = followService.getReceiveRequests(PageRequest.of(0, 20));
+        Page<FollowRequestResponse> requests = followService.getReceiveRequests(0, 20);
         assertEquals(user1.getId(), requests.getContent().get(0).getUser().getId());
     }
 
@@ -303,8 +303,8 @@ class FollowServiceTest {
 
         //조회
         testLogin(user1);
-        Page<UserResponse> followers1 = followService.getFollowers(null, PageRequest.of(0, 20));
-        Page<UserResponse> followers2 = followService.getFollowers(CursorUtil.getFollowerCursor(user2), PageRequest.of(0, 20));
+        Page<UserResponse> followers1 = followService.getFollowers(null, 20);
+        Page<UserResponse> followers2 = followService.getFollowers(CursorUtil.getFollowerCursor(user2), 20);
 
         //then
         assertEquals(2, followers1.getContent().size());

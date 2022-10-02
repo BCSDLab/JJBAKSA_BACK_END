@@ -19,6 +19,7 @@ import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,25 +94,28 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public Page<FollowRequestResponse> getSendRequests(Pageable pageable) throws Exception {
+    public Page<FollowRequestResponse> getSendRequests(Integer page, Integer pageSize) throws Exception {
 
         UserEntity user = userService.getLoginUser();
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         return followRequestRepository.findAllByUser(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
     }
 
     @Override
-    public Page<FollowRequestResponse> getReceiveRequests(Pageable pageable) throws Exception {
+    public Page<FollowRequestResponse> getReceiveRequests(Integer page, Integer pageSize) throws Exception {
 
         UserEntity user = userService.getLoginUser();
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         return followRequestRepository.findAllByFollower(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
     }
 
     @Override
-    public Page<UserResponse> getFollowers(String cursor, Pageable pageable) throws Exception {
+    public Page<UserResponse> getFollowers(String cursor, Integer pageSize) throws Exception {
 
         UserEntity user = userService.getLoginUser();
+        Pageable pageable = PageRequest.of(0, pageSize);
 
         return followRepository.findAllByUserWithCursor(user, cursor, pageable).map(follow -> UserMapper.INSTANCE.toUserResponse(follow.getFollower()));
     }
