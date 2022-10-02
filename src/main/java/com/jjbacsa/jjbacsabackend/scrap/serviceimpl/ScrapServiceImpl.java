@@ -1,15 +1,5 @@
 package com.jjbacsa.jjbacsabackend.scrap.serviceimpl;
 
-import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequest;
-import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
-import com.jjbacsa.jjbacsabackend.follow.dto.FollowResponse;
-import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
-import com.jjbacsa.jjbacsabackend.follow.entity.FollowRequestEntity;
-import com.jjbacsa.jjbacsabackend.follow.mapper.FollowMapper;
-import com.jjbacsa.jjbacsabackend.follow.mapper.FollowRequestMapper;
-import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
-import com.jjbacsa.jjbacsabackend.follow.repository.FollowRequestRepository;
-import com.jjbacsa.jjbacsabackend.follow.service.FollowService;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryRequest;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryResponse;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapRequest;
@@ -20,13 +10,12 @@ import com.jjbacsa.jjbacsabackend.scrap.mapper.ScrapDirectoryMapper;
 import com.jjbacsa.jjbacsabackend.scrap.mapper.ScrapMapper;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapDirectoryRepository;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapRepository;
+import com.jjbacsa.jjbacsabackend.scrap.service.InternalScrapService;
 import com.jjbacsa.jjbacsabackend.scrap.service.ScrapService;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
-import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
+import com.jjbacsa.jjbacsabackend.shop.service.InternalShopService;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
-import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
-import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,18 +30,18 @@ import java.util.Objects;
 @Transactional
 public class ScrapServiceImpl implements ScrapService {
 
-    private final UserService userService;
+    private final InternalUserService userService;
+    private final InternalShopService shopService;
+    private final InternalScrapService scrapService;
 
-    private final UserRepository userRepository;
     private final ScrapDirectoryRepository scrapDirectoryRepository;
     private final ScrapRepository scrapRepository;
-    private final ShopRepository shopRepository;
 
 
     @Override
     public ScrapDirectoryResponse createDirectory(ScrapDirectoryRequest request) throws Exception {
 
-        UserEntity user = getLoginUser();
+        UserEntity user = userService.getLoginUser();
 
         checkDirectoryDuplication(user, request);
 
@@ -65,7 +54,7 @@ public class ScrapServiceImpl implements ScrapService {
     @Override
     public Page<ScrapDirectoryResponse> getDirectories(String cursor, Integer pageSize) throws Exception {
 
-        UserEntity user = getLoginUser();
+        UserEntity user = userService.getLoginUser();
         Pageable pageable = PageRequest.of(0, pageSize);
         Page<ScrapDirectoryEntity> directories = scrapDirectoryRepository.findAllByUserWithCursor(user, cursor, pageable);
 
@@ -75,8 +64,8 @@ public class ScrapServiceImpl implements ScrapService {
     @Override
     public ScrapDirectoryResponse updateDirectory(Long directoryId, ScrapDirectoryRequest request) throws Exception {
 
-        UserEntity user = getLoginUser();
-        ScrapDirectoryEntity directory = getDirectory(directoryId);
+        UserEntity user = userService.getLoginUser();
+        ScrapDirectoryEntity directory = scrapService.getScrapDirectoryById(directoryId);
 
         checkDirectoryOwner(user, directory);
         checkDirectoryDuplication(user, request);
@@ -89,8 +78,8 @@ public class ScrapServiceImpl implements ScrapService {
     @Override
     public void deleteDirectory(Long directoryId) throws Exception {
 
-        UserEntity user = getLoginUser();
-        ScrapDirectoryEntity directory = getDirectory(directoryId);
+        UserEntity user = userService.getLoginUser();
+        ScrapDirectoryEntity directory = scrapService.getScrapDirectoryById(directoryId);
 
         checkDirectoryOwner(user, directory);
 
@@ -100,8 +89,8 @@ public class ScrapServiceImpl implements ScrapService {
     @Override
     public ScrapResponse create(ScrapRequest request) throws Exception {
 
-        UserEntity user = getLoginUser();
-        ShopEntity shop = getShop(request.getShopId());
+        UserEntity user = userService.getLoginUser();
+        ShopEntity shop = shopService.getShopById(request.getShopId());
         ScrapDirectoryEntity directory = getDirectoryOrNull(request.getDirectoryId());
 
         if (directory != null)
@@ -117,7 +106,7 @@ public class ScrapServiceImpl implements ScrapService {
     @Override
     public Page<ScrapResponse> getScraps(Long directoryId, Long cursor, Integer pageSize) throws Exception {
 
-        UserEntity user = getLoginUser();
+        UserEntity user = userService.getLoginUser();
         ScrapDirectoryEntity directory = getDirectoryOrNull(directoryId);
 
         if (directory != null)
@@ -134,10 +123,10 @@ public class ScrapServiceImpl implements ScrapService {
             return;
 
         if (scrap.getDirectory() != null)
-            scrap.getDirectory().getScrapDirectoryCount().decreaseScrapCount();
+            scrapService.addScrapCount(scrap.getDirectory().getId(), -1);
 
         if (directory != null)
-            directory.getScrapDirectoryCount().increaseScrapCount();
+            scrapService.addScrapCount(directory.getId(), 1);
 
         scrap.setDirectory(directory);
     }
@@ -145,8 +134,8 @@ public class ScrapServiceImpl implements ScrapService {
     @Override
     public ScrapResponse move(Long scrapId, ScrapRequest request) throws Exception {
 
-        UserEntity user = getLoginUser();
-        ScrapEntity scrap = getScrap(scrapId);
+        UserEntity user = userService.getLoginUser();
+        ScrapEntity scrap = scrapService.getScrapById(scrapId);
         ScrapDirectoryEntity directory = getDirectoryOrNull(request.getDirectoryId());
 
         if (directory != null)
@@ -161,24 +150,12 @@ public class ScrapServiceImpl implements ScrapService {
     @Override
     public void delete(Long scrapId) throws Exception {
 
-        UserEntity user = getLoginUser();
-        ScrapEntity scrap = getScrap(scrapId);
+        UserEntity user = userService.getLoginUser();
+        ScrapEntity scrap = scrapService.getScrapById(scrapId);
 
         checkScrapOwner(user, scrap);
 
         deleteScrap(scrap);
-    }
-
-    private UserEntity getLoginUser() throws Exception {
-
-        return userRepository.findById(userService.getLoginUser().getId())
-                .orElseThrow(() -> new RuntimeException("User not logged in."));
-    }
-
-    private ScrapDirectoryEntity getDirectory(Long directoryId) {
-
-        return scrapDirectoryRepository.findById(directoryId)
-                .orElseThrow(() -> new RuntimeException("Directory Not Exists."));
     }
 
     private ScrapDirectoryEntity getDirectoryOrNull(Long directoryId) {
@@ -186,19 +163,7 @@ public class ScrapServiceImpl implements ScrapService {
         if (directoryId == 0L)
             return null;
 
-        return getDirectory(directoryId);
-    }
-
-    private ShopEntity getShop(Long shopId) {
-
-        return shopRepository.findById(shopId)
-                .orElseThrow(() -> new RuntimeException("Shop Not Exists."));
-    }
-
-    private ScrapEntity getScrap(Long scrapId) {
-
-        return scrapRepository.findById(scrapId)
-                .orElseThrow(() -> new RuntimeException("Scrap Not Exists."));
+        return scrapService.getScrapDirectoryById(directoryId);
     }
 
     private void checkDirectoryDuplication(UserEntity user, ScrapDirectoryRequest request) {
@@ -243,9 +208,9 @@ public class ScrapServiceImpl implements ScrapService {
                 .directory(directory)
                 .build();
 
-        user.getUserCount().increaseScrapCount();
+        userService.increaseScrapCount(user.getId());
         if (directory != null)
-            directory.getScrapDirectoryCount().increaseScrapCount();
+            scrapService.addScrapCount(directory.getId(), 1);
 
         return scrapRepository.save(scrap);
     }
@@ -253,17 +218,17 @@ public class ScrapServiceImpl implements ScrapService {
     private void deleteDirectory(ScrapDirectoryEntity directory) {
 
         int scrapCount = (int) scrapRepository.deleteAllByDirectory(directory);
-        directory.getUser().getUserCount().addScrapCount(-scrapCount);
-        directory.getScrapDirectoryCount().addScrapCount(-scrapCount);
+        userService.addScrapCount(directory.getUser().getId(), -scrapCount);
+        scrapService.addScrapCount(directory.getId(), -scrapCount);
         directory.setIsDeleted(1);
     }
 
     private void deleteScrap(ScrapEntity scrap) {
 
-        scrap.getUser().getUserCount().decreaseScrapCount();
+        userService.decreaseScrapCount(scrap.getUser().getId());
 
         if (scrap.getDirectory() != null)
-            scrap.getDirectory().getScrapDirectoryCount().decreaseScrapCount();
+            scrapService.addScrapCount(scrap.getDirectory().getId(), -1);
 
         scrap.setIsDeleted(1);
     }

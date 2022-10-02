@@ -56,8 +56,7 @@ public class InternalUserServiceImpl implements InternalUserService {
     @Transactional
     public void increaseScrapCount(Long userId) {
 
-        UserEntity user = getUserById(userId);
-        user.getUserCount().setScrapCount(userRepository.getScrapCount(userId) + 1);
+        addScrapCount(userId, 1);
     }
 
     @Override
@@ -80,9 +79,7 @@ public class InternalUserServiceImpl implements InternalUserService {
     @Transactional
     public void decreaseScrapCount(Long userId) {
 
-        UserEntity user = getUserById(userId);
-        user.getUserCount().setScrapCount(userRepository.getScrapCount(userId) - 1);
-
+        addScrapCount(userId, -1);
     }
 
     @Override
@@ -91,5 +88,12 @@ public class InternalUserServiceImpl implements InternalUserService {
 
         UserEntity user = getUserById(userId);
         user.getUserCount().setFriendCount(userRepository.getFriendCount(userId) - 1);
+    }
+
+    @Override
+    public void addScrapCount(Long userId, int delta) {
+
+        UserEntity user = getUserById(userId);
+        user.getUserCount().setScrapCount(userRepository.getScrapCount(userId) + delta);
     }
 }

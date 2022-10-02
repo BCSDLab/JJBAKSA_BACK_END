@@ -22,4 +22,6 @@ public interface InternalUserService {
     void decreaseScrapCount(Long userId);
 
     void decreaseFriendCount(Long userId);
+
+    void addScrapCount(Long userId, int delta);
 }
