@@ -3,10 +3,8 @@ package com.jjbacsa.jjbacsabackend.user.controller;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -129,6 +126,13 @@ public class UserController {
         return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "회원 탈퇴",
+            notes = "회원 탈퇴\n\n" +
+                    "필요 헤더\n\n" +
+                    "Authorization : access token\n\n" +
+                    "RefreshToken : refresh token\n\n"
+    )
     @PreAuthorize(("hasRole('NORMAL')"))
     @DeleteMapping("/user/me")
     public ResponseEntity<Void> withdraw() throws Exception{
