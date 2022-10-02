@@ -111,7 +111,7 @@ class ScrapServiceTest {
         //디렉토리가 존재하지 않을 경우
         testLogin(user1);
         assertThrows(RuntimeException.class, () ->
-                scrapService.updateDirectory(0L, getDirectoryRequest("dir"))
+                scrapService.updateDirectory(null, getDirectoryRequest("dir"))
         );
 
         //내가 만든 디렉토리가 아닐 경우
@@ -145,7 +145,7 @@ class ScrapServiceTest {
         //디렉토리가 존재하지 않을 경우
         testLogin(user1);
         assertThrows(RuntimeException.class, () ->
-                scrapService.deleteDirectory(0L)
+                scrapService.deleteDirectory(null)
         );
 
         //내가 만든 디렉토리가 아닐 경우
@@ -173,12 +173,12 @@ class ScrapServiceTest {
         //상점이 없는 경우
         testLogin(user1);
         assertThrows(RuntimeException.class, () ->
-                scrapService.create(getScrapRequest(null, 0L))
+                scrapService.create(getScrapRequest(0L, 0L))
         );
 
         //디렉토리가 없는 경우
         assertThrows(RuntimeException.class, () ->
-                scrapService.create(getScrapRequest(0L, shop1.getId()))
+                scrapService.create(getScrapRequest(null, shop1.getId()))
         );
 
         //내가 만든 디렉토리가 아닌 경우
@@ -187,14 +187,14 @@ class ScrapServiceTest {
         );
 
         //스크랩 추가
-        ScrapResponse scrapRes1 = scrapService.create(getScrapRequest(null, shop1.getId()));
+        ScrapResponse scrapRes1 = scrapService.create(getScrapRequest(0L, shop1.getId()));
         ScrapResponse scrapRes2 = scrapService.create(getScrapRequest(dir1.getId(), shop2.getId()));
         ScrapEntity scrap1 = scrapRepository.getById(scrapRes1.getId());
         ScrapEntity scrap2 = scrapRepository.getById(scrapRes2.getId());
 
         //같은 상점을 중복 추가할 경우
         assertThrows(RuntimeException.class, () ->
-                scrapService.create(getScrapRequest(null, shop1.getId()))
+                scrapService.create(getScrapRequest(0L, shop1.getId()))
         );
 
         //then
@@ -224,7 +224,7 @@ class ScrapServiceTest {
         //디렉토리가 없는 경우
         testLogin(user1);
         assertThrows(RuntimeException.class, () ->
-                scrapService.getScraps(0L, null, 10)
+                scrapService.getScraps(null, null, 10)
         );
 
         //내가 만든 디렉토리가 아닌 경우
@@ -233,8 +233,8 @@ class ScrapServiceTest {
         );
 
         //스크랩 조회
-        Page<ScrapResponse> page1_1 = scrapService.getScraps(null, null, 10);
-        Page<ScrapResponse> page1_2 = scrapService.getScraps(null, page1_1.getContent().get(4).getId(), 10);
+        Page<ScrapResponse> page1_1 = scrapService.getScraps(0L, null, 10);
+        Page<ScrapResponse> page1_2 = scrapService.getScraps(0L, page1_1.getContent().get(4).getId(), 10);
         Page<ScrapResponse> page2_1 = scrapService.getScraps(directory1.getId(), null, 10);
         Page<ScrapResponse> page2_2 = scrapService.getScraps(directory1.getId(), page2_1.getContent().get(4).getId(), 10);
 
@@ -270,7 +270,7 @@ class ScrapServiceTest {
 
         //디렉토리가 없는 경우
         assertThrows(RuntimeException.class, () ->
-                scrapService.move(scrap1.getId(), getScrapRequest(0L, 0L))
+                scrapService.move(scrap1.getId(), getScrapRequest(null, 0L))
         );
 
         //내가 만든 디렉토리가 아닌 경우
