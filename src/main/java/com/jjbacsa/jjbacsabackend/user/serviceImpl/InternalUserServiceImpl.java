@@ -21,14 +21,14 @@ public class InternalUserServiceImpl implements InternalUserService {
     private final UserRepository userRepository;
 
     @Override
-    public UserEntity getUserById(Long userId) {
+    public UserEntity getUserById(Long userId) throws RequestInputException {
 
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
     }
 
     @Override
-    public UserEntity getUserByAccount(String account) {
+    public UserEntity getUserByAccount(String account) throws RequestInputException {
 
         return userRepository.findByAccount(account)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
@@ -91,6 +91,7 @@ public class InternalUserServiceImpl implements InternalUserService {
     }
 
     @Override
+    @Transactional
     public void addScrapCount(Long userId, int delta) {
 
         UserEntity user = getUserById(userId);

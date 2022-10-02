@@ -20,14 +20,14 @@ public class InternalScrapServiceImpl implements InternalScrapService {
     private final ScrapDirectoryRepository scrapDirectoryRepository;
 
     @Override
-    public ScrapEntity getScrapById(Long scrapId) {
+    public ScrapEntity getScrapById(Long scrapId) throws RequestInputException {
 
         return scrapRepository.findById(scrapId)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.SCRAP_NOT_EXISTS_EXCEPTION));
     }
 
     @Override
-    public ScrapDirectoryEntity getScrapDirectoryById(Long scrapDirectoryId) {
+    public ScrapDirectoryEntity getScrapDirectoryById(Long scrapDirectoryId) throws RequestInputException {
 
         return scrapDirectoryRepository.findById(scrapDirectoryId)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.SCRAP_DIRECTORY_NOT_EXISTS_EXCEPTION));

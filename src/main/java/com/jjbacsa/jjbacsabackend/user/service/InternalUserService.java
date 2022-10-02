@@ -1,13 +1,14 @@
 package com.jjbacsa.jjbacsabackend.user.service;
 
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 
 public interface InternalUserService {
 
-    UserEntity getUserById(Long userId);
+    UserEntity getUserById(Long userId) throws RequestInputException;
 
-    UserEntity getUserByAccount(String account);
+    UserEntity getUserByAccount(String account) throws RequestInputException;
 
     UserEntity getLoginUser() throws Exception;
 
