@@ -28,7 +28,9 @@ public enum ErrorMessage {
     REQUIRED_ATTRIBUTE_MISSING_EXCEPTION(22,"필수 속성이 없습니다.",HttpStatus.NOT_FOUND),
     SHOP_NOT_EXISTS_EXCEPTION(23, "상점이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     SCRAP_NOT_EXISTS_EXCEPTION(24, "스크랩이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
-    SCRAP_DIRECTORY_NOT_EXISTS_EXCEPTION(25, "스크랩 디렉토리가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    SCRAP_DUPLICATE_EXCEPTION(25, "같은 상점에 대한 스크랩이 존재합니다.", HttpStatus.BAD_REQUEST),
+    SCRAP_DIRECTORY_NOT_EXISTS_EXCEPTION(26, "스크랩 디렉토리가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    SCRAP_DIRECTORY_DUPLICATE_EXCEPTION(27, "같은 이름의 디렉토리가 존재합니다.", HttpStatus.BAD_REQUEST),
     ;
 
     Integer code;

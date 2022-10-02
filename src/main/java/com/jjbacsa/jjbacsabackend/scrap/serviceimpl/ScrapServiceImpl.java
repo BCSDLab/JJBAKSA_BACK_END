@@ -1,5 +1,7 @@
 package com.jjbacsa.jjbacsabackend.scrap.serviceimpl;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryRequest;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryResponse;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapRequest;
@@ -169,25 +171,25 @@ public class ScrapServiceImpl implements ScrapService {
     private void checkDirectoryDuplication(UserEntity user, ScrapDirectoryRequest request) {
 
         if (scrapDirectoryRepository.existsByUserAndName(user, request.getName()))
-            throw new RuntimeException("Directory already exists.");
+            throw new RequestInputException(ErrorMessage.SCRAP_DIRECTORY_DUPLICATE_EXCEPTION);
     }
 
     private void checkDirectoryOwner(UserEntity user, ScrapDirectoryEntity directory) {
 
         if (!user.equals(directory.getUser()))
-            throw new RuntimeException("Directory Not Exists.");
+            throw new RequestInputException(ErrorMessage.SCRAP_DIRECTORY_NOT_EXISTS_EXCEPTION);
     }
 
     private void checkScrapDuplication(UserEntity user, ShopEntity shop) {
 
         if (scrapRepository.existsByUserAndShop(user, shop))
-            throw new RuntimeException("Scrap already exists.");
+            throw new RequestInputException(ErrorMessage.SCRAP_DUPLICATE_EXCEPTION);
     }
 
     private void checkScrapOwner(UserEntity user, ScrapEntity scrap) {
 
         if (!user.equals(scrap.getUser()))
-            throw new RuntimeException("Scrap Not Exists.");
+            throw new RequestInputException(ErrorMessage.SHOP_NOT_EXISTS_EXCEPTION);
     }
 
     private ScrapDirectoryEntity saveDirectory(UserEntity user, ScrapDirectoryRequest request) {
