@@ -11,6 +11,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
+import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
@@ -26,6 +27,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +37,8 @@ import java.util.concurrent.TimeUnit;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final UserCountRepository userCountRepository;
+    private final FollowRepository followRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
@@ -163,5 +167,26 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public void withdraw() throws Exception {
+        UserEntity user = ((CustomUserDetails)SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal())
+                .getUser();
+        
+        userCountRepository.updateAllFriendsCountByUser(user);
+        //TODO : Internal Follow Service 생성시 리팩토링 필요
+        followRepository.deleteFollowWithUser(user);
+
+        user.setIsDeleted(1);
+        userRepository.save(user);
+
+        //회원 탈퇴에 따른 리프레시 토큰 삭제
+        String existToken = redisTemplate.opsForValue().get(user.getAccount());
+        if(existToken != null) redisTemplate.delete(user.getAccount());
     }
 }

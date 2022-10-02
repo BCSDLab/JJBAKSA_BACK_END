@@ -8,4 +8,6 @@ import org.springframework.data.domain.Pageable;
 public interface DslFollowRepository {
 
     Page<FollowEntity> findAllByUserWithCursor(UserEntity user, String cursor, Pageable pageable);
+
+    Long deleteFollowWithUser(UserEntity user);
 }

@@ -37,6 +37,13 @@ public class DslFollowRepositoryImpl extends QuerydslRepositorySupport implement
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount);
     }
 
+    @Override
+    public Long deleteFollowWithUser(UserEntity user){
+        return update(f).set(f.isDeleted, 1)
+                .where(f.follower.eq(user).or(f.user.eq(user)))
+                .execute();
+    }
+
     private BooleanExpression customCursor(String cursor) {
 
         if (cursor == null)

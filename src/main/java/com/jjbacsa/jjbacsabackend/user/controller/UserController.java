@@ -3,6 +3,7 @@ package com.jjbacsa.jjbacsabackend.user.controller;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -17,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -125,5 +127,12 @@ public class UserController {
     @PatchMapping("/user/me")
     public ResponseEntity<UserResponse> modifyUser(@RequestBody UserRequest request) throws Exception{
         return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
+    }
+
+    @PreAuthorize(("hasRole('NORMAL')"))
+    @DeleteMapping("/user/me")
+    public ResponseEntity<Void> withdraw() throws Exception{
+        userService.withdraw();
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

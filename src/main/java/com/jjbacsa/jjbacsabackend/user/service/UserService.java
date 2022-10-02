@@ -16,4 +16,5 @@ public interface UserService {
     Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception;
     UserResponse getAccountInfo(Long id) throws Exception;
     UserResponse modifyUser(UserRequest request) throws Exception;
+    void withdraw() throws Exception;
 }
