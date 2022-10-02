@@ -2,36 +2,28 @@ package com.jjbacsa.jjbacsabackend.review.service;
 
 
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
-import com.jjbacsa.jjbacsabackend.follow.service.FollowServiceImpl;
-import com.jjbacsa.jjbacsabackend.image.service.ImageService;
+import com.jjbacsa.jjbacsabackend.follow.serviceimpl.FollowServiceImpl;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
-import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.serviceImpl.ReviewServiceImpl;
 
 
-import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
-import com.jjbacsa.jjbacsabackend.user.dto.response.UserReviewResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
-import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -39,8 +31,6 @@ import org.springframework.test.context.jdbc.Sql;
 
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
-
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -60,6 +50,7 @@ public class ReviewServiceTest {
     private final UserServiceImpl userService;
     @MockBean
     private final FollowServiceImpl followService;
+    private final InternalUserService internalUserService;
 
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
@@ -288,7 +279,7 @@ public class ReviewServiceTest {
                 .rate(request.getRate())
                 .build();
 
-        reviewEntity.getWriter().getUserCount().increaseReviewCount();
+        internalUserService.increaseReviewCount(reviewEntity.getWriter().getId());
 
         return reviewEntity;
     }
