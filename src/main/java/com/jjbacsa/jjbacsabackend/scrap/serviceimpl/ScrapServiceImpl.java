@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.scrap.service;
+package com.jjbacsa.jjbacsabackend.scrap.serviceimpl;
 
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequest;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
@@ -20,6 +20,8 @@ import com.jjbacsa.jjbacsabackend.scrap.mapper.ScrapDirectoryMapper;
 import com.jjbacsa.jjbacsabackend.scrap.mapper.ScrapMapper;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapDirectoryRepository;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapRepository;
+import com.jjbacsa.jjbacsabackend.scrap.service.ScrapService;
+import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;

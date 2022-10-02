@@ -27,6 +27,7 @@ public enum ErrorMessage {
     JSON_PROCESSING_EXCEPTION(21,"JSON 변환 과정에서 에러가 발생합니다.",HttpStatus.UNPROCESSABLE_ENTITY),
     REQUIRED_ATTRIBUTE_MISSING_EXCEPTION(22,"필수 속성이 없습니다.",HttpStatus.NOT_FOUND),
     SHOP_NOT_EXISTS_EXCEPTION(23, "상점이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    SCRAP_DIRECTORY_NOT_EXISTS_EXCEPTION(24, "스크랩 디렉토리가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     ;
 
     Integer code;

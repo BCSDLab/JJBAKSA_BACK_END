@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.scrap.repository;
+package com.jjbacsa.jjbacsabackend.scrap.repository.dsl;
 
 import com.jjbacsa.jjbacsabackend.scrap.entity.QScrapDirectoryEntity;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapDirectoryEntity;
