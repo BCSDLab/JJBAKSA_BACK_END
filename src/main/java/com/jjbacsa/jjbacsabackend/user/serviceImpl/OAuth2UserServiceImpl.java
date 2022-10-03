@@ -57,7 +57,7 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
             registerOAuth(oAuth2UserInfo, user);
         }
 
-        return new CustomUserDetails(user, oAuth2User.getAttributes());
+        return new CustomUserDetails(user.getId(), oAuth2User.getAttributes());
     }
 
     private void registerOAuth(OAuth2UserInfo oAuth2UserInfo, UserEntity user) {
