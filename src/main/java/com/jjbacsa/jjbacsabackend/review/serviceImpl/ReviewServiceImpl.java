@@ -1,8 +1,9 @@
 package com.jjbacsa.jjbacsabackend.review.serviceImpl;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.image.service.ImageService;
-import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
@@ -19,7 +20,8 @@ import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,14 +50,13 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional
-    public ReviewResponse modifyReview(ReviewModifyRequest reviewModifyRequest) throws Exception {
+    public ReviewResponse modifyReview(ReviewRequest reviewRequest, Long reviewId) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
-        ReviewEntity review = reviewRepository.findByReviewId(reviewModifyRequest.getId());
-        if (review == null) throw new RuntimeException("존재하지 않는 리뷰입니다. - review_id:" + reviewModifyRequest.getId());
-        if (!review.getWriter().equals(userEntity)) throw new RuntimeException("리뷰 작성자가 아닙니다.");
-        if (reviewModifyRequest.getContent() != null)
-            review.setContent(reviewModifyRequest.getContent());  // not null 컬럼
-        modifyReviewInfo(review, reviewModifyRequest);
+        ReviewEntity review = reviewRepository.findByReviewId(reviewId);
+        if(review == null) throw new RequestInputException(ErrorMessage.REVIEW_NOT_EXISTS_EXCEPTION);
+        if(!review.getWriter().equals(userEntity)) throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_REVIEW);
+        if(reviewRequest.getContent() != null) review.setContent(reviewRequest.getContent());  // not null 컬럼
+        modifyReviewInfo(review, reviewRequest);
 
         return ReviewResponse.from(review);
     }
@@ -65,8 +66,8 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewDeleteResponse deleteReview(Long reviewId) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
         ReviewEntity reviewEntity = reviewRepository.findByReviewId(reviewId);
-        if (reviewEntity == null) throw new RuntimeException("존재하지 않는 리뷰입니다. review_id: " + reviewId);
-        if (!reviewEntity.getWriter().equals(userEntity)) throw new RuntimeException("리뷰 작성자가 아닙니다.");
+        if(reviewEntity == null) throw new RequestInputException(ErrorMessage.REVIEW_NOT_EXISTS_EXCEPTION);
+        if(!reviewEntity.getWriter().equals(userEntity)) throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_REVIEW);
         reviewRepository.deleteById(reviewId);
 
         // 리뷰 수, 별점 처리
@@ -82,52 +83,57 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional(readOnly = true)
     public ReviewResponse getReview(Long reviewId) {
         ReviewEntity review = reviewRepository.findByReviewId(reviewId);
-        if (review == null) throw new RuntimeException("존재하지 않는 리뷰입니다. review_id: " + reviewId);
+        if(review == null) throw new RequestInputException(ErrorMessage.REVIEW_NOT_EXISTS_EXCEPTION);
         return ReviewResponse.from(review);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> searchShopReviews(Long shopId, Pageable pageable) {
-        return reviewRepository.findAllByShopId(shopId, pageable).map(ReviewMapper.INSTANCE::fromReviewEntity);
+    public Page<ReviewResponse> searchShopReviews(Long shopId, Integer page, Integer size) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
+        return reviewRepository.findAllByShopId(shopId, pageRequest).map(ReviewMapper.INSTANCE::fromReviewEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> searchWriterReviews(Long writerId, Pageable pageable) {
-        return reviewRepository.findAllByWriterId(writerId, pageable).map(ReviewMapper.INSTANCE::fromReviewEntity);
+    public Page<ReviewResponse> searchWriterReviews(Long writerId,  Integer page, Integer size){
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
+        return reviewRepository.findAllByWriterId(writerId, pageRequest).map(ReviewMapper.INSTANCE::fromReviewEntity);
     }
-
-    // TODO : searchWriterReviews와 searchShopReviews 필요한지??
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> getMyReviews(Pageable pageable) throws Exception {
+    public Page<ReviewResponse> getMyReviews(Integer page, Integer size) throws Exception {
         UserEntity user = userService.getLoginUser();
-        return reviewRepository.findAllByWriterId(user.getId(), pageable).map(ReviewMapper.INSTANCE::fromReviewEntity);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
+        return reviewRepository.findAllByWriterId(user.getId(), pageRequest).map(ReviewMapper.INSTANCE::fromReviewEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> getFollowersReviews(Pageable pageable) throws Exception {
+    public Page<ReviewResponse> getFollowersReviews(Integer page, Integer size) throws Exception {
         UserEntity user = userService.getLoginUser();
-        return reviewRepository.findAllFriendsReview(user.getId(), pageable).map(ReviewResponse::from);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
+        return reviewRepository.findAllFriendsReview(user.getId(), pageRequest).map(ReviewResponse::from);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> searchFollowerReviews(String followerAccount, Pageable pageable) throws Exception {
+    public Page<ReviewResponse> searchFollowerReviews(String followerAccount, Integer page, Integer size) throws Exception {
         UserEntity user = userService.getLoginUser();
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
         UserEntity follower = userService.getUserByAccount(followerAccount);
-        if (followService.existsByUserAndFollower(user, follower)) {
-            return reviewRepository.findAllByFollowerId(follower.getId(), pageable).map(ReviewResponse::from);
-        } else throw new RuntimeException("친구 관계가 아닙니다. followerId : " + follower.getId());
+        if(followService.existsByUserAndFollower(user, follower)){
+            return reviewRepository.findAllByFollowerId(follower.getId(), pageRequest).map(ReviewResponse::from);
+        }
+        else throw new RequestInputException(ErrorMessage.NOT_FOLLOWED_EXCEPTION);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> searchFollowersShopReviews(Long shopId, Pageable pageable) throws Exception {
+    public Page<ReviewResponse> searchFollowersShopReviews(Long shopId, Integer page, Integer size) throws Exception {
         UserEntity user = userService.getLoginUser();
-        return reviewRepository.findAllFollowersReviewsByShopId(user.getId(), shopId, pageable).map(ReviewResponse::from);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
+        return reviewRepository.findAllFollowersReviewsByShopId(user.getId(), shopId, pageRequest).map(ReviewResponse::from);
     }
 
     private ReviewEntity createReviewEntity(ReviewRequest reviewRequest) throws Exception {
@@ -156,20 +162,21 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewEntity;
     }
 
-    private void modifyReviewInfo(ReviewEntity review, ReviewModifyRequest reviewModifyRequest) throws IOException {
+    private void modifyReviewInfo(ReviewEntity review, ReviewRequest reviewRequest) throws IOException {
         Integer curRate = review.getRate();
-        Integer modRate = reviewModifyRequest.getRate();
+        Integer modRate = reviewRequest.getRate();
 
         if (modRate != null) {
             shopService.addTotalRating(review.getShop().getId(), modRate - curRate);
             review.setRate(modRate);
         }
 
-        if (reviewModifyRequest.getReviewImages() != null) {
-            imageService.modifyReviewImages(reviewModifyRequest.getReviewImages(), review);
-        } else {
-            if (review.getReviewImages() != null) {
-                for (ReviewImageEntity image : review.getReviewImages()) {
+        if(reviewRequest.getReviewImages() != null) {
+            imageService.modifyReviewImages(reviewRequest.getReviewImages(), review);
+        }
+        else{
+            if(review.getReviewImages() != null){
+                for(ReviewImageEntity image: review.getReviewImages()){
                     reviewImageRepository.deleteById(image.getId());
                 }
                 review.getReviewImages().clear();

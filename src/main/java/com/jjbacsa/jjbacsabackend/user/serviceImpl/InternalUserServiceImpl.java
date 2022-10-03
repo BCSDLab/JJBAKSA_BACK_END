@@ -2,10 +2,8 @@ package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
-import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import lombok.RequiredArgsConstructor;
@@ -37,11 +35,13 @@ public class InternalUserServiceImpl implements InternalUserService {
     @Override
     public UserEntity getLoginUser() throws Exception {
 
-        return ((CustomUserDetails) SecurityContextHolder
+        Long userId = ((CustomUserDetails) SecurityContextHolder
                 .getContext()
                 .getAuthentication()
                 .getPrincipal())
-                .getUser();
+                .getId();
+
+        return getUserById(userId);
     }
 
     @Override
