@@ -19,7 +19,6 @@ public enum ErrorMessage {
     INVALID_ACCESS(13, "유효하지 않은 접근입니다.", HttpStatus.CONFLICT),
     EXPIRED_TOKEN(14, "만료된 토큰입니다.", HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN_TYPE(15,  "잘못된 토큰 타입입니다.", HttpStatus.BAD_REQUEST),
-
     ZERO_RESULTS_EXCEPTION(16,"해당 가게에 대해 요청할 수 없습니다.",HttpStatus.FORBIDDEN),
     NOT_FOUND_EXCEPTION(17,"정보를 가져올 수 없습니다.",HttpStatus.NOT_FOUND),
     INVALID_REQUEST_EXCEPTION(18,"API 요쳥 형식이 올바르지 않습니다.",HttpStatus.BAD_REQUEST),
@@ -27,6 +26,11 @@ public enum ErrorMessage {
     REQUEST_DENIEDE_EXCEPTION(20,"API 요청이 거절됩니다.",HttpStatus.UNAUTHORIZED),
     JSON_PROCESSING_EXCEPTION(21,"JSON 변환 과정에서 에러가 발생합니다.",HttpStatus.UNPROCESSABLE_ENTITY),
     REQUIRED_ATTRIBUTE_MISSING_EXCEPTION(22,"필수 속성이 없습니다.",HttpStatus.NOT_FOUND)
+    SHOP_NOT_EXISTS_EXCEPTION(23, "상점이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_EXISTS_EXCEPTION(24, "리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
+    INVALID_PERMISSION_REVIEW(25, "리뷰 작성자가 아닙니다.", HttpStatus.BAD_REQUEST),
+    IMAGE_NOT_EXISTS_EXCEPTION(26, "이미지가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
+    INVALID_IMAGE(27, "올바르지 않은 이미지 파일입니다.", HttpStatus.BAD_REQUEST),
     ;
 
     Integer code;
