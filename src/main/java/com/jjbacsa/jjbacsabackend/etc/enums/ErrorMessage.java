@@ -20,11 +20,11 @@ public enum ErrorMessage {
     EXPIRED_TOKEN(14, "만료된 토큰입니다.", HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN_TYPE(15,  "잘못된 토큰 타입입니다.", HttpStatus.BAD_REQUEST),
 
-    SHOP_NOT_EXISTS_EXCEPTION(16, "상점이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
-    REVIEW_NOT_EXISTS_EXCEPTION(17, "리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
-    INVALID_PERMISSION_REVIEW(18, "리뷰 작성자가 아닙니다.", HttpStatus.BAD_REQUEST),
-    IMAGE_NOT_EXISTS_EXCEPTION(19, "이미지가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
-    INVALID_IMAGE(20, "올바르지 않은 이미지 파일입니다.", HttpStatus.BAD_REQUEST),
+    SHOP_NOT_EXISTS_EXCEPTION(23, "상점이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_EXISTS_EXCEPTION(24, "리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
+    INVALID_PERMISSION_REVIEW(25, "리뷰 작성자가 아닙니다.", HttpStatus.BAD_REQUEST),
+    IMAGE_NOT_EXISTS_EXCEPTION(26, "이미지가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
+    INVALID_IMAGE(27, "올바르지 않은 이미지 파일입니다.", HttpStatus.BAD_REQUEST),
     ;
 
     Integer code;
