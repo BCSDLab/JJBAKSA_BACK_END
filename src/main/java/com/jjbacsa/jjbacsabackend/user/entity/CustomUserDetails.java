@@ -1,27 +1,25 @@
 package com.jjbacsa.jjbacsabackend.user.entity;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
 public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
-    private UserEntity user;
+    private Long id;
     private Map<String, Object> attributes;
 
-    public CustomUserDetails(UserEntity user){
-        this.user = user;
+    public CustomUserDetails(Long id){
+        this.id = id;
     }
 
-    public CustomUserDetails(UserEntity user, Map<String, Object> attributes) {
-        this.user = user;
+    public CustomUserDetails(Long id, Map<String, Object> attributes) {
+        this.id = id;
         this.attributes = attributes;
     }
 
@@ -32,23 +30,17 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities(){
-        Collection<GrantedAuthority> authorities = new ArrayList<>();
-
-        //TODO : Stream으로 바꿀 수 있으면 바꿀 것
-        for(String role : user.getUserType().getUserType().split(",")){
-            authorities.add(new SimpleGrantedAuthority(role));
-        }
-        return authorities;
+        return null;
     }
 
     @Override
     public String getPassword(){
-        return user.getPassword();
+        return null;
     }
 
     @Override
     public String getUsername(){
-        return String.valueOf(user.getId());
+        return null;
     }
 
     @Override
@@ -68,14 +60,14 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 
     @Override
     public boolean isEnabled(){
-        return user.getIsDeleted() != 0;
+        return false;
     }
 
-    public UserEntity getUser(){return this.user;}
+    public Long getId(){ return id; }
 
     @Override
     public String getName() {
-        return String.valueOf(user.getId());
+        return null;
     }
 
     @Override

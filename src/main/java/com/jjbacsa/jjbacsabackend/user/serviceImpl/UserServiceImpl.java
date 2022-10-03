@@ -5,7 +5,6 @@ import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
-import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
@@ -78,12 +77,12 @@ public class UserServiceImpl implements UserService {
         String existToken = redisTemplate.opsForValue().get(user.getAccount());
 
         if(existToken == null) {
-            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH);
+            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH, user.getUserType().getUserType());
             redisTemplate.opsForValue().set(user.getAccount(), existToken, 14, TimeUnit.DAYS);
         }
 
         Token token = new Token(
-                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
                 existToken);
 
         return token;
@@ -91,11 +90,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse getLoginUser() throws Exception{
-        UserEntity user = ((CustomUserDetails)SecurityContextHolder
+        Long id = ((CustomUserDetails)SecurityContextHolder
                 .getContext()
                 .getAuthentication()
                 .getPrincipal())
-                .getUser();
+                .getId();
+
+        UserEntity user = userRepository.getById(id);
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
@@ -124,7 +125,7 @@ public class UserServiceImpl implements UserService {
             throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
 
         return new Token(
-                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
                 existToken);
     }
 
@@ -149,11 +150,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse modifyUser(UserRequest request) throws Exception {
-        UserEntity user = ((CustomUserDetails)SecurityContextHolder
+        Long id = ((CustomUserDetails)SecurityContextHolder
                 .getContext()
                 .getAuthentication()
                 .getPrincipal())
-                .getUser();
+                .getId();
+
+        UserEntity user = userRepository.getById(id);
 
         if(request.getPassword() != null)
             user.setPassword(passwordEncoder.encode(request.getPassword()));

@@ -24,13 +24,14 @@ public class JwtUtil {
 
     public static final short BEARER_LENGTH = 7;
 
-    public String generateToken(Long id, TokenType type){
+    public String generateToken(Long id, TokenType type, String authority){
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("typ", "JWT");
         headers.put("alg", "HS256");
 
         Map<String, Object> payloads = new HashMap<String, Object>();
         payloads.put("id", id);
+        payloads.put("auth", authority);
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
