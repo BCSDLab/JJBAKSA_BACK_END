@@ -25,12 +25,16 @@ public enum ErrorMessage {
     OVER_QUERY_LIMIT_EXCEPTION(19,"API 요청을 수행할 수 없습니다.",HttpStatus.FORBIDDEN),
     REQUEST_DENIEDE_EXCEPTION(20,"API 요청이 거절됩니다.",HttpStatus.UNAUTHORIZED),
     JSON_PROCESSING_EXCEPTION(21,"JSON 변환 과정에서 에러가 발생합니다.",HttpStatus.UNPROCESSABLE_ENTITY),
-    REQUIRED_ATTRIBUTE_MISSING_EXCEPTION(22,"필수 속성이 없습니다.",HttpStatus.NOT_FOUND)
+    REQUIRED_ATTRIBUTE_MISSING_EXCEPTION(22,"필수 속성이 없습니다.",HttpStatus.NOT_FOUND),
     SHOP_NOT_EXISTS_EXCEPTION(23, "상점이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_EXISTS_EXCEPTION(24, "리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
     INVALID_PERMISSION_REVIEW(25, "리뷰 작성자가 아닙니다.", HttpStatus.BAD_REQUEST),
     IMAGE_NOT_EXISTS_EXCEPTION(26, "이미지가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
     INVALID_IMAGE(27, "올바르지 않은 이미지 파일입니다.", HttpStatus.BAD_REQUEST),
+    SCRAP_NOT_EXISTS_EXCEPTION(28, "스크랩이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    SCRAP_DUPLICATE_EXCEPTION(29, "같은 상점에 대한 스크랩이 존재합니다.", HttpStatus.BAD_REQUEST),
+    SCRAP_DIRECTORY_NOT_EXISTS_EXCEPTION(30, "스크랩 디렉토리가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    SCRAP_DIRECTORY_DUPLICATE_EXCEPTION(31, "같은 이름의 디렉토리가 존재합니다.", HttpStatus.BAD_REQUEST),
     ;
 
     Integer code;

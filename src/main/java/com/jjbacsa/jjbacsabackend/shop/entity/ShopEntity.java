@@ -71,21 +71,4 @@ public class ShopEntity extends BaseEntity {
     @OneToOne(mappedBy = "shop", fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
     @Builder.Default
     private ShopCount shopCount = new ShopCount();
-
-    public void update(ShopDto shopDto) {
-
-    }
-
-    public void setTotalRating(Integer totalRating) {
-        shopCount.setTotalRating(totalRating);
-    }
-
-    public void increaseRatingCount() {
-        shopCount.increaseRatingCount();
-    }
-
-    public void decreaseRatingCount() {
-        shopCount.decreaseRatingCount();
-    }
-
 }

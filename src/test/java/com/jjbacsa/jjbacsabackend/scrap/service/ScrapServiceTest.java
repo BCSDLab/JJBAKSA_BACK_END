@@ -11,21 +11,24 @@ import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapDirectoryRepository;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapRepository;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
+import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
-import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
-import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.util.CursorUtil;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.TestConstructor;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,13 +40,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class ScrapServiceTest {
 
     private final ScrapService scrapService;
-    @MockBean
-    private final UserService userService;
+    private final InternalUserService userService;
+    private final InternalScrapService internalScrapService;
 
     private final UserRepository userRepository;
     private final ShopRepository shopRepository;
     private final ScrapRepository scrapRepository;
     private final ScrapDirectoryRepository scrapDirectoryRepository;
+
+    private final EntityManager entityManager;
 
 
     private UserEntity user1;
@@ -140,7 +145,9 @@ class ScrapServiceTest {
         ScrapDirectoryEntity dir1 = scrapDirectoryRepository.save(getTestDirectory(user1, "dir1"));
         ScrapDirectoryEntity dir2 = scrapDirectoryRepository.save(getTestDirectory(user2, "dir2"));
         ScrapEntity scrap = scrapRepository.save(getTestScrap(user1, shop1, dir1));
-        user1.getUserCount().increaseScrapCount();
+        userService.increaseScrapCount(user1.getId());
+        entityManager.flush();
+        user1 = userService.getUserById(user1.getId());
 
         //디렉토리가 존재하지 않을 경우
         testLogin(user1);
@@ -155,10 +162,12 @@ class ScrapServiceTest {
 
         //디렉토리 제거
         scrapService.deleteDirectory(dir1.getId());
+        entityManager.flush();
 
         //then
         assertEquals(1, dir1.getIsDeleted());
         assertTrue(scrapRepository.findById(scrap.getId()).isEmpty());
+        user1 = userService.getUserById(user1.getId());
         assertEquals(0, user1.getUserCount().getScrapCount());
     }
 
@@ -295,8 +304,8 @@ class ScrapServiceTest {
         ScrapDirectoryEntity directory = scrapDirectoryRepository.save(getTestDirectory(user1, "dir1"));
         ScrapEntity scrap1 = scrapRepository.save(getTestScrap(user1, shop1, directory));
         ScrapEntity scrap2 = scrapRepository.save(getTestScrap(user2, shop1, null));
-        user1.getUserCount().increaseScrapCount();
-        directory.getScrapDirectoryCount().increaseScrapCount();
+        userService.increaseScrapCount(user1.getId());
+        internalScrapService.addScrapCount(directory.getId(), 1);
 
         //스크랩이 없는 경우
         testLogin(user1);
@@ -374,6 +383,9 @@ class ScrapServiceTest {
 
     private void testLogin(UserEntity user) throws Exception {
 
-        Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user));
+        UserDetails userDetails = new CustomUserDetails(user);
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        //Mockito.when(userService.getLoginUser()).thenReturn(user);
     }
 }
