@@ -20,12 +20,9 @@ import com.jjbacsa.jjbacsabackend.scrap.mapper.ScrapDirectoryMapper;
 import com.jjbacsa.jjbacsabackend.scrap.mapper.ScrapMapper;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapDirectoryRepository;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapRepository;
-import com.jjbacsa.jjbacsabackend.shop.dto.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
-import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -184,7 +181,7 @@ public class ScrapServiceImpl implements ScrapService {
 
     private ScrapDirectoryEntity getDirectoryOrNull(Long directoryId) {
 
-        if (directoryId == null)
+        if (directoryId == 0L)
             return null;
 
         return getDirectory(directoryId);
