@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.follow.repository;
 
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowRequestEntity;
+import com.jjbacsa.jjbacsabackend.follow.repository.dsl.DslFollowRequestRepository;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.follow.repository;
+package com.jjbacsa.jjbacsabackend.follow.repository.dsl;
 
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowRequestEntity;
 import com.jjbacsa.jjbacsabackend.follow.entity.QFollowRequestEntity;

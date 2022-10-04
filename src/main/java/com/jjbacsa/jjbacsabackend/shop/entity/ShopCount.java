@@ -22,24 +22,13 @@ public class ShopCount {
     @OneToOne(optional = false)
     private ShopEntity shop;
 
-    @Setter
     @Basic
+    @Setter
     @Column(name = "total_rating", nullable = false)
     private Integer totalRating = 0;
 
     @Basic
+    @Setter
     @Column(name = "rating_count", nullable = false)
     private Integer ratingCount = 0;
-
-    public void increaseTotalRating(Integer rate){ this.totalRating += rate;}
-
-    public void decreaseTotalRating(Integer rate){ this.totalRating -= rate;}
-
-    public void increaseRatingCount() {
-        ++this.ratingCount;
-    }
-
-    public void decreaseRatingCount() {
-        --this.ratingCount;
-    }
 }

@@ -2,7 +2,8 @@ package com.jjbacsa.jjbacsabackend.review.service;
 
 
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
-import com.jjbacsa.jjbacsabackend.follow.service.FollowServiceImpl;
+import com.jjbacsa.jjbacsabackend.follow.serviceimpl.FollowServiceImpl;
+import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
@@ -13,6 +14,7 @@ import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,7 @@ public class ReviewServiceTest {
     private final UserServiceImpl userService;
     @MockBean
     private final FollowServiceImpl followService;
+    private final InternalUserService internalUserService;
 
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
@@ -281,7 +284,7 @@ public class ReviewServiceTest {
                 .rate(request.getRate())
                 .build();
 
-        reviewEntity.getWriter().getUserCount().increaseReviewCount();
+        internalUserService.increaseReviewCount(reviewEntity.getWriter().getId());
 
         return reviewEntity;
     }
