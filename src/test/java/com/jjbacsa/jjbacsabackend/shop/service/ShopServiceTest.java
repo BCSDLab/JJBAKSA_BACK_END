@@ -90,12 +90,12 @@ public class ShopServiceTest {
     @Test
     public void searchWithoutCategory(){
         //given
-        String keyword="대전떡볶이";
+        String keyword="대전카페";
 
         ShopRequest shopRequest=ShopRequest.builder()
                 .keyword(keyword)
-                .x(36.362)
-                .y(127.3922)
+                .x(127.3922)
+                .y(36.362)
                 .build();
 
         Pageable pageable= PageRequest.of(0,10);
@@ -112,12 +112,12 @@ public class ShopServiceTest {
     @Test
     public void searchWithCategory(){
         //given
-        String keyword="대전카페";
+        String keyword="크러쉬온드";
 
         ShopRequest shopRequest=ShopRequest.builder()
                 .keyword(keyword)
-                .x(36.362)
-                .y(127.3922)
+                .x(127.3922)
+                .y(36.362)
                 .build();
 
         Pageable pageable= PageRequest.of(0,10);

@@ -18,6 +18,18 @@ public class ShopSummaryResponse implements Comparable<ShopSummaryResponse>{
         this.score=score;
     }
 
+    public String getPlaceId() {
+        return placeId;
+    }
+
+    public String getPlaceName() {
+        return placeName;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
     public double getDist() {
         return dist;
     }
@@ -53,5 +65,4 @@ public class ShopSummaryResponse implements Comparable<ShopSummaryResponse>{
     public int compareTo(ShopSummaryResponse o) {
         return (int)(this.getDist()-o.getDist());
     }
-
 }

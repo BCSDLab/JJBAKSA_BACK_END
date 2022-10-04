@@ -26,7 +26,7 @@ public enum ErrorMessage {
     OVER_QUERY_LIMIT_EXCEPTION(19,"API 요청을 수행할 수 없습니다.",HttpStatus.FORBIDDEN),
     REQUEST_DENIEDE_EXCEPTION(20,"API 요청이 거절됩니다.",HttpStatus.UNAUTHORIZED),
     JSON_PROCESSING_EXCEPTION(21,"JSON 변환 과정에서 에러가 발생합니다.",HttpStatus.UNPROCESSABLE_ENTITY),
-    REQUIRED_ATTRIBUTE_MISSING_EXCEPTION(22,"필수 속성이 없습니다.",HttpStatus.NOT_FOUND)
+    REQUIRED_ATTRIBUTE_MISSING_EXCEPTION(22,"API 필수 속성이 없습니다.",HttpStatus.NOT_FOUND)
     ;
 
     Integer code;

@@ -49,7 +49,7 @@ public class ShopServiceImpl implements ShopService {
     private final String KEY="ranking";
 
     private final List<String>cafe= Arrays.asList("카페","디저트","커피","후식");
-    private final List<String>restaurant=Arrays.asList("맛집","식당","레스토랑");
+    private final List<String>restaurant=Arrays.asList("맛집","식당","레스토랑","음식점");
 
     private final ObjectMapper objectMapper;
 

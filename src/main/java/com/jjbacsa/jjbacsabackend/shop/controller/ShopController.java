@@ -35,6 +35,11 @@ public class ShopController {
 
     @PostMapping(value="/shops")
     @ApiOperation(value="상점 검색",notes="입력받은 키워드와 현재 좌표를 기반으로 상점을 검색한다.")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="keyword",value="검색할 키워드",required = true,dataType = "ShopRequest"),
+            @ApiImplicitParam(name="x",value="현재 위치의 x좌표(경도)",required = true,dataType = "ShopRequest"),
+            @ApiImplicitParam(name="y",value="현재 위치의 y좌표(위도)",required = true,dataType = "ShopRequest"),
+    })
     public ResponseEntity<Page<ShopSummaryResponse>> searchShop(@RequestBody ShopRequest shopRequest,
                                                                 @PageableDefault(page =0,size=10) Pageable pageable){
         return new ResponseEntity<>(shopService.searchShop(shopRequest, pageable),HttpStatus.OK);
