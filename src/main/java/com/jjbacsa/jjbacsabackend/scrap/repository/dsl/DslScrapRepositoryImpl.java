@@ -1,11 +1,10 @@
-package com.jjbacsa.jjbacsabackend.scrap.repository;
+package com.jjbacsa.jjbacsabackend.scrap.repository.dsl;
 
 import com.jjbacsa.jjbacsabackend.scrap.entity.QScrapEntity;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapDirectoryEntity;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.StringExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

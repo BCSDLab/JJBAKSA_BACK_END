@@ -19,9 +19,9 @@ public interface FollowService {
 
     void delete(FollowRequest request) throws Exception;
 
-    Page<FollowRequestResponse> getSendRequests(Pageable pageable) throws Exception;
+    Page<FollowRequestResponse> getSendRequests(Integer page, Integer pageSize) throws Exception;
 
-    Page<FollowRequestResponse> getReceiveRequests(Pageable pageable) throws Exception;
+    Page<FollowRequestResponse> getReceiveRequests(Integer page, Integer pageSize) throws Exception;
 
-    Page<UserResponse> getFollowers(String cursor, Pageable pageable) throws Exception;
+    Page<UserResponse> getFollowers(String cursor, Integer pageSize) throws Exception;
 }

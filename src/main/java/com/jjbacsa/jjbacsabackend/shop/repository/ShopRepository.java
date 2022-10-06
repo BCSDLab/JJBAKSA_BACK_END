@@ -3,9 +3,11 @@ package com.jjbacsa.jjbacsabackend.shop.repository;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import javax.persistence.LockModeType;
 import javax.persistence.Tuple;
 import java.util.List;
 import java.util.Optional;
@@ -33,4 +35,13 @@ public interface ShopRepository extends JpaRepository<ShopEntity, Long> {
     List<Tuple> searchWithCategory(@Param("keyword")String keyword, @Param("category")String category);
 
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select sc.totalRating from ShopCount sc " +
+            "where sc.id = :shopId")
+    Integer getTotalRating(@Param("shopId") Long shopId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select sc.ratingCount from ShopCount sc " +
+            "where sc.id = :shopId")
+    Integer getRatingCount(@Param("shopId") Long shopId);
 }

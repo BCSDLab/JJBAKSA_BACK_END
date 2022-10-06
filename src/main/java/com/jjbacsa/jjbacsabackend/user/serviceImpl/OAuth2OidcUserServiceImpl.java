@@ -56,7 +56,7 @@ public class OAuth2OidcUserServiceImpl extends OidcUserService{
             registerOidc(oAuth2UserInfo, user);
         }
 
-        return new CustomUserDetails(user, oidcUser.getAttributes());
+        return new CustomUserDetails(user.getId(), oidcUser.getAttributes());
     }
 
     private void registerOidc(OAuth2UserInfo oAuth2UserInfo, UserEntity user) {

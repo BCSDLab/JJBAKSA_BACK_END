@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.HandlerMethod;
 
+import javax.validation.ValidationException;
 import java.io.IOException;
 import java.util.List;
 
@@ -45,9 +46,13 @@ public class GlobalExceptionHandler {
         //Validation 예외인 경우
         else if (e instanceof BindException) {
             baseException = convertBindToBase((BindException) e);
+        } else if (e instanceof ValidationException) {
+            baseException = new BaseException(e.getClass().getSimpleName(), ErrorMessage.VALIDATION_FAIL_EXCEPTION);
+            baseException.setErrorMessage(e.getMessage());
+            baseException.setErrorTrace(e.getStackTrace()[0].toString());
         }
         //Method Security 예외인 경우
-        else if (e instanceof AccessDeniedException){
+        else if (e instanceof AccessDeniedException) {
             baseException = convertDeniedToBase((AccessDeniedException) e);
         }
         //정의되지 않은 예외인 경우

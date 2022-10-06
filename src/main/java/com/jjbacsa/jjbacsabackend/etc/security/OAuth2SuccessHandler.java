@@ -45,8 +45,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         }
         oAuthInfoEntity = oAuthInfoRepository.findByApiKey(oAuth2UserInfo.getApiKey());
 
-        String accessToken = jwtUtil.generateToken(oAuthInfoEntity.getUser().getId(), TokenType.ACCESS);
-        String RefreshToken = jwtUtil.generateToken(oAuthInfoEntity.getUser().getId(), TokenType.REFRESH);
+        String accessToken = jwtUtil.generateToken(oAuthInfoEntity.getUser().getId(), 
+                TokenType.ACCESS, oAuthInfoEntity.getUser().getUserType().getUserType());
+        String RefreshToken = jwtUtil.generateToken(oAuthInfoEntity.getUser().getId(),
+                TokenType.REFRESH, oAuthInfoEntity.getUser().getUserType().getUserType());
 
         response.getWriter().write("accessToken : " + objectMapper.writeValueAsString(accessToken));
         response.getWriter().write("\nrefreshToken : " + objectMapper.writeValueAsString(RefreshToken));
