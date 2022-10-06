@@ -13,7 +13,6 @@ import com.jjbacsa.jjbacsabackend.shop.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.TrendingResponse;
-import com.jjbacsa.jjbacsabackend.shop.entity.ShopCount;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.mapper.ShopMapper;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
@@ -23,9 +22,9 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
@@ -86,13 +85,11 @@ public class ShopServiceImpl implements ShopService {
 
         if(shopRepository.existsByPlaceId(placeId)){
             Optional<ShopEntity> shopEntity=shopRepository.findByPlaceId(placeId);
-            ShopCount shopCount=shopEntity.get().getShopCount();
 
             ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity.get());
-            shopResponse.setShopCount(shopCount.getTotalRating(),shopCount.getRatingCount());
+            shopResponse.setShopCount(shopEntity.get().getShopCount());
 
             return shopResponse;
-
         }else{
             ShopApiDto shopApiDto;
 
@@ -107,10 +104,8 @@ public class ShopServiceImpl implements ShopService {
             ShopDto shopDto=ShopDto.ShopDto(shopApiDto);
             ShopEntity shopEntity=register(shopDto);
 
-            ShopCount shopCount=shopEntity.getShopCount();
-
             ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity);
-            shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
+            shopResponse.setShopCount(shopEntity.getShopCount());
 
             return shopResponse;
         }
@@ -166,11 +161,10 @@ public class ShopServiceImpl implements ShopService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Pageable pageable) {
+    public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Integer page,Integer size) {
         //keyword Redis 저장
-        saveRedis(shopRequest.getKeyword());
-
         String keyword=shopRequest.getKeyword();
+        saveRedis(keyword);
 
         //키워드 검색 타입 판별
         SearchType searchType=typeSetting(keyword);
@@ -225,8 +219,9 @@ public class ShopServiceImpl implements ShopService {
             }
         });
 
-
         //pagination
+        Pageable pageable= PageRequest.of(page,size);
+
         int start=Math.min((int)pageable.getOffset(),shopList.size());
         int end=(start+pageable.getPageSize()>shopList.size()? shopList.size() : (start+ pageable.getPageSize()));
 

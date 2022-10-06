@@ -98,10 +98,8 @@ public class ShopServiceTest {
                 .y(36.362)
                 .build();
 
-        Pageable pageable= PageRequest.of(0,10);
-
         //when
-        Page<ShopSummaryResponse> res=shopService.searchShop(shopRequest,pageable);
+        Page<ShopSummaryResponse> res=shopService.searchShop(shopRequest,0,10);
 
         //then
         assertThat(res.stream().collect(Collectors.toList()).size()).isNotEqualTo(0);
@@ -120,10 +118,8 @@ public class ShopServiceTest {
                 .y(36.362)
                 .build();
 
-        Pageable pageable= PageRequest.of(0,10);
-
         //when
-        Page<ShopSummaryResponse> res=shopService.searchShop(shopRequest,pageable);
+        Page<ShopSummaryResponse> res=shopService.searchShop(shopRequest,0,10);
 
         //then
         assertThat(res.stream().collect(Collectors.toList()).size()).isNotEqualTo(0);

@@ -24,10 +24,10 @@ public class ShopResponse {
     private Integer totalRating;
     private Integer ratingCount;
 
-    public boolean setShopCount(Integer totalRating,Integer ratingCount){
+    public boolean setShopCount(ShopCount shopCount){
         try{
-            this.totalRating=totalRating;
-            this.ratingCount=ratingCount;
+            this.totalRating= shopCount.getTotalRating();
+            this.ratingCount=shopCount.getRatingCount();
 
             return true;
         }catch (Exception e){
