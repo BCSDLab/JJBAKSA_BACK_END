@@ -1,32 +1,29 @@
 package com.jjbacsa.jjbacsabackend.review.service;
 
 
-import com.jjbacsa.jjbacsabackend.image.service.ImageService;
+import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
+import com.jjbacsa.jjbacsabackend.follow.serviceimpl.FollowServiceImpl;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewModifyRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
-import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.serviceImpl.ReviewServiceImpl;
-
-
-import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
-import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 
@@ -37,6 +34,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.*;
 
+@ActiveProfiles("test")
 @Slf4j
 @DisplayName("리뷰 통합 테스트")
 @SpringBootTest
@@ -48,12 +46,18 @@ public class ReviewServiceTest {
     private final ReviewServiceImpl reviewService;
     @MockBean
     private final UserServiceImpl userService;
+    @MockBean
+    private final FollowServiceImpl followService;
+    private final InternalUserService internalUserService;
 
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
+
 
     private static UserEntity user;
     private static UserEntity user2;
+    private static UserEntity user3;
 
 
     /*
@@ -95,7 +99,7 @@ public class ReviewServiceTest {
         assertThat(response)
                 .hasFieldOrPropertyWithValue("id", review.getId())
                 .hasFieldOrPropertyWithValue("content", review.getContent())
-                .hasFieldOrPropertyWithValue("isTemp", review.getIsTemp());
+                .hasFieldOrPropertyWithValue("rate", review.getRate());
         // 없는 리뷰에 대한 요청
         assertThrows(RuntimeException.class, ()-> reviewService.getReview(0L));
     }
@@ -104,10 +108,11 @@ public class ReviewServiceTest {
     void givenShopId_whenSearchingReviews_thenReturnsReviewPage(){
         // Given
         Long shopId = 1L;
-        Pageable pageable = Pageable.ofSize(3);
+        Integer page = 0;
+        Integer size = 3;
         // When
-        Page<ReviewResponse> reviews = reviewService.searchShopReviews(shopId, pageable);
-        Page<ReviewResponse> emptyReviews = reviewService.searchShopReviews(0L, pageable);
+        Page<ReviewResponse> reviews = reviewService.searchShopReviews(shopId, page, size);
+        Page<ReviewResponse> emptyReviews = reviewService.searchShopReviews(0L, page, size);
 
         // Then
         assertThat(reviews).isNotEmpty();
@@ -120,11 +125,12 @@ public class ReviewServiceTest {
     void givenUserId_whenSearchingReviews_thenReturnsReviewPage(){
         // Given
         Long writerId = 1L;
-        Pageable pageable = Pageable.ofSize(3);
+        Integer page = 0;
+        Integer size = 3;
 
         // When
-        Page<ReviewResponse> reviews = reviewService.searchWriterReviews(writerId, pageable);
-        Page<ReviewResponse> emptyReviews = reviewService.searchWriterReviews(0L, pageable);
+        Page<ReviewResponse> reviews = reviewService.searchWriterReviews(writerId, page, size);
+        Page<ReviewResponse> emptyReviews = reviewService.searchWriterReviews(0L, page, size);
 
         // Then
         assertThat(reviews).isNotEmpty();
@@ -139,12 +145,13 @@ public class ReviewServiceTest {
         // Given
         user = userRepository.getById(1L);
         String content = "new content";
-        ReviewEntity review = createReviewEntity(createReviewRequest());
-        ReviewModifyRequest dto = createReviewModifyRequest(content);
+        ReviewRequest dto = createReviewRequest();
+        ReviewEntity review = createReviewEntity(dto);
 
         // When
         testLogin(user);
-        ReviewResponse response = reviewService.modifyReview(dto);
+        dto.setContent(content);
+        ReviewResponse response = reviewService.modifyReview(dto, review.getId());
 
         // Then
         assertThat(review.getId()).isEqualTo(response.getId());
@@ -153,11 +160,11 @@ public class ReviewServiceTest {
         // 작성자가 아닌 경우
         user2 = userRepository.getById(2L);
         testLogin(user2);
-        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto));
+        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto, review.getId()));
 
         // 없는 리뷰에 대해
-        dto.setId(0L);
-        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto));
+        Long reviewId = 0L;
+        assertThrows(RuntimeException.class, ()-> reviewService.modifyReview(dto, reviewId));
 
 
     }
@@ -185,6 +192,85 @@ public class ReviewServiceTest {
 
     }
 
+    @DisplayName("팔로잉한 친구의 id를 주면, 친구가 작성한 리뷰 페이지를 반환한다.")
+    @Test
+    void givenFollowerId_whenSearchFollowerReview_thenReturnReviewPage() throws Exception {
+        // Given
+        user = userRepository.getById(1L);
+        user2 = userRepository.getById(2L);
+        Integer page = 0;
+        Integer size = 3;
+        // When
+        testLogin(user);
+        Page<ReviewResponse> reviews = reviewService.searchFollowerReviews(user2.getAccount(), page, size);
+        // Then
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(review -> review.getUserReviewResponse().getId().equals(user2.getId()));
+
+        // 팔로워가 아닌 경우
+        user3 = userRepository.getById(3L);
+        assertThrows(RuntimeException.class, () -> reviewService.searchFollowerReviews(user3.getAccount(), page, size));
+    }
+
+    @DisplayName("사용자의 모든 친구에 대해 리뷰 페이지를 반환한다.")
+    @Test
+    void givenUser_whenSearchFollowerReviews_thenReturnReviewPage() throws Exception {
+        // Given
+        user = userRepository.getById(1L);
+        Integer page = 0;
+        Integer size = 3;
+        // When
+        testLogin(user);
+        Page<ReviewResponse> reviews = reviewService.getFollowersReviews(page, size);
+        // Then
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(
+                review -> followRepository.existsByUserAndFollower(user, userRepository.getById(review.getUserReviewResponse().getId()))
+        );
+    }
+    @DisplayName("사용자가 작성한 리뷰에 대해 리뷰 페이지를 반환한다.")
+    @Test
+    void givenNothing_whenGetMyReviews_thenReturnReviewPage() throws Exception {
+        // Given
+        user = userRepository.getById(1L);
+        Integer page = 0;
+        Integer size = 3;
+        // When
+        testLogin(user);
+        Page<ReviewResponse> reviews = reviewService.getMyReviews(page, size);
+        // Then
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(
+                review -> review.getUserReviewResponse().getId().equals(user.getId())
+        );
+    }
+    @DisplayName("특정상점에서 내 친구의 리뷰를 조회하면, 친구가 작성한 리뷰 페이지를 반환한다.")
+    @Test
+    void givenShopId_whenSearchFollowersReviews_thenReturnReviewPage() throws Exception {
+        // Given
+        user = userRepository.getById(1L);
+        Long shopId = 1L;
+        Integer page = 0;
+        Integer size = 3;
+        // When
+        testLogin(user);
+        Page<ReviewResponse> reviews = reviewService.searchFollowersShopReviews(shopId, page, size);
+        // Then
+        assertThat(reviews).isNotEmpty();
+        assertThat(reviews).allMatch(
+                review -> followRepository.existsByUserAndFollower(user, userRepository.getById(review.getUserReviewResponse().getId()))
+        );
+        assertThat(reviews).allMatch(
+                review -> review.getShopReviewResponse().getId().equals(shopId)
+        );
+
+        // 친구가 작성한 리뷰가 없는 경우
+        Long shopId2 = 2L;
+        Page<ReviewResponse> emptyReviews = reviewService.searchFollowersShopReviews(shopId2, page, size);
+        assertThat(emptyReviews).isEmpty();
+
+    }
+
     private ReviewEntity createReviewEntity(ReviewRequest request){
         UserEntity userEntity = userRepository.findById(1L)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 사용자 입니다."));
@@ -195,19 +281,16 @@ public class ReviewServiceTest {
                 .writer(userEntity)
                 .shop(shopEntity)
                 .content(request.getContent())
-                .isTemp(request.getIsTemp())
+                .rate(request.getRate())
                 .build();
 
-        reviewEntity.getWriter().getUserCount().increaseReviewCount();
+        internalUserService.increaseReviewCount(reviewEntity.getWriter().getId());
 
         return reviewEntity;
     }
 
     private ReviewRequest createReviewRequest(){
-        return new ReviewRequest(1L, "content1", 0, null);
-    }
-    private ReviewModifyRequest createReviewModifyRequest(String content){
-        return new ReviewModifyRequest(1L, 1L, content, 0, null);
+        return new ReviewRequest(1L, "content1", 3, null);
     }
     private void testLogin(UserEntity user) throws Exception {
 

@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.follow.service;
+package com.jjbacsa.jjbacsabackend.follow.serviceimpl;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
@@ -11,13 +11,15 @@ import com.jjbacsa.jjbacsabackend.follow.mapper.FollowMapper;
 import com.jjbacsa.jjbacsabackend.follow.mapper.FollowRequestMapper;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRequestRepository;
+import com.jjbacsa.jjbacsabackend.follow.service.FollowService;
+import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
-import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
-import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,17 +29,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class FollowServiceImpl implements FollowService {
 
-    private final UserService userService;
+    private final InternalUserService userService;
+    private final InternalFollowService followService;
 
-    private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final FollowRequestRepository followRequestRepository;
 
     @Override
     public FollowRequestResponse request(FollowRequest request) throws Exception {
 
-        UserEntity user = getLoginUser();
-        UserEntity follower = getUserByAccount(request.getUserAccount());
+        UserEntity user = userService.getLoginUser();
+        UserEntity follower = userService.getUserByAccount(request.getUserAccount());
 
         checkValidFollowRequest(user, follower);
         FollowRequestEntity followRequest = saveFollowRequest(user, follower);
@@ -48,8 +50,8 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public FollowResponse accept(Long requestId) throws Exception {
 
-        UserEntity user = getLoginUser();
-        FollowRequestEntity followRequest = getFollowRequestById(requestId);
+        UserEntity user = userService.getLoginUser();
+        FollowRequestEntity followRequest = followService.getFollowRequestById(requestId);
 
         checkRequestForMe(followRequest, user);
         deleteFollowRequest(followRequest);
@@ -63,8 +65,8 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public void reject(Long requestId) throws Exception {
 
-        UserEntity user = getLoginUser();
-        FollowRequestEntity followRequest = getFollowRequestById(requestId);
+        UserEntity user = userService.getLoginUser();
+        FollowRequestEntity followRequest = followService.getFollowRequestById(requestId);
 
         checkRequestForMe(followRequest, user);
         deleteFollowRequest(followRequest);
@@ -73,8 +75,8 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public void cancel(Long requestId) throws Exception {
 
-        UserEntity user = getLoginUser();
-        FollowRequestEntity followRequest = getFollowRequestById(requestId);
+        UserEntity user = userService.getLoginUser();
+        FollowRequestEntity followRequest = followService.getFollowRequestById(requestId);
 
         checkRequestByMe(followRequest, user);
         deleteFollowRequest(followRequest);
@@ -83,8 +85,8 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public void delete(FollowRequest request) throws Exception {
 
-        UserEntity user = getLoginUser();
-        UserEntity follower = getUserByAccount(request.getUserAccount());
+        UserEntity user = userService.getLoginUser();
+        UserEntity follower = userService.getUserByAccount(request.getUserAccount());
 
         checkUserIsFollower(user, follower);
         deleteFollow(user, follower);
@@ -92,45 +94,30 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public Page<FollowRequestResponse> getSendRequests(Pageable pageable) throws Exception {
+    public Page<FollowRequestResponse> getSendRequests(Integer page, Integer pageSize) throws Exception {
 
-        UserEntity user = getLoginUser();
+        UserEntity user = userService.getLoginUser();
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         return followRequestRepository.findAllByUser(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
     }
 
     @Override
-    public Page<FollowRequestResponse> getReceiveRequests(Pageable pageable) throws Exception {
+    public Page<FollowRequestResponse> getReceiveRequests(Integer page, Integer pageSize) throws Exception {
 
-        UserEntity user = getLoginUser();
+        UserEntity user = userService.getLoginUser();
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         return followRequestRepository.findAllByFollower(user, pageable).map(FollowRequestMapper.INSTANCE::toFollowRequestResponse);
     }
 
     @Override
-    public Page<UserResponse> getFollowers(String cursor, Pageable pageable) throws Exception {
+    public Page<UserResponse> getFollowers(String cursor, Integer pageSize) throws Exception {
 
-        UserEntity user = getLoginUser();
+        UserEntity user = userService.getLoginUser();
+        Pageable pageable = PageRequest.of(0, pageSize);
 
         return followRepository.findAllByUserWithCursor(user, cursor, pageable).map(follow -> UserMapper.INSTANCE.toUserResponse(follow.getFollower()));
-    }
-
-    private UserEntity getLoginUser() throws Exception {
-
-        return userRepository.findById(userService.getLoginUser().getId())
-                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
-    }
-
-    private UserEntity getUserByAccount(String account) throws RequestInputException {
-
-        return userRepository.findByAccount(account)
-                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
-    }
-
-    private FollowRequestEntity getFollowRequestById(Long id) throws RequestInputException {
-
-        return followRequestRepository.findById(id)
-                .orElseThrow(() -> new RequestInputException(ErrorMessage.FOLLOW_REQUEST_NOT_EXISTS_EXCEPTION));
     }
 
     private void checkValidFollowRequest(UserEntity user, UserEntity follower) throws RequestInputException {
@@ -188,7 +175,7 @@ public class FollowServiceImpl implements FollowService {
                 .user(user)
                 .follower(follower)
                 .build();
-        user.increaseFriendCount();
+        userService.increaseFriendCount(user.getId());
 
         return followRepository.save(follow);
     }
@@ -206,7 +193,7 @@ public class FollowServiceImpl implements FollowService {
 
                     followRepository.delete(follow);
                     follow.setIsDeleted(1);
-                    user.decreaseFriendCount();
+                    userService.decreaseFriendCount(user.getId());
                 }, null);
     }
 }

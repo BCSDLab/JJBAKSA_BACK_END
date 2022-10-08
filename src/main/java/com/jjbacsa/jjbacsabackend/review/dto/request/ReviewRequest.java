@@ -13,6 +13,6 @@ import java.util.List;
 public class ReviewRequest {
     private Long shopId;
     private String content;
-    private int isTemp;
+    private Integer rate;
     private List<MultipartFile> reviewImages;
 }

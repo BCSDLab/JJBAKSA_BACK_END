@@ -1,5 +1,7 @@
 package com.jjbacsa.jjbacsabackend.image.serviceImpl;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.image.dto.request.ImageRequest;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.image.mapper.ImageMapper;
@@ -58,7 +60,6 @@ public class ImageServiceImpl implements ImageService {
         int origin_size = reviewEntity.getReviewImages().size();
         int new_size = images.size();
         String filePath;
-
         if(origin_size<= new_size) {   // 업데이트된 이미지가 기존과 같거나 많을 때
             for (int i = 0; i < origin_size; i++) {
                 MultipartFile image = images.get(i);
@@ -81,7 +82,7 @@ public class ImageServiceImpl implements ImageService {
                         .image(imageEntity)
                         .build();
                 reviewImageRepository.save(reviewImageEntity);
-                reviewEntity.getReviewImages().add(reviewImageEntity);
+                reviewEntity.addReviewImageEntity(reviewImageEntity);
             }
         }
         else{   // 업데이트 된 images가 기존보다 더 적을 때
@@ -106,7 +107,7 @@ public class ImageServiceImpl implements ImageService {
 
     private void deleteReviewImage(ImageEntity imageEntity) {
         File im = new File(imageEntity.getPath());
-        if(!im.delete()) throw new RuntimeException("존재하지 않는 이미지입니다. : " + imageEntity.getPath());
+        if(!im.delete()) throw new RequestInputException(ErrorMessage.IMAGE_NOT_EXISTS_EXCEPTION);
     }
 
     private String createReviewFile(MultipartFile image) throws IOException {
@@ -121,7 +122,7 @@ public class ImageServiceImpl implements ImageService {
                 originalFileExtension = ".jpg";
             else if(contentType.contains("image/png"))
                 originalFileExtension = ".png";
-            else throw new RuntimeException("올바르지 못한 형식의 이미지 파일입니다. : "+contentType);
+            else throw new RequestInputException(ErrorMessage.INVALID_IMAGE);
         }
         // 파일명 중복 피하고자 나노초까지 얻어와 지정, yml에 설정한 root directory 아래 review 폴더에 저장되도록 함
         String imagePath = reviewPath + System.nanoTime() + originalFileExtension;

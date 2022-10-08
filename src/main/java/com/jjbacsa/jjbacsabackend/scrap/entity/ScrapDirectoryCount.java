@@ -21,19 +21,7 @@ public class ScrapDirectoryCount {
     private ScrapDirectoryEntity directory;
 
     @Basic
+    @Setter
     @Column(name = "scrap_count", nullable = false)
     private Integer scrapCount = 0;
-
-    public void addScrapCount(int val) {
-        scrapCount += val;
-    }
-
-    public void increaseScrapCount() {
-        ++this.scrapCount;
-    }
-
-    public void decreaseScrapCount() {
-        --this.scrapCount;
-    }
-
 }

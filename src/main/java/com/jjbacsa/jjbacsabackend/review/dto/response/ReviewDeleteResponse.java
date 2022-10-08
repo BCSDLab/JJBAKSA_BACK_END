@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class ReviewDeleteResponse {
     private Long id;
     private String content;
-    private int isTemp;
+    private Integer rate;
     private int isDeleted;
     private UserReviewResponse userReviewResponse;
     private ShopReviewResponse shopReviewResponse;

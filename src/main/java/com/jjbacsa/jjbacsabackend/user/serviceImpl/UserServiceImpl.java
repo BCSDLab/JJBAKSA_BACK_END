@@ -5,7 +5,6 @@ import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
-import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
@@ -13,6 +12,7 @@ import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
+    private final InternalUserService userService;
     private final UserRepository userRepository;
     private final UserCountRepository userCountRepository;
     private final FollowRepository followRepository;
@@ -62,54 +63,43 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String checkDuplicateAccount(String account) throws Exception{
-        if(userRepository.existsByAccount(account)){
+    public String checkDuplicateAccount(String account) throws Exception {
+        if (userRepository.existsByAccount(account)) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
         return "OK";
     }
 
     @Override
-    public Token login(UserRequest request) throws Exception{
+    public Token login(UserRequest request) throws Exception {
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
-        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
         }
 
         String existToken = redisTemplate.opsForValue().get(user.getAccount());
 
-        if(existToken == null) {
-            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH);
+        if (existToken == null) {
+            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH, user.getUserType().getUserType());
             redisTemplate.opsForValue().set(user.getAccount(), existToken, 14, TimeUnit.DAYS);
         }
 
         Token token = new Token(
-                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
                 existToken);
 
         return token;
     }
 
     @Override
-    public UserResponse getLoginUser() throws Exception{
-        UserEntity user = ((CustomUserDetails)SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal())
-                .getUser();
-
-        return UserMapper.INSTANCE.toUserResponse(user);
-    }
-
-    @Override
-    public void logout() throws Exception{
+    public void logout() throws Exception {
         //TODO : 로그아웃 로직 추가
     }
 
     @Override
-    public Token refresh() throws Exception{
+    public Token refresh() throws Exception {
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
         String token = request.getHeader("RefreshToken");
@@ -123,12 +113,17 @@ public class UserServiceImpl implements UserService {
         String existToken = redisTemplate.opsForValue().get(user.getAccount());
 
         //null인 경우에는 다시 로그인 필요
-        if(existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH)))
+        if (existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH)))
             throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
 
         return new Token(
-                jwtUtil.generateToken(user.getId(), TokenType.ACCESS),
+                jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
                 existToken);
+    }
+
+    @Override
+    public UserResponse getLoginUser() throws Exception {
+        return UserMapper.INSTANCE.toUserResponse(userService.getLoginUser());
     }
 
     @Override
@@ -136,7 +131,7 @@ public class UserServiceImpl implements UserService {
         Page<UserResponse> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor)
                 .map(UserMapper.INSTANCE::toUserResponse);
 
-        if(result == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+        if (result == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
 
         return result;
     }
@@ -145,22 +140,24 @@ public class UserServiceImpl implements UserService {
     public UserResponse getAccountInfo(Long id) throws Exception {
         UserEntity user = userRepository.findUserByIdWithCount(id);
 
-        if(user == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+        if (user == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
     @Override
     public UserResponse modifyUser(UserRequest request) throws Exception {
-        UserEntity user = ((CustomUserDetails)SecurityContextHolder
+        Long id = ((CustomUserDetails) SecurityContextHolder
                 .getContext()
                 .getAuthentication()
                 .getPrincipal())
-                .getUser();
+                .getId();
 
-        if(request.getPassword() != null)
+        UserEntity user = userRepository.getById(id);
+
+        if (request.getPassword() != null)
             user.setPassword(passwordEncoder.encode(request.getPassword()));
-        if(request.getNickname() != null)
+        if (request.getNickname() != null)
             user.setNickname(request.getNickname());
         //TODO : email 변경시 인증된 이메일 확인
 
