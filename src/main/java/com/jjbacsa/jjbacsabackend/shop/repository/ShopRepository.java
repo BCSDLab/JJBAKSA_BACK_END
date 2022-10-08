@@ -1,7 +1,7 @@
 package com.jjbacsa.jjbacsabackend.shop.repository;
 
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
-import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
