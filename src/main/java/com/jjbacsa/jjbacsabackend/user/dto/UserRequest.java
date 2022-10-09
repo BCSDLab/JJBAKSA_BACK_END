@@ -14,7 +14,7 @@ import javax.validation.constraints.Pattern;
 @AllArgsConstructor
 public class UserRequest {
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Login.class}, message = "아이디를 비워둘 순 없습니다.")
-    @Pattern(regexp = "^[a-z0-9]{1,20}$", message = "올바른 형식의 아이디가 아닙니다.",
+    @Pattern(regexp = "^[a-zA-Z0-9]{1,20}$", message = "올바른 형식의 아이디가 아닙니다.",
             groups = ValidationGroups.Create.class)
     private String account;
 
