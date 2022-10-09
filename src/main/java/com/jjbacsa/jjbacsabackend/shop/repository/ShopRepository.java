@@ -19,15 +19,16 @@ public interface ShopRepository extends JpaRepository<ShopEntity, Long> {
 
     boolean existsByPlaceId(String placeId);
 
+
     //full text search (boolean mode)
-    @Query(value="SELECT s.place_id as placeId,s.place_name as placeName,s.address as address," +
+    @Query(value="SELECT s.id as shopId, s.place_id as placeId,s.place_name as placeName,s.address as address," +
             "s.x as x ,s.y as y ,MATCH(s.place_name,s.address) AGAINST(:keyword in boolean mode) as score "+
             "FROM shop s "+
             "WHERE MATCH(s.place_name,s.address) AGAINST(:keyword in boolean mode) ", nativeQuery = true
     )
     List<Tuple> search(@Param("keyword") String keyword);
 
-    @Query(value="SELECT s.place_id as placeId,s.place_name as placeName,s.address as address," +
+    @Query(value="SELECT s.id as shopId, s.place_id as placeId,s.place_name as placeName,s.address as address," +
             "s.x as x ,s.y as y ,MATCH(s.place_name,s.address) AGAINST(:keyword in boolean mode) as score "+
             "FROM shop s "+
             "WHERE MATCH(s.place_name,s.address) AGAINST(:keyword in boolean mode) and s.category_name=:category ", nativeQuery = true
@@ -44,4 +45,8 @@ public interface ShopRepository extends JpaRepository<ShopEntity, Long> {
     @Query("select sc.ratingCount from ShopCount sc " +
             "where sc.id = :shopId")
     Integer getRatingCount(@Param("shopId") Long shopId);
+
+    List<ShopEntity> findAllByCategoryName(String categoryName);
+
+    List<ShopEntity> findByPlaceNameContaining(String keyword);
 }

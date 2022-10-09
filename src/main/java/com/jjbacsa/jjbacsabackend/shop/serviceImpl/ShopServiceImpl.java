@@ -33,6 +33,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.netty.http.client.HttpClient;
 
+import java.math.BigInteger;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -168,34 +169,51 @@ public class ShopServiceImpl implements ShopService {
 
         //키워드 검색 타입 판별
         SearchType searchType=typeSetting(keyword);
-
         List<ShopSummaryResponse> shopList=new ArrayList<>();
+        String keywordForQuery;
 
-        //키워드 정제
-        String keywordForQuery=getKeywordForQuery(keyword);
 
         switch (searchType){
             case cafe:
             case restaurant:
+                //키워드 정제
+                keywordForQuery=getKeywordForQuery(keyword);
+
                 shopList.addAll(shopRepository.searchWithCategory(keywordForQuery,searchType.name()).stream().map(t -> new ShopSummaryResponse(
-                                t.get(0,String.class),
+                                t.get(0, BigInteger.class).longValue(),
                                 t.get(1,String.class),
                                 t.get(2,String.class),
                                 t.get(3,String.class),
                                 t.get(4,String.class),
-                                t.get(5,Double.class)
+                                t.get(5,String.class),
+                                t.get(6,Double.class)
                         ))
                         .collect(Collectors.toList())
                 );
                 break;
+            case cafe_category:
+                shopList.addAll(shopRepository.findAllByCategoryName("cafe").stream().map(t ->
+                        ShopMapper.INSTANCE.toShopSummaryResponse(t)).collect(Collectors.toList()));
+                break;
+            case restaurant_category:
+                shopList.addAll(shopRepository.findAllByCategoryName("restaurant").stream().map(t ->
+                        ShopMapper.INSTANCE.toShopSummaryResponse(t)).collect(Collectors.toList()));
+                break;
+            case one:
+                shopList.addAll(shopRepository.findByPlaceNameContaining(keyword).stream().map(t->
+                        ShopMapper.INSTANCE.toShopSummaryResponse(t)).collect(Collectors.toList()));
+                break;
             case NONE:
+                keywordForQuery=getKeywordForQuery(keyword);
+
                 shopList.addAll(shopRepository.search(keywordForQuery).stream().map(t -> new ShopSummaryResponse(
-                                        t.get(0,String.class),
+                                        t.get(0, BigInteger.class).longValue(),
                                         t.get(1,String.class),
                                         t.get(2,String.class),
                                         t.get(3,String.class),
                                         t.get(4,String.class),
-                                        t.get(5,Double.class)
+                                        t.get(5,String.class),
+                                        t.get(6,Double.class)
                                 ))
                                 .collect(Collectors.toList())
                 );
@@ -207,17 +225,21 @@ public class ShopServiceImpl implements ShopService {
             shop.setDist(shopRequest.getX(), shopRequest.getY());
         }
 
-        //정확도 순으로 정렬(거리순은 2차 정렬)
-        Collections.sort(shopList,new Comparator<ShopSummaryResponse>() {
-            @Override
-            public int compare(ShopSummaryResponse s1, ShopSummaryResponse s2) {
-                if(s1.getScore()<s2.getScore()) return 1;
-                else if(s1.getScore()==s2.getScore())
-                    return s1.compareTo(s2);
-                else
-                    return -1;
-            }
-        });
+        if(searchType!=SearchType.cafe_category&&searchType!=SearchType.restaurant_category&&searchType!=SearchType.one) {
+            //정확도 순으로 정렬(거리순은 2차 정렬)
+            Collections.sort(shopList, new Comparator<ShopSummaryResponse>() {
+                @Override
+                public int compare(ShopSummaryResponse s1, ShopSummaryResponse s2) {
+                    if (s1.getScore() < s2.getScore()) return 1;
+                    else if (s1.getScore() == s2.getScore())
+                        return s1.compareTo(s2);
+                    else
+                        return -1;
+                }
+            });
+        } else{
+            Collections.sort(shopList);
+        }
 
         //pagination
         Pageable pageable= PageRequest.of(page,size);
@@ -230,13 +252,25 @@ public class ShopServiceImpl implements ShopService {
 
     private SearchType typeSetting(String keyword){
 
+        if(keyword.length()==1){
+            return SearchType.one;
+        }
+
         for(String str:cafe){
+            if(keyword.equals(str)){
+                return SearchType.cafe_category;
+            }
+
             if(keyword.contains(str)){
                 return SearchType.cafe;
             }
         }
 
         for(String str:restaurant){
+            if(keyword.equals(str)){
+                return SearchType.restaurant_category;
+            }
+
             if(keyword.contains(str)){
                 return SearchType.restaurant;
             }
@@ -288,5 +322,5 @@ public class ShopServiceImpl implements ShopService {
 
 }
 enum SearchType{
-    cafe, restaurant, NONE
+    cafe, restaurant, NONE, cafe_category,restaurant_category, one
 }

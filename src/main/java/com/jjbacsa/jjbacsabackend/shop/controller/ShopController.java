@@ -33,7 +33,7 @@ public class ShopController {
             notes = "place_id에 대한 상점 상세정보를 조회한다.",
             authorizations = @Authorization(value = "Bearer + accessToken")
     )
-    @ApiImplicitParam(name="place_id",value="상점 아이디")
+    @ApiImplicitParam(name="place_id",value="상점 아이디",dataType = "String",dataTypeClass = String.class)
     public ResponseEntity<ShopResponse> getShop(@RequestParam("place_id")String placeId) {
         return new ResponseEntity<>(shopService.getShop(placeId), HttpStatus.OK);
     }
@@ -46,11 +46,11 @@ public class ShopController {
             authorizations = @Authorization(value = "Bearer + accessToken")
     )
     @ApiImplicitParams({
-            @ApiImplicitParam(name="keyword",value="검색할 키워드",required = true,dataType = "ShopRequest"),
-            @ApiImplicitParam(name="x",value="현재 위치의 x좌표(경도)",required = true,dataType = "ShopRequest"),
-            @ApiImplicitParam(name="y",value="현재 위치의 y좌표(위도)",required = true,dataType = "ShopRequest"),
-            @ApiImplicitParam(name="page",value="조회할 페이지"),
-            @ApiImplicitParam(name="size",value="페이지 사이즈")
+            @ApiImplicitParam(name="keyword",value="검색할 키워드",required = true, dataType = "String",dataTypeClass = String.class),
+            @ApiImplicitParam(name="x",value="현재 위치의 x좌표(경도)",required = true,dataType = "Double",dataTypeClass = Double.class),
+            @ApiImplicitParam(name="y",value="현재 위치의 y좌표(위도)",required = true, dataType = "Double",dataTypeClass = Double.class),
+            @ApiImplicitParam(name="page",value="조회할 페이지",dataType = "Integer",dataTypeClass = Integer.class),
+            @ApiImplicitParam(name="size",value="페이지 사이즈",dataType = "Integer",dataTypeClass = Integer.class)
     })
     public ResponseEntity<Page<ShopSummaryResponse>> searchShop(@RequestBody ShopRequest shopRequest,
                                                                 @RequestParam(value="page", required = false, defaultValue = "0") Integer page,

@@ -1,6 +1,12 @@
 package com.jjbacsa.jjbacsabackend.shop.dto.response;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
+@Builder
+@AllArgsConstructor
 public class ShopSummaryResponse implements Comparable<ShopSummaryResponse>{
+    private Long shopId;
     private String placeId;
     private String placeName;
     private String address;
@@ -9,13 +15,20 @@ public class ShopSummaryResponse implements Comparable<ShopSummaryResponse>{
     private double dist;
     private double score;
 
-    public ShopSummaryResponse(String placeId, String placeName, String address, String x, String y, double score){
+    public ShopSummaryResponse(Long shopId,String placeId, String placeName, String address, String x, String y, double score){
+        this.shopId=shopId;
         this.placeId=placeId;
         this.placeName=placeName;
         this.address=address;
         this.x=x;
         this.y=y;
         this.score=score;
+    }
+
+
+
+    public Long getShopId() {
+        return shopId;
     }
 
     public String getPlaceId() {
