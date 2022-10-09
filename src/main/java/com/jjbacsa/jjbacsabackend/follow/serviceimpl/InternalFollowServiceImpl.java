@@ -31,4 +31,9 @@ public class InternalFollowServiceImpl implements InternalFollowService {
 
         return followRepository.existsByUserAndFollower(user, follower);
     }
+
+    @Override
+    public Long deleteFollowWithUser(UserEntity user){
+        return followRepository.deleteFollowWithUser(user);
+    }
 }

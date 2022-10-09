@@ -10,4 +10,5 @@ public interface InternalFollowService {
 
     boolean existsByUserAndFollower(UserEntity user, UserEntity follower);
 
+    Long deleteFollowWithUser(UserEntity user);
 }

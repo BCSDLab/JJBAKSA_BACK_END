@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
@@ -36,9 +37,9 @@ import java.util.concurrent.TimeUnit;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final InternalUserService userService;
+    private final InternalFollowService followService;
     private final UserRepository userRepository;
     private final UserCountRepository userCountRepository;
-    private final FollowRepository followRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
@@ -168,21 +169,16 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void withdraw() throws Exception {
-        UserEntity user = ((CustomUserDetails)SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal())
-                .getUser();
-        
+        UserEntity user = userService.getLoginUser();
+
         userCountRepository.updateAllFriendsCountByUser(user);
-        //TODO : Internal Follow Service 생성시 리팩토링 필요
-        followRepository.deleteFollowWithUser(user);
+        followService.deleteFollowWithUser(user);
 
         user.setIsDeleted(1);
         userRepository.save(user);
 
         //회원 탈퇴에 따른 리프레시 토큰 삭제
         String existToken = redisTemplate.opsForValue().get(user.getAccount());
-        if(existToken != null) redisTemplate.delete(user.getAccount());
+        if (existToken != null) redisTemplate.delete(user.getAccount());
     }
 }
