@@ -52,7 +52,10 @@ public class UserServiceImpl implements UserService {
         //TODO : 이메일 인증 확인 절차 추가
 
         //TODO : Default Profile 등록하기
-        //TODO : Validation 추가하면서 수정
+        if (existAccount(request.getAccount())) {
+            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
+        }
+
         request.setNickname(UUID.randomUUID().toString());
 
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
@@ -66,7 +69,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String checkDuplicateAccount(String account) throws Exception {
-        if (userRepository.existsByAccount(account)) {
+        if (existAccount(account)) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
         return "OK";
@@ -183,5 +186,12 @@ public class UserServiceImpl implements UserService {
         //회원 탈퇴에 따른 리프레시 토큰 삭제
         String existToken = redisTemplate.opsForValue().get(user.getAccount());
         if (existToken != null) redisTemplate.delete(user.getAccount());
+    }
+
+    private boolean existAccount(String account){
+        if (userRepository.existsByAccount(account)) {
+            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
+        }
+        return true;
     }
 }
