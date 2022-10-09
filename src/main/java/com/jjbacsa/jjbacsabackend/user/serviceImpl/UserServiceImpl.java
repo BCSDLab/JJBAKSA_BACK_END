@@ -138,8 +138,6 @@ public class UserServiceImpl implements UserService {
         Page<UserResponse> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor)
                 .map(UserMapper.INSTANCE::toUserResponse);
 
-        if (result == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
-
         return result;
     }
 
