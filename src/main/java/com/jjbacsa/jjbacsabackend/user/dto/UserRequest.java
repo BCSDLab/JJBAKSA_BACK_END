@@ -27,5 +27,7 @@ public class UserRequest {
     private String email;
 
     //TODO : 닉네임 관련 추가 정보 필요
+    @Pattern(regexp = "^[a-zA-z가-힣0-9]{1,20}$",
+            groups = {ValidationGroups.Update.class}, message = "닉네임에 특수문자와 초성은 불가능합니다.")
     private String nickname;
 }

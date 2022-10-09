@@ -11,16 +11,18 @@ import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
 @RequiredArgsConstructor
 @RestController
+@Validated
 public class UserController {
     private final UserService userService;
 
@@ -33,7 +35,8 @@ public class UserController {
                     "password : 유저 패스워드,\n\n     " +
                     "email : 유저 이메일(차후 인증 추가)\n\n}")
     @PostMapping(value = "/user")
-    public ResponseEntity<UserResponse> register(@Validated(ValidationGroups.Create.class) @RequestBody UserRequest request) throws Exception {
+    public ResponseEntity<UserResponse> register(@Validated(ValidationGroups.Create.class)
+                                                     @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.register(request), HttpStatus.CREATED);
     }
 
@@ -41,7 +44,9 @@ public class UserController {
             value = "아이디 중복 확인",
             notes = "아이디 중복을 확인합니다.\n\n")
     @GetMapping(value = "/user/exists")
-    public ResponseEntity<String> checkDuplicateAccount(@RequestParam String account) throws Exception {
+    public ResponseEntity<String> checkDuplicateAccount(
+            @Pattern(regexp = "^[a-zA-z가-힣0-9]{1,20}$", message = "닉네임에 특수문자와 초성은 불가능합니다.")
+            @RequestParam String account) throws Exception {
         return new ResponseEntity<>(userService.checkDuplicateAccount(account), HttpStatus.OK);
     }
 
@@ -54,7 +59,8 @@ public class UserController {
                     "password : 유저 패스워드,\n\n" +
                     "}")
     @PostMapping(value = "/user/login")
-    public ResponseEntity<Token> login(@Validated(ValidationGroups.Login.class) @RequestBody UserRequest request) throws Exception {
+    public ResponseEntity<Token> login(@Validated(ValidationGroups.Login.class)
+                                           @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
@@ -94,8 +100,9 @@ public class UserController {
     )
     @GetMapping("/users")
     public ResponseEntity<Page<UserResponse>> searchUsers(
-            @RequestParam String keyword,
-            @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "20") Integer pageSize,
+            @Size(min = 1, max = 20, message = "닉네임은 1~20글자까지 검색할 수 있습니다.") @RequestParam String keyword,
+            @ApiParam("가져올 데이터 수(1~100)") @Range(min = 0, max = 100, message = "올바르지 않은 값입니다.")
+            @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             @RequestParam(required = false) Long cursor) throws Exception {
         return new ResponseEntity<>(userService.searchUsers(keyword, pageSize, cursor), HttpStatus.OK);
     }
@@ -124,7 +131,8 @@ public class UserController {
             authorizations = @Authorization(value = "Bearer + refreshToken"))
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping("/user/me")
-    public ResponseEntity<UserResponse> modifyUser(@RequestBody UserRequest request) throws Exception {
+    public ResponseEntity<UserResponse> modifyUser(@Validated(ValidationGroups.Update.class)
+                                                       @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
     }
 
