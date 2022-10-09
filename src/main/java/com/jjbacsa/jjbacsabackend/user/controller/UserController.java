@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.controller;
 
+import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
@@ -13,9 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
 
 @RequiredArgsConstructor
 @RestController
@@ -31,7 +31,7 @@ public class UserController {
                     "password : 유저 패스워드,\n\n     " +
                     "email : 유저 이메일(차후 인증 추가)\n\n}")
     @PostMapping(value = "/user")
-    public ResponseEntity<UserResponse> register(@RequestBody UserRequest request) throws Exception {
+    public ResponseEntity<UserResponse> register(@Validated(ValidationGroups.Create.class) @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.register(request), HttpStatus.CREATED);
     }
 
@@ -52,20 +52,20 @@ public class UserController {
                     "password : 유저 패스워드,\n\n" +
                     "}")
     @PostMapping(value = "/user/login")
-    public ResponseEntity<Token> login(@RequestBody UserRequest request, HttpServletResponse httpResponse) throws Exception{
+    public ResponseEntity<Token> login(@Validated(ValidationGroups.Login.class) @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
     @ApiOperation(
             value = "본인 정보 확인",
             notes = "로그인 유저 정보 확인\n\n" +
-            "필요 헤더\n\n" +
-            "Authorization : access token\n\n" +
-            "RefreshToken : refresh token",
+                    "필요 헤더\n\n" +
+                    "Authorization : access token\n\n" +
+                    "RefreshToken : refresh token",
             authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value = "/user/me")
-    public ResponseEntity<UserResponse> getMe() throws Exception{
+    public ResponseEntity<UserResponse> getMe() throws Exception {
         return new ResponseEntity<>(userService.getLoginUser(), HttpStatus.OK);
     }
 
@@ -77,7 +77,7 @@ public class UserController {
                     "RefreshToken : refresh token",
             authorizations = @Authorization(value = "Bearer + refreshToken"))
     @GetMapping("/user/refresh")
-    public ResponseEntity<Token> refresh() throws Exception{
+    public ResponseEntity<Token> refresh() throws Exception {
         return new ResponseEntity<>(userService.refresh(), HttpStatus.OK);
     }
 
@@ -94,7 +94,7 @@ public class UserController {
     public ResponseEntity<Page<UserResponse>> searchUsers(
             @RequestParam String keyword,
             @PageableDefault(size = 20) Pageable pageable,
-            @RequestParam(required = false) Long cursor) throws Exception{
+            @RequestParam(required = false) Long cursor) throws Exception {
         return new ResponseEntity<>(userService.searchUsers(keyword, pageable, cursor), HttpStatus.OK);
     }
 
@@ -122,7 +122,7 @@ public class UserController {
             authorizations = @Authorization(value = "Bearer + refreshToken"))
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping("/user/me")
-    public ResponseEntity<UserResponse> modifyUser(@RequestBody UserRequest request) throws Exception{
+    public ResponseEntity<UserResponse> modifyUser(@RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
     }
 
@@ -135,7 +135,7 @@ public class UserController {
     )
     @PreAuthorize(("hasRole('NORMAL')"))
     @DeleteMapping("/user/me")
-    public ResponseEntity<Void> withdraw() throws Exception{
+    public ResponseEntity<Void> withdraw() throws Exception {
         userService.withdraw();
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
