@@ -45,11 +45,6 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
                 .fetchOne();
     }
 
-//    SELECT u.*, uc.* FROM jjbacsa.user u
-//    INNER JOIN jjbacsa.follow f on f.follower_id = u.id
-//    INNER JOIN jjbacsa.user_count uc on u.id = uc.user_id
-//    where u.id = 4;
-
     @Override
     public List<UserEntity> findAllUserByIdAndFollowWithCount(Long id){
         QFollowEntity follow = QFollowEntity.followEntity;

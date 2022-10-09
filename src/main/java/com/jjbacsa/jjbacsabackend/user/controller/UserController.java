@@ -6,8 +6,10 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -93,9 +95,9 @@ public class UserController {
     @GetMapping("/users")
     public ResponseEntity<Page<UserResponse>> searchUsers(
             @RequestParam String keyword,
-            @PageableDefault(size = 20) Pageable pageable,
+            @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "20") Integer pageSize,
             @RequestParam(required = false) Long cursor) throws Exception {
-        return new ResponseEntity<>(userService.searchUsers(keyword, pageable, cursor), HttpStatus.OK);
+        return new ResponseEntity<>(userService.searchUsers(keyword, pageSize, cursor), HttpStatus.OK);
     }
 
     @ApiOperation(

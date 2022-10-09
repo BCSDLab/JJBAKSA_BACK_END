@@ -13,7 +13,7 @@ public interface UserService {
     void logout() throws Exception;
     Token refresh() throws Exception;
     UserResponse getLoginUser() throws Exception;
-    Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception;
+    Page<UserResponse> searchUsers(String keyword, Integer pageSize, Long cursor) throws Exception;
     UserResponse getAccountInfo(Long id) throws Exception;
     UserResponse modifyUser(UserRequest request) throws Exception;
     void withdraw() throws Exception;

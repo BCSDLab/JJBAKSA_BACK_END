@@ -18,6 +18,7 @@ import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -128,7 +129,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception {
+    public Page<UserResponse> searchUsers(String keyword, Integer pageSize, Long cursor) throws Exception {
+        Pageable pageable = PageRequest.of(0, pageSize);
+
         Page<UserResponse> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor)
                 .map(UserMapper.INSTANCE::toUserResponse);
 
