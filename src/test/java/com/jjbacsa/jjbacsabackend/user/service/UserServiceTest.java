@@ -12,6 +12,7 @@ import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
+import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +36,7 @@ public class UserServiceTest {
     private final UserService userService;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisUtil redisUtil;
 
     private UserEntity user;
     private UserRequest loginRequest;
@@ -153,7 +154,7 @@ public class UserServiceTest {
         assertThrows(RequestInputException.class,
                 () -> userService.getAccountInfo(userService.getLoginUser().getId()));
 
-        assertEquals(redisTemplate.opsForValue().get(user.getAccount()), null);
+        assertEquals(redisUtil.getStringValue(String.valueOf(user.getId())), null);
     }
 
     private void testLogin(UserEntity user) throws Exception {
