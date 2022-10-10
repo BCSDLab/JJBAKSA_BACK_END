@@ -4,6 +4,7 @@ import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.user.serviceImpl.OAuth2UserServiceImpl;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.Authorization;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 @RestController
 public class UserController {
     private final UserService userService;
+    private final OAuth2UserServiceImpl oAuth2UserService;
 
     @ApiOperation(
             value = "회원가입",
@@ -126,4 +128,18 @@ public class UserController {
     public ResponseEntity<UserResponse> modifyUser(@RequestBody UserRequest request) throws Exception{
         return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
     }
+
+    @ApiOperation(
+            value = "APPLE 로그인",
+            notes = "APPLE 로그인\n\n" +
+                    "필요 헤더\n\n" +
+                    "{\n\n     " +
+                    "Authorization : 클라이언트 측에서 발급 받은 id token\n\n" +
+                    "}"
+    )
+    @PostMapping(value = "/login/apple")
+    public ResponseEntity<Token> oauth2AppleLogin() throws Exception {
+        return new ResponseEntity<>(oAuth2UserService.appleLogin(), HttpStatus.OK);
+    }
+
 }
