@@ -35,7 +35,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponses({
             @ApiResponse(code = 201,
-                    message = "생성된 유저 정보 (토큰 반환이 낫다면 채널에서 이야기 바랍니다.)",
+                    message = "생성된 유저 정보",
                     response = UserResponse.class)
     })
     @PostMapping(value = "/user")
