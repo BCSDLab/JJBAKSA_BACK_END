@@ -16,6 +16,7 @@ import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
+import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,7 +44,7 @@ public class UserServiceImpl implements UserService {
     private final UserCountRepository userCountRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisUtil redisUtil;
 
     //TODO : OAuth별 작동
     @Override
@@ -79,11 +80,11 @@ public class UserServiceImpl implements UserService {
             throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
         }
 
-        String existToken = redisTemplate.opsForValue().get(user.getAccount());
+        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
 
         if (existToken == null) {
             existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH, user.getUserType().getUserType());
-            redisTemplate.opsForValue().set(user.getAccount(), existToken, 14, TimeUnit.DAYS);
+            redisUtil.setToken(String.valueOf(user.getId()), existToken);
         }
 
         Token token = new Token(
@@ -110,7 +111,7 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
-        String existToken = redisTemplate.opsForValue().get(user.getAccount());
+        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
 
         //null인 경우에는 다시 로그인 필요
         if (existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH)))
@@ -171,8 +172,8 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         //회원 탈퇴에 따른 리프레시 토큰 삭제
-        String existToken = redisTemplate.opsForValue().get(user.getAccount());
-        if (existToken != null) redisTemplate.delete(user.getAccount());
+        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
+        if (existToken != null) redisUtil.deleteValue(String.valueOf(user.getId()));
     }
 
     private boolean existAccount(String account) {
