@@ -2,8 +2,12 @@ package com.jjbacsa.jjbacsabackend.user.service;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
+import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
+import com.jjbacsa.jjbacsabackend.user.entity.UserCount;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
@@ -12,48 +16,53 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.data.domain.Page;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.TestConstructor;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@AutoConfigureMockMvc
 @RequiredArgsConstructor
 @Transactional
 public class UserServiceTest {
     private final UserService userService;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-    private final MockMvc mockMvc;
+    private final RedisTemplate<String, String> redisTemplate;
 
-    private UserRequest request;
+    private UserEntity user;
     private UserRequest loginRequest;
 
     @BeforeEach
-    void setup() throws Exception{
-        request = new UserRequest("test1", "test1", "test1@google.com", "test1");
-        loginRequest = new UserRequest("test2", "test2", "test2@google.com", "test1");
+    void setup() throws Exception {
+        UserEntity testUser = UserEntity.builder()
+                .account("test1")
+                .password("password")
+                .email("test2@google.com")
+                .nickname("test1")
+                .userType(UserType.NORMAL)
+                .build();
+        user = userRepository.save(testUser);
+        testLogin(user);
+
+        loginRequest = new UserRequest("test2", "test2!", "test2@google.com", "test1");
     }
 
     @DisplayName("회원 가입")
     @Test
-    void register() throws Exception{
-        UserResponse response = userService.register(request);
+    void register() throws Exception {
+        UserRequest testRequest = new UserRequest("", "", "", "");
 
-        UserEntity testUser = userRepository.findByAccount(request.getAccount())
+        UserResponse response = userService.register(loginRequest);
+
+        UserEntity testUser = userRepository.findByAccount(loginRequest.getAccount())
                 .orElseThrow(() -> new Exception("Not Found"));
 
         assertEquals(UserMapper.INSTANCE.toUserResponse(testUser).getId(), response.getId());
@@ -61,27 +70,27 @@ public class UserServiceTest {
 
     @DisplayName("로그인")
     @Test
-    void login() throws Exception{
+    void login() throws Exception {
         UserResponse userResponse = userService.register(loginRequest);
 
         UserRequest loginInfo = new UserRequest("", loginRequest.getPassword(), "", "");
         //아이디 틀린 경우
-        assertThrows(Exception.class, () ->
+        assertThrows(RequestInputException.class, () ->
                 userService.login(loginInfo));
 
         loginInfo.setAccount(loginRequest.getAccount());
         loginInfo.setPassword("");
         //비밀번호 틀린 경우
-        assertThrows(Exception.class, () ->
+        assertThrows(RequestInputException.class, () ->
                 userService.login(loginInfo));
 
         loginInfo.setPassword(loginRequest.getPassword());
         Token token = userService.login(loginInfo);
 
         //토큰 타입 불일치
-        assertThrows(Exception.class, () ->
+        assertThrows(RequestInputException.class, () ->
                 jwtUtil.isValid("Bearer " + token.getAccessToken(), TokenType.REFRESH));
-        assertThrows(Exception.class, () ->
+        assertThrows(RequestInputException.class, () ->
                 jwtUtil.isValid("Bearer " + token.getRefreshToken(), TokenType.ACCESS));
 
         assertEquals(jwtUtil.isValid("Bearer " + token.getAccessToken(), TokenType.ACCESS), true);
@@ -92,22 +101,65 @@ public class UserServiceTest {
     }
 
 
-    //WithUserDetails에 존재하는 Account 값을 넣으면 됩니다.
     @DisplayName("로그인 유저 정보 확인")
     @Test
-    @WithUserDetails(value = "4")
     void getLoginUser() throws Exception {
-        assertEquals(userService.getLoginUser().getAccount(), "12345");
+        UserResponse response = userService.getLoginUser();
+
+        assertEquals(user.getId(), response.getId());
     }
 
     @DisplayName("유저 수정")
     @Test
-    @WithUserDetails(value = "4")
-    void modifyUser() throws Exception{
+    void modifyUser() throws Exception {
         UserRequest request = new UserRequest();
         request.setNickname("Test");
 
         userService.modifyUser(request);
         assertEquals(userService.getLoginUser().getNickname(), "Test");
+    }
+
+    @DisplayName("유저 리스트 검색")
+    @Test
+    void searchUsers() throws Exception {
+        Page<UserResponse> result = userService
+                .searchUsers("NoSearchName", 10, 0L);
+        assertTrue(result.isEmpty());
+
+        UserRequest request = new UserRequest();
+        request.setNickname("SearchName");
+        userService.modifyUser(request);
+
+        result = userService
+                .searchUsers("SearchName", 10, 0L);
+        assertEquals(result.getContent().get(0).getId(),
+                userService.getLoginUser().getId());
+    }
+
+    @DisplayName("유저 검색")
+    @Test
+    void getAccountInfo() throws Exception {
+        assertThrows(RequestInputException.class,
+                () -> userService.getAccountInfo(999999L));
+
+        assertEquals(userService.getAccountInfo(user.getId()).getId(),
+                userService.getLoginUser().getId());
+    }
+
+    @DisplayName("회원 탈퇴")
+    @Test
+    void withdraw() throws Exception {
+        userService.withdraw();
+        assertThrows(RequestInputException.class,
+                () -> userService.getAccountInfo(userService.getLoginUser().getId()));
+
+        assertEquals(redisTemplate.opsForValue().get(user.getAccount()), null);
+    }
+
+    private void testLogin(UserEntity user) throws Exception {
+        UserDetails userDetails = new CustomUserDetails(user.getId());
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }
