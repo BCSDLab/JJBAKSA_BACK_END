@@ -3,6 +3,7 @@ package com.jjbacsa.jjbacsabackend.review.serviceImpl;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
+import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.image.service.ImageService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
@@ -33,18 +34,20 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ReviewServiceImpl implements ReviewService {
-    private final ImageService imageService;
     private final InternalUserService userService;
     private final InternalShopService shopService;
     private final InternalFollowService followService;
-
+    // TODO: InternalService로 변경
+    private final ImageService imageService;
     private final ReviewImageRepository reviewImageRepository;
+
     private final ReviewRepository reviewRepository;
 
     @Override
     @Transactional
     public ReviewResponse createReview(ReviewRequest reviewRequest) throws Exception {
         ReviewEntity review = reviewRepository.save(createReviewEntity(reviewRequest));
+        log.info(review.getCreatedAt().toString());
         return ReviewResponse.from(review);
     }
 
@@ -68,6 +71,10 @@ public class ReviewServiceImpl implements ReviewService {
         ReviewEntity reviewEntity = reviewRepository.findByReviewId(reviewId);
         if(reviewEntity == null) throw new RequestInputException(ErrorMessage.REVIEW_NOT_EXISTS_EXCEPTION);
         if(!reviewEntity.getWriter().equals(userEntity)) throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_REVIEW);
+
+        for(ReviewImageEntity reviewImage: reviewEntity.getReviewImages()){ // 리뷰 이미지를 버킷에서 삭제
+            imageService.deleteImage(reviewImage.getImage().getId());
+        }
         reviewRepository.deleteById(reviewId);
 
         // 리뷰 수, 별점 처리
@@ -170,14 +177,14 @@ public class ReviewServiceImpl implements ReviewService {
             shopService.addTotalRating(review.getShop().getId(), modRate - curRate);
             review.setRate(modRate);
         }
-
         if(reviewRequest.getReviewImages() != null) {
             imageService.modifyReviewImages(reviewRequest.getReviewImages(), review);
         }
         else{
             if(review.getReviewImages() != null){
-                for(ReviewImageEntity image: review.getReviewImages()){
-                    reviewImageRepository.deleteById(image.getId());
+                for(ReviewImageEntity reviewImage: review.getReviewImages()){
+                    imageService.deleteImage(reviewImage.getImage().getId());
+                    reviewImageRepository.deleteById(reviewImage.getId());
                 }
                 review.getReviewImages().clear();
             }
