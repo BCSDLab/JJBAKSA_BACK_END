@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.etc.security;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
+import com.jjbacsa.jjbacsabackend.user.serviceImpl.UserDetailsServiceImpl;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +20,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
     private final JwtUtil jwtUtil;
+    private final UserDetailsServiceImpl userDetailsService;
 
     public Authentication getAuthentication(String token) throws Exception {
         Map<String, Object> payloads = jwtUtil.getPayloadsFromJwt(token);
@@ -29,7 +31,8 @@ public class JwtTokenProvider {
         Arrays.stream(authority.split(","))
                 .forEach(auth -> authorities.add(new SimpleGrantedAuthority(auth)));
 
-        return new UsernamePasswordAuthenticationToken(new CustomUserDetails(id), "", authorities);
+        return new UsernamePasswordAuthenticationToken(
+                userDetailsService.loadUserByUsername(id.toString()), "", authorities);
     }
 
     public boolean validateToken(String token, TokenType tokenType) throws Exception {
