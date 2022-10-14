@@ -173,50 +173,26 @@ public class ShopServiceImpl implements ShopService {
         String keywordForQuery;
 
 
+        //TODO: test후 쿼리 다 확인, 쿼리(검색어) 정제 유무 확인
         switch (searchType){
             case cafe:
             case restaurant:
                 //키워드 정제
                 keywordForQuery=getKeywordForQuery(keyword);
-
-                shopList.addAll(shopRepository.searchWithCategory(keywordForQuery,searchType.name()).stream().map(t -> new ShopSummaryResponse(
-                                t.get(0, BigInteger.class).longValue(),
-                                t.get(1,String.class),
-                                t.get(2,String.class),
-                                t.get(3,String.class),
-                                t.get(4,String.class),
-                                t.get(5,String.class),
-                                t.get(6,Double.class)
-                        ))
-                        .collect(Collectors.toList())
-                );
+                shopList.addAll(shopRepository.search(keywordForQuery,searchType.name()));
                 break;
             case cafe_category:
-                shopList.addAll(shopRepository.findAllByCategoryName("cafe").stream().map(t ->
-                        ShopMapper.INSTANCE.toShopSummaryResponse(t)).collect(Collectors.toList()));
+                shopList.addAll(shopRepository.findAllByCategoryName("cafe"));
                 break;
             case restaurant_category:
-                shopList.addAll(shopRepository.findAllByCategoryName("restaurant").stream().map(t ->
-                        ShopMapper.INSTANCE.toShopSummaryResponse(t)).collect(Collectors.toList()));
+                shopList.addAll(shopRepository.findAllByCategoryName("restaurant"));
                 break;
             case one:
-                shopList.addAll(shopRepository.findByPlaceNameContaining(keyword).stream().map(t->
-                        ShopMapper.INSTANCE.toShopSummaryResponse(t)).collect(Collectors.toList()));
+                shopList.addAll(shopRepository.findByPlaceNameContaining(keyword));
                 break;
             case NONE:
                 keywordForQuery=getKeywordForQuery(keyword);
-
-                shopList.addAll(shopRepository.search(keywordForQuery).stream().map(t -> new ShopSummaryResponse(
-                                        t.get(0, BigInteger.class).longValue(),
-                                        t.get(1,String.class),
-                                        t.get(2,String.class),
-                                        t.get(3,String.class),
-                                        t.get(4,String.class),
-                                        t.get(5,String.class),
-                                        t.get(6,Double.class)
-                                ))
-                                .collect(Collectors.toList())
-                );
+                shopList.addAll(shopRepository.search(keywordForQuery,null));
                 break;
         }
 

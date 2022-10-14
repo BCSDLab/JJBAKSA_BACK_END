@@ -1,9 +1,12 @@
 package com.jjbacsa.jjbacsabackend.shop.dto.response;
 
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 
 @Builder
+@Getter
 @AllArgsConstructor
 public class ShopSummaryResponse implements Comparable<ShopSummaryResponse>{
     private Long shopId;
@@ -15,7 +18,8 @@ public class ShopSummaryResponse implements Comparable<ShopSummaryResponse>{
     private double dist;
     private double score;
 
-    public ShopSummaryResponse(Long shopId,String placeId, String placeName, String address, String x, String y, double score){
+    @QueryProjection
+    public ShopSummaryResponse(Long shopId, String placeId, String placeName, String address, String x, String y, double score){
         this.shopId=shopId;
         this.placeId=placeId;
         this.placeName=placeName;
@@ -25,40 +29,24 @@ public class ShopSummaryResponse implements Comparable<ShopSummaryResponse>{
         this.score=score;
     }
 
-
-
-    public Long getShopId() {
-        return shopId;
+    @QueryProjection
+    public ShopSummaryResponse(Long shopId, String placeId, String placeName, String address, String x, String y){
+        //정확도 필요 없는 ShopSummaryResponse (한 글자 검색, 카테고리 검색)
+        this.shopId=shopId;
+        this.placeId=placeId;
+        this.placeName=placeName;
+        this.address=address;
+        this.x=x;
+        this.y=y;
     }
-
-    public String getPlaceId() {
-        return placeId;
-    }
-
-    public String getPlaceName() {
-        return placeName;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public double getDist() {
-        return dist;
-    }
-
-    public double getX(){
-        return Double.valueOf(x);
-    }
-
-    public double getY(){return Double.valueOf(y);}
-
-    public double getScore(){return score;}
 
     public void setDist(double x, double y){
-        double theta=y-this.getY();
-        double dist=Math.sin(deg2rad((x)))*Math.sin(deg2rad(this.getX()))
-                +Math.cos(deg2rad(x))*Math.cos(deg2rad(this.getX()))*Math.cos(deg2rad(theta));
+        double y_double=Double.valueOf(this.getY());
+        double x_double=Double.valueOf(this.getX());
+
+        double theta=y-y_double;
+        double dist=Math.sin(deg2rad((x)))*Math.sin(deg2rad(x_double))
+                +Math.cos(deg2rad(x))*Math.cos(deg2rad(x_double))*Math.cos(deg2rad(theta));
         dist=Math.acos(dist);
         dist=rad2deg(dist);
         dist*=60*1.1515*1609.344; //meter
