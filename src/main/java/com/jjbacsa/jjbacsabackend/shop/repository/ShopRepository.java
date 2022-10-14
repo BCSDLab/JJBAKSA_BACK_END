@@ -1,6 +1,5 @@
 package com.jjbacsa.jjbacsabackend.shop.repository;
 
-import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.querydsl.DslShopRepository;
 import org.springframework.data.repository.query.Param;

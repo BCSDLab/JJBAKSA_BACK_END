@@ -8,8 +8,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import java.util.List;
-
 @Mapper(componentModel = "Spring")
 public interface ShopMapper {
 
@@ -20,6 +18,4 @@ public interface ShopMapper {
     @Mapping(source="id",target="shopId")
     ShopResponse toShopResponse(ShopEntity shopEntity);
 
-    @Mapping(source="id", target = "shopId")
-    ShopSummaryResponse toShopSummaryResponse(ShopEntity shopEntity);
 }

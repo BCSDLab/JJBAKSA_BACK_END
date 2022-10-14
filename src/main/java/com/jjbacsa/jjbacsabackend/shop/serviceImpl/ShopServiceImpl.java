@@ -33,7 +33,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.netty.http.client.HttpClient;
 
-import java.math.BigInteger;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -88,7 +87,7 @@ public class ShopServiceImpl implements ShopService {
             Optional<ShopEntity> shopEntity=shopRepository.findByPlaceId(placeId);
 
             ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity.get());
-            shopResponse.setShopCount(shopEntity.get().getShopCount());
+            shopResponse.setShopCount(shopRepository.getTotalRating(shopResponse.getShopId()), shopRepository.getRatingCount(shopResponse.getShopId()));
 
             return shopResponse;
         }else{
@@ -106,7 +105,7 @@ public class ShopServiceImpl implements ShopService {
             ShopEntity shopEntity=register(shopDto);
 
             ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity);
-            shopResponse.setShopCount(shopEntity.getShopCount());
+            shopResponse.setShopCount(shopRepository.getTotalRating(shopResponse.getShopId()), shopRepository.getRatingCount(shopResponse.getShopId()));
 
             return shopResponse;
         }
@@ -172,8 +171,6 @@ public class ShopServiceImpl implements ShopService {
         List<ShopSummaryResponse> shopList=new ArrayList<>();
         String keywordForQuery;
 
-
-        //TODO: test후 쿼리 다 확인, 쿼리(검색어) 정제 유무 확인
         switch (searchType){
             case cafe:
             case restaurant:

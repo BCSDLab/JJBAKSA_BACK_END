@@ -31,7 +31,6 @@ public class ShopSummaryResponse implements Comparable<ShopSummaryResponse>{
 
     @QueryProjection
     public ShopSummaryResponse(Long shopId, String placeId, String placeName, String address, String x, String y){
-        //정확도 필요 없는 ShopSummaryResponse (한 글자 검색, 카테고리 검색)
         this.shopId=shopId;
         this.placeId=placeId;
         this.placeName=placeName;

@@ -67,7 +67,7 @@ public class ShopEntity extends BaseEntity {
     @Column(name="business_day",nullable = true)
     private String businessDay;
 
-    @OneToOne(mappedBy = "shop", fetch = FetchType.EAGER, optional = false, cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "shop", fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
     @Builder.Default
     private ShopCount shopCount = new ShopCount();
 }

@@ -18,7 +18,6 @@ public class DslShopRepositoryImpl implements DslShopRepository{
 
     private final JPAQueryFactory queryFactory;
 
-    //TODO: keyword 전처리 없이도 수행되는지 확인
     @Override
     public List<ShopSummaryResponse> search(String keyword, String category) {
 
