@@ -332,7 +332,7 @@ class FollowServiceTest {
 
     private void testLogin(UserEntity user) throws Exception {
 
-        UserDetails userDetails = new CustomUserDetails(user);
+        UserDetails userDetails = new CustomUserDetails(user.getId());
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(auth);
         //Mockito.when(userService.getLoginUser()).thenReturn(UserMapper.INSTANCE.toUserResponse(user));
