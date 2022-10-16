@@ -35,6 +35,7 @@ public enum ErrorMessage {
     SCRAP_DUPLICATE_EXCEPTION(29, "같은 상점에 대한 스크랩이 존재합니다.", HttpStatus.BAD_REQUEST),
     SCRAP_DIRECTORY_NOT_EXISTS_EXCEPTION(30, "스크랩 디렉토리가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     SCRAP_DIRECTORY_DUPLICATE_EXCEPTION(31, "같은 이름의 디렉토리가 존재합니다.", HttpStatus.BAD_REQUEST),
+    BAD_AUTHENTICATION_CODE(32, "잘못된 인가 코드입니다.", HttpStatus.BAD_REQUEST)
     ;
 
     Integer code;

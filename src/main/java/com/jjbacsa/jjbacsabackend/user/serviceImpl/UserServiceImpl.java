@@ -12,6 +12,7 @@ import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
@@ -36,6 +37,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
     private final InternalUserService userService;
     private final InternalFollowService followService;
+    private final InternalEmailService emailService;
     private final UserRepository userRepository;
     private final UserCountRepository userCountRepository;
     private final JwtUtil jwtUtil;
@@ -48,6 +50,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
         //TODO : 이메일 인증 확인 절차 추가
+//        emailService.codeCertification(request.getEmail(), code);
 
         //TODO : Default Profile 등록하기
         existAccount(request.getAccount());
@@ -148,8 +151,10 @@ public class UserServiceImpl implements UserService {
     public UserResponse modifyUser(UserRequest request) throws Exception {
         UserEntity user = userService.getLoginUser();
 
-        if (request.getPassword() != null)
+        if (request.getPassword() != null) {
+//            emailService.codeCertification(request.getEmail(), code);
             user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
         if (request.getNickname() != null)
             user.setNickname(request.getNickname());
 
@@ -172,11 +177,20 @@ public class UserServiceImpl implements UserService {
         if (existToken != null) redisUtil.deleteValue(String.valueOf(user.getId()));
     }
 
-    //TODO : 테스트용 코드 인증 실 구현 시 내부 메소드로 변경
     @Override
-    public Boolean codeCertification(String email, String code) throws Exception {
-        String existCode = redisUtil.getStringValue(email.split("@")[0]);
-        return existCode.equals(code);
+    public void sendAuthEmail(String email) throws Exception{
+        emailService.sendAuthEmail(email);
+    }
+
+    @Override
+    public void findAccount(String email, String code) throws Exception {
+        if (!emailService.codeCertification(email, code))
+            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+
+        UserEntity user = userService.getUserByEmail(email);
+
+        //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
+        emailService.sendAccountEmail(email, user.getAccount());
     }
 
     private boolean existAccount(String account) {

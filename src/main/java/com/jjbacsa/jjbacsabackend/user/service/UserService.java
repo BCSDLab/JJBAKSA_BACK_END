@@ -16,5 +16,6 @@ public interface UserService {
     UserResponse getAccountInfo(Long id) throws Exception;
     UserResponse modifyUser(UserRequest request) throws Exception;
     void withdraw() throws Exception;
-    Boolean codeCertification(String email, String code) throws Exception;
+    void sendAuthEmail(String email) throws Exception;
+    void findAccount(String email, String code) throws Exception;
 }

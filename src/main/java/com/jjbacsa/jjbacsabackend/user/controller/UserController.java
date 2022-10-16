@@ -4,7 +4,7 @@ import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.service.EmailService;
+import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import javax.validation.constraints.Size;
 @Validated
 public class UserController {
     private final UserService userService;
-    private final EmailService emailService;
+    private final InternalEmailService emailService;
 
     @ApiOperation(
             value = "회원가입",
@@ -195,14 +195,21 @@ public class UserController {
 
     @PostMapping("/user/email")
     public ResponseEntity<String> sendAuthEmail (@RequestParam String email) throws Exception {
-        emailService.sendAuthEmail(email);
+        userService.sendAuthEmail(email);
+        return new ResponseEntity<>("OK", HttpStatus.OK);
+    }
+
+    @GetMapping("user/account")
+    public ResponseEntity<String> findAccount(@RequestParam String email,
+                                                @RequestParam String code) throws Exception {
+        userService.findAccount(email, code);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 
     @GetMapping("/user/test-auth")
     public ResponseEntity<String> testAuthCode(@RequestParam String email,
                                                 @RequestParam String code) throws Exception {
-        return userService.codeCertification(email, code)?
+        return emailService.codeCertification(email, code)?
                 new ResponseEntity<>("True", HttpStatus.OK):
                 new ResponseEntity<>("False", HttpStatus.OK);
     }
