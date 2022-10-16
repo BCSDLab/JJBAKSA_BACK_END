@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.shop.repository;
 
+import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.annotation.Rollback;
 
-import javax.persistence.Tuple;
 import java.util.List;
 import java.util.Optional;
 
@@ -138,7 +138,7 @@ class ShopRepositoryTest {
         String keyword="상수 수동 동떡 떡볶 볶이";
 
         //when
-        List<Tuple> searchResult=shopRepository.search(keyword);
+        List<ShopSummaryResponse> searchResult=shopRepository.search(keyword,null);
 
         //then
         assertEquals(3,searchResult.size());
@@ -152,10 +152,39 @@ class ShopRepositoryTest {
         String keyword="서울 울카 카페";
 
         //when
-        List<Tuple> searchResult=shopRepository.searchWithCategory(keyword,"cafe");
+        List<ShopSummaryResponse>searchResult=shopRepository.search(keyword,"cafe");
 
         //then
         assertEquals(1,searchResult.size());
+
+    }
+
+    @Order(8)
+    @DisplayName("카테고리로 상점 검색")
+    @Test
+    public void findAllByCategoryName(){
+        //given
+        String category="cafe";
+
+        //when
+        List<ShopSummaryResponse> searchResult=shopRepository.findAllByCategoryName(category);
+
+        //then
+        assertEquals(1,searchResult.size());
+    }
+
+    @Order(9)
+    @DisplayName("한글자로 상점 검색")
+    @Test
+    public void findByPlaceNameContaining(){
+        //given
+        String keyword="떡";
+
+        //when
+        List<ShopSummaryResponse> searchResult=shopRepository.findByPlaceNameContaining(keyword);
+
+        //then
+        assertEquals(3,searchResult.size());
 
     }
 }

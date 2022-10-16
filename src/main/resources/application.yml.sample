@@ -31,7 +31,7 @@ spring:
 
   jpa:
     show-sql: true
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    database-platform: com.jjbacsa.jjbacsabackend.etc.config.CustomDialect
     properties:
       hibernate.format_sql: true
       default_batch_fetch_size: 100
