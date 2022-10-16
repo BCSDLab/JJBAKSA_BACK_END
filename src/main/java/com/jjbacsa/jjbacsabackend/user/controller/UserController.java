@@ -4,6 +4,7 @@ import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.service.EmailService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import javax.validation.constraints.Size;
 @Validated
 public class UserController {
     private final UserService userService;
+    private final EmailService emailService;
 
     @ApiOperation(
             value = "회원가입",
@@ -189,5 +191,19 @@ public class UserController {
     public ResponseEntity<Void> withdraw() throws Exception {
         userService.withdraw();
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PostMapping("/user/email")
+    public ResponseEntity<String> sendAuthEmail (@RequestParam String email) throws Exception {
+        emailService.sendAuthEmail(email);
+        return new ResponseEntity<>("OK", HttpStatus.OK);
+    }
+
+    @GetMapping("/user/test-auth")
+    public ResponseEntity<String> testAuthCode(@RequestParam String email,
+                                                @RequestParam String code) throws Exception {
+        return userService.codeCertification(email, code)?
+                new ResponseEntity<>("True", HttpStatus.OK):
+                new ResponseEntity<>("False", HttpStatus.OK);
     }
 }

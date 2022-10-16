@@ -4,7 +4,6 @@ import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface UserService {
     UserResponse register(UserRequest request) throws Exception;
@@ -17,4 +16,5 @@ public interface UserService {
     UserResponse getAccountInfo(Long id) throws Exception;
     UserResponse modifyUser(UserRequest request) throws Exception;
     void withdraw() throws Exception;
+    Boolean codeCertification(String email, String code) throws Exception;
 }

@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService {
     private final RedisUtil redisUtil;
 
     //TODO : OAuth별 작동
-    //TODO : 이메일 인증 추가 시 인증 코드 파라미터 추가
+    //TODO : 이메일 인증 추가 시 인증 코드 파라미터 추가 (변경 시 채널에 고지 )
     @Override
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
@@ -143,7 +143,7 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
-    //TODO : Email 인증 추가 완료 시 파라미터 추가(비밀번호 수정 시 인증 코드)
+    //TODO : Email 인증 추가 완료 시 파라미터 추가 (변경 시 채널에 고지 )
     @Override
     public UserResponse modifyUser(UserRequest request) throws Exception {
         UserEntity user = userService.getLoginUser();
@@ -170,6 +170,13 @@ public class UserServiceImpl implements UserService {
         //회원 탈퇴에 따른 리프레시 토큰 삭제
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
         if (existToken != null) redisUtil.deleteValue(String.valueOf(user.getId()));
+    }
+
+    //TODO : 테스트용 코드 인증 실 구현 시 내부 메소드로 변경
+    @Override
+    public Boolean codeCertification(String email, String code) throws Exception {
+        String existCode = redisUtil.getStringValue(email.split("@")[0]);
+        return existCode.equals(code);
     }
 
     private boolean existAccount(String account) {
