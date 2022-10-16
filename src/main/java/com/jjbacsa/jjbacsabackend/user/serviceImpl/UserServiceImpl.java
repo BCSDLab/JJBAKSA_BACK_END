@@ -8,7 +8,6 @@ import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
@@ -21,8 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +29,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +43,7 @@ public class UserServiceImpl implements UserService {
     private final RedisUtil redisUtil;
 
     //TODO : OAuth별 작동
+    //TODO : 이메일 인증 추가 시 인증 코드 파라미터 추가
     @Override
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
@@ -146,6 +143,7 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
+    //TODO : Email 인증 추가 완료 시 파라미터 추가(비밀번호 수정 시 인증 코드)
     @Override
     public UserResponse modifyUser(UserRequest request) throws Exception {
         UserEntity user = userService.getLoginUser();
@@ -154,7 +152,6 @@ public class UserServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         if (request.getNickname() != null)
             user.setNickname(request.getNickname());
-        //TODO : email 변경시 인증된 이메일 확인
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
