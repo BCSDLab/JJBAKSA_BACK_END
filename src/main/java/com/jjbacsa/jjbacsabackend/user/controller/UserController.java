@@ -16,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
@@ -193,15 +194,40 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @ApiOperation(
+            value = "인증 이메일 발송",
+            notes = "인증 이메일 발송\n\n" +
+                    "필요한 필드\n\n" +
+                    "\t{\n\n     " +
+                    "email : 이메일을 받을 이메일\n\n" +
+                    "\t}"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "OK")
+    })
+    //TODO : 이메일 로직에 따라 인증용 파라미터 설정
     @PostMapping("/user/email")
-    public ResponseEntity<String> sendAuthEmail (@RequestParam String email) throws Exception {
+    public ResponseEntity<String> sendAuthEmail (@RequestBody String email) throws Exception {
         userService.sendAuthEmail(email);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "아이디 발송",
+            notes = "찾을 이메일 발송\n\n" +
+                    "email : 아이디를 찾을 이메일 - 메일 받을 주소\n\n" +
+                    "code : 인증 코드"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "OK")
+    })
     @GetMapping("user/account")
     public ResponseEntity<String> findAccount(@RequestParam String email,
-                                                @RequestParam String code) throws Exception {
+                                              @RequestParam String code) throws Exception {
         userService.findAccount(email, code);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
