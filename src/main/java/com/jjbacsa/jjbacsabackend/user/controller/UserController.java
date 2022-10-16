@@ -209,7 +209,8 @@ public class UserController {
     })
     //TODO : 이메일 로직에 따라 인증용 파라미터 설정
     @PostMapping("/user/email")
-    public ResponseEntity<String> sendAuthEmail (@RequestBody String email) throws Exception {
+    public ResponseEntity<String> sendAuthEmail (@Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                     @RequestBody String email) throws Exception {
         userService.sendAuthEmail(email);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
@@ -226,7 +227,8 @@ public class UserController {
                     message = "OK")
     })
     @GetMapping("user/account")
-    public ResponseEntity<String> findAccount(@RequestParam String email,
+    public ResponseEntity<String> findAccount(@Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                  @RequestParam String email,
                                               @RequestParam String code) throws Exception {
         userService.findAccount(email, code);
         return new ResponseEntity<>("OK", HttpStatus.OK);
