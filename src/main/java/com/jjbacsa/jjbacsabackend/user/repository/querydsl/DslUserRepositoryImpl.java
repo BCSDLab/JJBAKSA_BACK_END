@@ -1,5 +1,7 @@
 package com.jjbacsa.jjbacsabackend.user.repository.querydsl;
 
+import com.jjbacsa.jjbacsabackend.follow.entity.QFollowEntity;
+import com.jjbacsa.jjbacsabackend.user.entity.QUserCount;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -41,5 +43,17 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
                 .join(qUser.userCount).fetchJoin()
                 .where(qUser.id.eq(id))
                 .fetchOne();
+    }
+
+    @Override
+    public List<UserEntity> findAllUserByIdAndFollowWithCount(Long id){
+        QFollowEntity follow = QFollowEntity.followEntity;
+        QUserCount userCount = QUserCount.userCount;
+
+        return from(qUser).select(qUser)
+                .join(follow).on(qUser.eq(follow.follower)).fetchJoin()
+                .join(userCount).on(qUser.eq(userCount.user)).fetchJoin()
+                .where(qUser.id.eq(id))
+                .fetch();
     }
 }

@@ -13,7 +13,6 @@ import com.jjbacsa.jjbacsabackend.shop.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.TrendingResponse;
-import com.jjbacsa.jjbacsabackend.shop.entity.ShopCount;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.mapper.ShopMapper;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
@@ -23,9 +22,9 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
@@ -49,7 +48,7 @@ public class ShopServiceImpl implements ShopService {
     private final String KEY="ranking";
 
     private final List<String>cafe= Arrays.asList("카페","디저트","커피","후식");
-    private final List<String>restaurant=Arrays.asList("맛집","식당","레스토랑");
+    private final List<String>restaurant=Arrays.asList("맛집","식당","레스토랑","음식점");
 
     private final ObjectMapper objectMapper;
 
@@ -86,13 +85,11 @@ public class ShopServiceImpl implements ShopService {
 
         if(shopRepository.existsByPlaceId(placeId)){
             Optional<ShopEntity> shopEntity=shopRepository.findByPlaceId(placeId);
-            ShopCount shopCount=shopEntity.get().getShopCount();
 
             ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity.get());
-            shopResponse.setShopCount(shopCount.getTotalRating(),shopCount.getRatingCount());
+            shopResponse.setShopCount(shopRepository.getTotalRating(shopResponse.getShopId()), shopRepository.getRatingCount(shopResponse.getShopId()));
 
             return shopResponse;
-
         }else{
             ShopApiDto shopApiDto;
 
@@ -107,10 +104,8 @@ public class ShopServiceImpl implements ShopService {
             ShopDto shopDto=ShopDto.ShopDto(shopApiDto);
             ShopEntity shopEntity=register(shopDto);
 
-            ShopCount shopCount=shopEntity.getShopCount();
-
             ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity);
-            shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
+            shopResponse.setShopCount(shopRepository.getTotalRating(shopResponse.getShopId()), shopRepository.getRatingCount(shopResponse.getShopId()));
 
             return shopResponse;
         }
@@ -166,45 +161,35 @@ public class ShopServiceImpl implements ShopService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Pageable pageable) {
+    public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Integer page,Integer size) {
         //keyword Redis 저장
-        saveRedis(shopRequest.getKeyword());
-
         String keyword=shopRequest.getKeyword();
+        saveRedis(keyword);
 
         //키워드 검색 타입 판별
         SearchType searchType=typeSetting(keyword);
-
         List<ShopSummaryResponse> shopList=new ArrayList<>();
-
-        //키워드 정제
-        String keywordForQuery=getKeywordForQuery(keyword);
+        String keywordForQuery;
 
         switch (searchType){
             case cafe:
             case restaurant:
-                shopList.addAll(shopRepository.searchWithCategory(keywordForQuery,searchType.name()).stream().map(t -> new ShopSummaryResponse(
-                                t.get(0,String.class),
-                                t.get(1,String.class),
-                                t.get(2,String.class),
-                                t.get(3,String.class),
-                                t.get(4,String.class),
-                                t.get(5,Double.class)
-                        ))
-                        .collect(Collectors.toList())
-                );
+                //키워드 정제
+                keywordForQuery=getKeywordForQuery(keyword);
+                shopList.addAll(shopRepository.search(keywordForQuery,searchType.name()));
+                break;
+            case cafe_category:
+                shopList.addAll(shopRepository.findAllByCategoryName("cafe"));
+                break;
+            case restaurant_category:
+                shopList.addAll(shopRepository.findAllByCategoryName("restaurant"));
+                break;
+            case one:
+                shopList.addAll(shopRepository.findByPlaceNameContaining(keyword));
                 break;
             case NONE:
-                shopList.addAll(shopRepository.search(keywordForQuery).stream().map(t -> new ShopSummaryResponse(
-                                        t.get(0,String.class),
-                                        t.get(1,String.class),
-                                        t.get(2,String.class),
-                                        t.get(3,String.class),
-                                        t.get(4,String.class),
-                                        t.get(5,Double.class)
-                                ))
-                                .collect(Collectors.toList())
-                );
+                keywordForQuery=getKeywordForQuery(keyword);
+                shopList.addAll(shopRepository.search(keywordForQuery,null));
                 break;
         }
 
@@ -213,20 +198,25 @@ public class ShopServiceImpl implements ShopService {
             shop.setDist(shopRequest.getX(), shopRequest.getY());
         }
 
-        //정확도 순으로 정렬(거리순은 2차 정렬)
-        Collections.sort(shopList,new Comparator<ShopSummaryResponse>() {
-            @Override
-            public int compare(ShopSummaryResponse s1, ShopSummaryResponse s2) {
-                if(s1.getScore()<s2.getScore()) return 1;
-                else if(s1.getScore()==s2.getScore())
-                    return s1.compareTo(s2);
-                else
-                    return -1;
-            }
-        });
-
+        if(searchType!=SearchType.cafe_category&&searchType!=SearchType.restaurant_category&&searchType!=SearchType.one) {
+            //정확도 순으로 정렬(거리순은 2차 정렬)
+            Collections.sort(shopList, new Comparator<ShopSummaryResponse>() {
+                @Override
+                public int compare(ShopSummaryResponse s1, ShopSummaryResponse s2) {
+                    if (s1.getScore() < s2.getScore()) return 1;
+                    else if (s1.getScore() == s2.getScore())
+                        return s1.compareTo(s2);
+                    else
+                        return -1;
+                }
+            });
+        } else{
+            Collections.sort(shopList);
+        }
 
         //pagination
+        Pageable pageable= PageRequest.of(page,size);
+
         int start=Math.min((int)pageable.getOffset(),shopList.size());
         int end=(start+pageable.getPageSize()>shopList.size()? shopList.size() : (start+ pageable.getPageSize()));
 
@@ -235,13 +225,25 @@ public class ShopServiceImpl implements ShopService {
 
     private SearchType typeSetting(String keyword){
 
+        if(keyword.length()==1){
+            return SearchType.one;
+        }
+
         for(String str:cafe){
+            if(keyword.equals(str)){
+                return SearchType.cafe_category;
+            }
+
             if(keyword.contains(str)){
                 return SearchType.cafe;
             }
         }
 
         for(String str:restaurant){
+            if(keyword.equals(str)){
+                return SearchType.restaurant_category;
+            }
+
             if(keyword.contains(str)){
                 return SearchType.restaurant;
             }
@@ -293,5 +295,5 @@ public class ShopServiceImpl implements ShopService {
 
 }
 enum SearchType{
-    cafe, restaurant, NONE
+    cafe, restaurant, NONE, cafe_category,restaurant_category, one
 }
