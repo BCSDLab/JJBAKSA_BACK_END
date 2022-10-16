@@ -67,6 +67,13 @@ external:
   api:
     key: asdfasddf
 
+cloud:
+  aws:
+    ses:
+      access-key:
+      secret-key:
+      domain:
+
 ---
 spring:
   config:
