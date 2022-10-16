@@ -1,5 +1,7 @@
 package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import com.jjbacsa.jjbacsabackend.util.SesSender;
@@ -14,6 +16,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
     private final SesSender sesSender;
     private final RedisUtil redisUtil;
 
+    @Override
     public void sendAuthEmail(String email) throws Exception {
         String secret = getRandomNumber();
 
@@ -25,6 +28,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
         sesSender.sendMail(email, "쩝쩝박사 서비스 인증 메일입니다.", secret);
     }
 
+    @Override
     public void sendAccountEmail(String email, String account) throws Exception {
         sesSender.sendMail(email, "쩝쩝박사 아이디 찾기 메일입니다.", account);
     }
@@ -35,7 +39,9 @@ public class InternalEmailServiceImpl implements InternalEmailService {
         //TODO : 이메일 인증 제약 기획 완료 시 반영
         //TODO : RDB 저장으로 수정
         String existCode = redisUtil.getStringValue(email.split("@")[0]);
-        return existCode.equals(code);
+        if(existCode.equals(code))
+            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+        return true;
     }
 
     //4글자 난수 생성
