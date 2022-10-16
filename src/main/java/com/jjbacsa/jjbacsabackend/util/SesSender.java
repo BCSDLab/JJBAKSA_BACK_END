@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class SesSender {
     private final AmazonSimpleEmailServiceAsync simpleEmailServiceAsync;
 
-    public void sendMail(String from, String to, String subject, String htmlBody) {
+    public void sendMail(String to, String subject, String htmlBody) {
         SendEmailRequest request = new SendEmailRequest()
                 .withDestination(
                         new Destination().withToAddresses(to) // 받는 사람
@@ -27,7 +27,7 @@ public class SesSender {
                         .withSubject(new Content()
                                 .withCharset("UTF-8").withData(subject)) // 제목
                 )
-                .withSource(from);  // Verify된 Email
+                .withSource("no-reply@jjbaksa.com");  // Verify된 Email
 
         simpleEmailServiceAsync.sendEmailAsync(request);
     }
