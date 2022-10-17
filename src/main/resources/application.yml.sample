@@ -76,10 +76,6 @@ flyway:
 server:
   port: 8080
 
-image:
-  review:
-    path:
-
 jwt:
   key: Secret Key Random String
   access: access
@@ -88,6 +84,22 @@ jwt:
 external:
   api:
     key: asdfasddf
+
+cloud:
+  aws:
+    credentials:
+      access-key:
+      secret-key:
+    region:
+      static:
+    s3:
+      review:
+      profile:
+    cloudfront:
+      review-url-format:
+      profile-url-format:
+    stack:
+      auto:
 
 ---
 spring:

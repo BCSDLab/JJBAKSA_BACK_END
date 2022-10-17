@@ -12,4 +12,5 @@ public interface ImageService {
 
     List<ReviewImageEntity> createReviewImages(List<MultipartFile> images) throws IOException;
     ReviewEntity modifyReviewImages(List<MultipartFile> images, ReviewEntity reviewEntity) throws IOException;
+    void deleteImage(Long imageId);
 }

@@ -35,8 +35,8 @@ public class ReviewResponse {
         if(reviewEntity.getReviewImages() != null) {
             response.reviewImages = new ArrayList<>();
             for (ReviewImageEntity image : reviewEntity.getReviewImages()) {
-                ReviewImageResponse imageResponse = new ReviewImageResponse(image.getImage().getId(), image.getImage().getOriginalName(), image.getImage().getPath());
-                response.getReviewImages().add(imageResponse);
+                ReviewImageResponse reviewImageResponse = new ReviewImageResponse(image.getImage().getId(), image.getImage().getOriginalName(), image.getImage().getPath(), image.getImage().getUrl());
+                response.getReviewImages().add(reviewImageResponse);
             }
         }
         return response;
