@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class ImageRequest {
     private String path;
     private String originalName;
+    private String imageUrl;
 }

@@ -3,8 +3,6 @@ package com.jjbacsa.jjbacsabackend.review.serviceImpl;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
-import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
-import com.jjbacsa.jjbacsabackend.image.service.ImageService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
@@ -13,7 +11,7 @@ import com.jjbacsa.jjbacsabackend.review.mapper.ReviewMapper;
 import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.service.ReviewService;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
-import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
+import com.jjbacsa.jjbacsabackend.review_image.service.InternalReviewImageService;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.service.InternalShopService;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -37,9 +35,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final InternalUserService userService;
     private final InternalShopService shopService;
     private final InternalFollowService followService;
-    // TODO: InternalService로 변경
-    private final ImageService imageService;
-    private final ReviewImageRepository reviewImageRepository;
+    private final InternalReviewImageService reviewImageService;
 
     private final ReviewRepository reviewRepository;
 
@@ -73,7 +69,7 @@ public class ReviewServiceImpl implements ReviewService {
         if(!reviewEntity.getWriter().equals(userEntity)) throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_REVIEW);
 
         for(ReviewImageEntity reviewImage: reviewEntity.getReviewImages()){ // 리뷰 이미지를 버킷에서 삭제
-            imageService.deleteImage(reviewImage.getImage().getId());
+            reviewImageService.delete(reviewImage);
         }
         reviewRepository.deleteById(reviewId);
 
@@ -154,7 +150,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
 
         if (reviewRequest.getReviewImages() != null) {
-            List<ReviewImageEntity> reviewImageEntities = imageService.createReviewImages(reviewRequest.getReviewImages());
+            List<ReviewImageEntity> reviewImageEntities = reviewImageService.createReviewImages(reviewRequest.getReviewImages());
             for (ReviewImageEntity reviewImageEntity : reviewImageEntities) {
                 reviewEntity.addReviewImageEntity(reviewImageEntity);
             }
@@ -178,13 +174,12 @@ public class ReviewServiceImpl implements ReviewService {
             review.setRate(modRate);
         }
         if(reviewRequest.getReviewImages() != null) {
-            imageService.modifyReviewImages(reviewRequest.getReviewImages(), review);
+            reviewImageService.modifyReviewImages(reviewRequest.getReviewImages(), review);
         }
         else{
             if(review.getReviewImages() != null){
                 for(ReviewImageEntity reviewImage: review.getReviewImages()){
-                    imageService.deleteImage(reviewImage.getImage().getId());
-                    reviewImageRepository.deleteById(reviewImage.getId());
+                    reviewImageService.delete(reviewImage);
                 }
                 review.getReviewImages().clear();
             }
