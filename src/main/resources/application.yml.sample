@@ -91,7 +91,7 @@ cloud:
       access-key:
       secret-key:
     region:
-      static:
+      static: ap-northeast-2
     s3:
       review:
       profile:
@@ -99,7 +99,7 @@ cloud:
       review-url-format:
       profile-url-format:
     stack:
-      auto:
+      auto: false
 
 ---
 spring:
