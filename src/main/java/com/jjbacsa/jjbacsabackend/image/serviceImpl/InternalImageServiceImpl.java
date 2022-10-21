@@ -28,7 +28,7 @@ import java.util.stream.IntStream;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class ImageServiceImpl implements InternalImageService {
+public class InternalImageServiceImpl implements InternalImageService {
 
     private Long FILE_MAX_SIZE = 10000000L;
 
