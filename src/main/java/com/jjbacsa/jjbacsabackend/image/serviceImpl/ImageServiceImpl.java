@@ -1,134 +1,150 @@
 package com.jjbacsa.jjbacsabackend.image.serviceImpl;
 
+
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.image.dto.request.ImageRequest;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.image.mapper.ImageMapper;
 import com.jjbacsa.jjbacsabackend.image.repository.ImageRepository;
-import com.jjbacsa.jjbacsabackend.image.service.ImageService;
-import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
-import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
-import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
+import com.jjbacsa.jjbacsabackend.image.service.InternalImageService;
+import com.jjbacsa.jjbacsabackend.util.AmazonS3Util;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class ImageServiceImpl implements ImageService {
-    @Value("${image.review.path}")
-    private String reviewPath;
-    private final ImageRepository imageRepository;
-    private final ReviewImageRepository reviewImageRepository;
+public class ImageServiceImpl implements InternalImageService {
 
-    // TODO: AWS S3에 저장하는 방식으로 변경
+    private Long FILE_MAX_SIZE = 10000000L;
+
+    private final ImageRepository imageRepository;
+    private final AmazonS3Util amazonS3;
+
     @Override
-    public List<ReviewImageEntity> createReviewImages(List<MultipartFile> images) throws IOException {
-        List<ReviewImageEntity> result = new ArrayList<>();
+    public List<ImageEntity> createImages(List<MultipartFile> images, String path, String urlFormat) throws IOException {
+        List<ImageEntity> result = new ArrayList<>();
 
         for(MultipartFile image: images){
-            // 파일의 확장자 추출
-            String originalName = image.getOriginalFilename();
-            String imagePath = createReviewFile(image);
-
-            ImageEntity imageEntity = ImageMapper.INSTANCE.toImageEntity(new ImageRequest(imagePath, originalName));
-            ReviewImageEntity reviewImageEntity = new ReviewImageEntity();
-            reviewImageEntity.setImage(imageEntity);
+            ImageForm imageForm = createImageFile(image, path, urlFormat);
+            ImageEntity imageEntity = ImageMapper.INSTANCE.toImageEntity(new ImageRequest(imageForm.getImagePath(), imageForm.getOriginalName(), imageForm.getImageUrl()));
             imageRepository.save(imageEntity);
-            result.add(reviewImageEntity);
+            result.add(imageEntity);
         }
         return result;
     }
 
     @Override
-    public ReviewEntity modifyReviewImages(List<MultipartFile> images, ReviewEntity reviewEntity) throws IOException {
-        List<ReviewImageEntity> reviewImageEntities = reviewEntity.getReviewImages();
-        int origin_size = reviewEntity.getReviewImages().size();
+    public List<ImageEntity> modifyImages(List<MultipartFile> images, List<ImageEntity> imageEntities, String path, String urlFormat) throws IOException {
+        List<ImageEntity> modifyImageEntities = new ArrayList<>();
+        int origin_size = imageEntities.size();
         int new_size = images.size();
-        String filePath;
         if(origin_size<= new_size) {   // 업데이트된 이미지가 기존과 같거나 많을 때
             for (int i = 0; i < origin_size; i++) {
                 MultipartFile image = images.get(i);
-                String originalName = image.getOriginalFilename();
-                filePath = createReviewFile(image);
+                ImageForm imageForm = createImageFile(image, path, urlFormat);
 
-                ImageEntity imageEntity = reviewEntity.getReviewImages().get(i).getImage();
-                deleteReviewImage(imageEntity);     // 기존 파일 삭제
-                imageEntity.updateImage(filePath, originalName);
-                reviewEntity.getReviewImages().get(i).setImage(imageEntity);
+                ImageEntity imageEntity = imageEntities.get(i);
+                deleteImage(imageEntity);     // 기존 파일 삭제
+                imageEntity.updateImage(imageForm.getImagePath(), imageForm.getOriginalName(), imageForm.getImageUrl());
+                modifyImageEntities.add(imageEntity);
             }
             for(int i=origin_size; i<new_size; i++){    // 추가된 이미지 넣기
                 MultipartFile image = images.get(i);
-                String originalName = image.getOriginalFilename();
-                filePath= createReviewFile(image);
+                ImageForm imageForm = createImageFile(image, path, urlFormat);
 
-                ImageEntity imageEntity = ImageMapper.INSTANCE.toImageEntity(new ImageRequest(filePath, originalName));
-                ReviewImageEntity reviewImageEntity = ReviewImageEntity.builder()
-                        .review(reviewEntity)
-                        .image(imageEntity)
-                        .build();
-                reviewImageRepository.save(reviewImageEntity);
-                reviewEntity.addReviewImageEntity(reviewImageEntity);
+                ImageEntity imageEntity = ImageMapper.INSTANCE.toImageEntity(new ImageRequest(imageForm.getImagePath(), imageForm.getOriginalName(), imageForm.getImageUrl()));
+                imageRepository.save(imageEntity);
+                modifyImageEntities.add(imageEntity);
             }
         }
         else{   // 업데이트 된 images가 기존보다 더 적을 때
             for (int i = 0; i < new_size; i++) {
                 MultipartFile image = images.get(i);
-                String originalName = image.getOriginalFilename();
-                filePath = createReviewFile(image);
+                ImageForm imageForm = createImageFile(image, path, urlFormat);
 
-                ImageEntity imageEntity = reviewEntity.getReviewImages().get(i).getImage();
-                deleteReviewImage(imageEntity);
-                imageEntity.updateImage(filePath, originalName);
-                reviewEntity.getReviewImages().get(i).setImage(imageEntity);
+                ImageEntity imageEntity = imageEntities.get(i);
+                deleteImage(imageEntity);
+                imageEntity.updateImage(imageForm.getImagePath(), imageForm.getOriginalName(), imageForm.getImageUrl());
+                modifyImageEntities.add(imageEntity);
 
             }
             for(int i=new_size; i<origin_size; i++){
-                reviewImageRepository.deleteById(reviewImageEntities.get(i).getId());
-                reviewEntity.getReviewImages().remove(i);
+                ImageEntity imageEntity = imageEntities.get(i);
+                deleteImage(imageEntity);
             }
         }
-        return reviewEntity;
+        return modifyImageEntities;
     }
 
-    private void deleteReviewImage(ImageEntity imageEntity) {
-        File im = new File(imageEntity.getPath());
-        if(!im.delete()) throw new RequestInputException(ErrorMessage.IMAGE_NOT_EXISTS_EXCEPTION);
+    @Override
+    public void deleteImage(Long imageId) {
+        ImageEntity imageEntity = imageRepository.findById(imageId)
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.IMAGE_NOT_EXISTS_EXCEPTION));
+        deleteImage(imageEntity);
+    }
+    private void deleteImage(ImageEntity imageEntity) {
+        String[] name = imageEntity.getPath().split("\\/");
+        int nameLength = name.length;
+        String fileName = name[nameLength-1];
+        String[] pathName = IntStream.range(0, name.length-1).filter(idx -> idx != nameLength-1).mapToObj(idx -> name[idx]).toArray(String[]::new);
+        String path = String.join("/", pathName);
+        amazonS3.deleteImage(path, fileName);
     }
 
-    private String createReviewFile(MultipartFile image) throws IOException {
+    private ImageForm createImageFile(MultipartFile image, String path, String urlFormat) throws IOException {
+        String originalName = image.getOriginalFilename();
+        String originalFileExtension = checkImageInfo(image);
+
+        // 파일명 중복 피하고자 UUID 랜덤 변수 설정
+        String fileName = UUID.randomUUID().toString().concat(originalFileExtension);
+        String filePath = path.substring(0, path.length()-1);
+        String imagePath = path.concat(fileName);
+        String imageUrl = urlFormat.concat(fileName);
+        amazonS3.saveImage(filePath, fileName, image);
+
+        return new ImageForm(originalName, fileName, imagePath, imageUrl);
+    }
+
+    private String checkImageInfo(MultipartFile image){
         String contentType = image.getContentType();
         String originalFileExtension;
-        // 확장자명이 존재하지 않을 경우 처리 x
-        if(ObjectUtils.isEmpty(contentType)) {
-            return null;
-        }
-        else {  // 확장자가 jpeg, png인 파일들만 받아서 처리
-            if(contentType.contains("image/jpeg") || contentType.contains("image/jpg"))
-                originalFileExtension = ".jpg";
-            else if(contentType.contains("image/png"))
-                originalFileExtension = ".png";
-            else throw new RequestInputException(ErrorMessage.INVALID_IMAGE);
-        }
-        // 파일명 중복 피하고자 나노초까지 얻어와 지정, yml에 설정한 root directory 아래 review 폴더에 저장되도록 함
-        String imagePath = reviewPath + System.nanoTime() + originalFileExtension;
-        File dest = new File(imagePath);
-        image.transferTo(dest);
-        return dest.getPath();
+        // 확장자가 jpeg, png인 파일들만 받아서 처리
+        if(contentType.contains("image/jpg"))
+            originalFileExtension = ".jpg";
+        else if(contentType.contains("image/jpeg"))
+            originalFileExtension = ".jpeg";
+        else if(contentType.contains("image/png"))
+            originalFileExtension = ".png";
+        else throw new RequestInputException(ErrorMessage.INVALID_IMAGE);
+        if(image.getSize() > FILE_MAX_SIZE) throw new RequestInputException(ErrorMessage.IMAGE_SIZE_OVERFLOW_EXCEPTION);
+
+        return originalFileExtension;
+    }
+
+    @RequiredArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    private static class ImageForm{
+        String originalName;
+        String fileName;
+        String imagePath;
+        String imageUrl;
     }
 
 }

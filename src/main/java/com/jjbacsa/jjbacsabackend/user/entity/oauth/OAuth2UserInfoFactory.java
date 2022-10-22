@@ -9,6 +9,7 @@ public class OAuth2UserInfoFactory {
         switch (oauthType) {
             case NAVER: return new NaverUserInfo(attributes);
             case KAKAO: return new KakaoUserInfo(attributes);
+            case GOOGLE: return new GoogleUserInfo(attributes);
             default: throw new IllegalArgumentException("Invalid OAuthType.");
         }
     }

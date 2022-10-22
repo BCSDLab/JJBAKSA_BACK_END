@@ -8,16 +8,11 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -90,18 +85,16 @@ public class ShopServiceTest {
     @Test
     public void searchWithoutCategory(){
         //given
-        String keyword="대전떡볶이";
+        String keyword="대전카페";
 
         ShopRequest shopRequest=ShopRequest.builder()
                 .keyword(keyword)
-                .x(36.362)
-                .y(127.3922)
+                .x(127.3922)
+                .y(36.362)
                 .build();
 
-        Pageable pageable= PageRequest.of(0,10);
-
         //when
-        Page<ShopSummaryResponse> res=shopService.searchShop(shopRequest,pageable);
+        Page<ShopSummaryResponse> res=shopService.searchShop(shopRequest,0,10);
 
         //then
         assertThat(res.stream().collect(Collectors.toList()).size()).isNotEqualTo(0);
@@ -112,18 +105,16 @@ public class ShopServiceTest {
     @Test
     public void searchWithCategory(){
         //given
-        String keyword="대전카페";
+        String keyword="크러쉬온드";
 
         ShopRequest shopRequest=ShopRequest.builder()
                 .keyword(keyword)
-                .x(36.362)
-                .y(127.3922)
+                .x(127.3922)
+                .y(36.362)
                 .build();
 
-        Pageable pageable= PageRequest.of(0,10);
-
         //when
-        Page<ShopSummaryResponse> res=shopService.searchShop(shopRequest,pageable);
+        Page<ShopSummaryResponse> res=shopService.searchShop(shopRequest,0,10);
 
         //then
         assertThat(res.stream().collect(Collectors.toList()).size()).isNotEqualTo(0);
