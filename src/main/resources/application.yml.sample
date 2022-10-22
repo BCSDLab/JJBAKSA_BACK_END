@@ -57,6 +57,9 @@ server:
 image:
   review:
     path:
+   profile:
+    default:
+    base-path:
 
 jwt:
   key: Secret Key Random String
