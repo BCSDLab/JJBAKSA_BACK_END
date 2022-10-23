@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,19 @@ public class ImageServiceImpl implements InternalImageService {
 
     private final ImageRepository imageRepository;
     private final AmazonS3Util amazonS3;
+
+    @Override
+    public ImageEntity createImage(MultipartFile image, String path, String urlFormat) throws Exception {
+        ImageForm imageForm = createImageFile(image, path, urlFormat);
+        ImageEntity imageEntity = new ImageEntity().toBuilder()
+                .path(imageForm.getImagePath())
+                .originalName(imageForm.originalName)
+                .url(imageForm.getImageUrl())
+                .build();
+
+        imageRepository.save(imageEntity);
+        return imageEntity;
+    }
 
     @Override
     public List<ImageEntity> createImages(List<MultipartFile> images, String path, String urlFormat) throws IOException {

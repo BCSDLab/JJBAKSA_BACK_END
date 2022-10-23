@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.controller;
 
+import com.amazonaws.Response;
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
@@ -11,10 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -191,6 +194,12 @@ public class UserController {
     public ResponseEntity<Void> withdraw() throws Exception {
         userService.withdraw();
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PreAuthorize("hasRole('NORMAL')")
+    @PatchMapping(value = "/user/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UserResponse> modifyProfile(@RequestPart("profile") MultipartFile profile) throws Exception {
+        return new ResponseEntity<>(userService.modifyProfile(profile), HttpStatus.OK);
     }
 
     @ApiOperation(

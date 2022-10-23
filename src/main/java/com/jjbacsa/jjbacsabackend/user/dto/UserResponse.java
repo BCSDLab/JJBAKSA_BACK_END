@@ -27,7 +27,8 @@ public class UserResponse {
     @ApiModelProperty(notes = "유저 계정", example = "jjbcsa@naver.com")
     private String email;
 
-    //private Long profileImage;
+    @ApiModelProperty(notes = "유저 프로필 url", example = "https://static.api.stage.jjbaksa.com/profile/test.jpg")
+    private String profileImage;
 
     @ApiModelProperty(notes = "OAuth 타입", example = "NAVER")
     private OAuthType oAuthType;
