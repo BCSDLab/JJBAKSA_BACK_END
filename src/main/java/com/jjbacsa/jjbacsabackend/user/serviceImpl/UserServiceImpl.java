@@ -7,7 +7,6 @@ import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
-import com.jjbacsa.jjbacsabackend.image.service.InternalImageService;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -180,13 +179,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse modifyProfile(MultipartFile profile) throws Exception {
         UserEntity user = userService.getLoginUser();
-        ImageEntity image = profileService.updateProfileImage(profile);
-
-        if(user.getProfileImage() != null){
+        if(user.getProfileImage() != null)
             profileService.deleteProfileImage(user.getProfileImage());
-        }
-        user.setProfileImage(image);
 
+        ImageEntity image = null;
+        if (profile != null)
+            image = profileService.createProfileImage(profile);
+
+        user.setProfileImage(image);
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
