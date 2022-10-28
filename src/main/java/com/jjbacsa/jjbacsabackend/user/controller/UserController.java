@@ -196,6 +196,20 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @ApiOperation(
+            value = "회원 프로필 사진 수정",
+            notes = "회원 프로필 사진 수정\n\n" +
+                    "필요 헤더\n\n" +
+                    "\tAuthorization : Bearer + access token\n\n" +
+                    "필요한 필드\n\n" +
+                    "\t프로필 사진 : 파일 업로드\n\n" +
+                    "\t업로드할 사진을 올리지 않을 시 기본 프로필로 변경"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "변경된 유저 정보")
+    })
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping(value = "/user/profile")
     public ResponseEntity<UserResponse> modifyProfile(@RequestPart(value = "profile", required = false)
