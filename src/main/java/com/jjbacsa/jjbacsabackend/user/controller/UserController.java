@@ -45,7 +45,7 @@ public class UserController {
     })
     @PostMapping(value = "/user")
     public ResponseEntity<UserResponse> register(@Validated(ValidationGroups.Create.class)
-                                                     @RequestBody UserRequest request) throws Exception {
+                                                 @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.register(request), HttpStatus.CREATED);
     }
 
@@ -79,7 +79,7 @@ public class UserController {
     })
     @PostMapping(value = "/user/login")
     public ResponseEntity<Token> login(@Validated(ValidationGroups.Login.class)
-                                           @RequestBody UserRequest request) throws Exception {
+                                       @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
@@ -174,7 +174,7 @@ public class UserController {
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping("/user/me")
     public ResponseEntity<UserResponse> modifyUser(@Validated(ValidationGroups.Update.class)
-                                                       @RequestBody UserRequest request) throws Exception {
+                                                   @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
     }
 
@@ -197,8 +197,9 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('NORMAL')")
-    @PatchMapping(value = "/user/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserResponse> modifyProfile(@RequestPart("profile") MultipartFile profile) throws Exception {
+    @PatchMapping(value = "/user/profile")
+    public ResponseEntity<UserResponse> modifyProfile(@RequestPart(value = "profile", required = false)
+                                                                  MultipartFile profile) throws Exception {
         return new ResponseEntity<>(userService.modifyProfile(profile), HttpStatus.OK);
     }
 
