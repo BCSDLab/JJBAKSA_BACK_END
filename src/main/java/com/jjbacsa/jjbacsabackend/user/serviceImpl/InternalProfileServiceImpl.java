@@ -20,7 +20,7 @@ public class InternalProfileServiceImpl implements InternalProfileService {
 
     private final InternalImageService imageService;
 
-    public ImageEntity updateProfileImage(MultipartFile profile) throws Exception {
+    public ImageEntity createProfileImage(MultipartFile profile) throws Exception {
         return imageService.createImage(profile, profilePath, profileUrlFormat);
     }
 
