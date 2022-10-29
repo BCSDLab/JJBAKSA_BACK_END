@@ -56,6 +56,11 @@ public class UserEntity extends BaseEntity {
     @Setter
     private String nickname;
 
+    @Basic
+    @Column(name = "auth_email", nullable = false, columnDefinition = "boolean default false")
+    @Setter
+    private boolean authEmail = false;
+
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "profile_image_id")
     @Setter
