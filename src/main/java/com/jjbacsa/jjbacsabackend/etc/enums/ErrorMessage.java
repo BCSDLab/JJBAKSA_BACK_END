@@ -35,7 +35,17 @@ public enum ErrorMessage {
     SCRAP_DUPLICATE_EXCEPTION(29, "같은 상점에 대한 스크랩이 존재합니다.", HttpStatus.BAD_REQUEST),
     SCRAP_DIRECTORY_NOT_EXISTS_EXCEPTION(30, "스크랩 디렉토리가 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     SCRAP_DIRECTORY_DUPLICATE_EXCEPTION(31, "같은 이름의 디렉토리가 존재합니다.", HttpStatus.BAD_REQUEST),
-    BAD_AUTHENTICATION_CODE(32, "잘못된 인가 코드입니다.", HttpStatus.BAD_REQUEST)
+    BAD_AUTHENTICATION_CODE(32, "잘못된 인가 코드입니다.", HttpStatus.BAD_REQUEST),
+
+    EMAIL_EXPIRED_EXCEPTION(33, "이메일 인증 시간이 만료되었습니다.", HttpStatus.BAD_REQUEST),
+
+    EMAIL_CODE_FAIL_EXCEPTION(34, "인증 번호가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+
+    EMAIL_SEND_EXCEED_EXCEPTION(35, "이메일 전송 횟수가 초과되었습니다.", HttpStatus.BAD_REQUEST),
+
+    SOCIAL_ACCOUNT_EXCEPTION(36, "소셜 로그인 사용자는 수행할 수 없습니다.", HttpStatus.BAD_REQUEST)
+
+
     ;
 
     Integer code;

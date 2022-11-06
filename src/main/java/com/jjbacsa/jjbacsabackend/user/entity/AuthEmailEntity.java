@@ -16,7 +16,7 @@ import java.util.Date;
 @SuperBuilder(toBuilder = true)
 @Entity
 @SQLDelete(sql = "UPDATE auth_email SET is_deleted = 1 WHERE id=?")
-@Where(clause = "is_deleted = 0")
+//@Where(clause = "is_deleted = 0")
 @Table(name = "auth_email")
 public class AuthEmailEntity extends BaseEntity {
 
