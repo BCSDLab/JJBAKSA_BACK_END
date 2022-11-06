@@ -37,6 +37,7 @@ public enum ErrorMessage {
     SCRAP_DIRECTORY_DUPLICATE_EXCEPTION(31, "같은 이름의 디렉토리가 존재합니다.", HttpStatus.BAD_REQUEST),
     IMAGE_UPLOAD_FAIL_EXCEPTION(32, "이미지 업로드에 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     IMAGE_SIZE_OVERFLOW_EXCEPTION(33, "이미지 파일크기가 10MB이상 입니다.", HttpStatus.BAD_REQUEST),
+    INVALID_SOCIAL_TYPE(34, "유효하지 않은 소셜 로그인 타입입니다.", HttpStatus.BAD_REQUEST),
     ;
 
     Integer code;

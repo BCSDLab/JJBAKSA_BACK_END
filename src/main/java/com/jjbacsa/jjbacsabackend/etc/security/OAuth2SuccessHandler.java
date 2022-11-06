@@ -8,8 +8,8 @@ import com.jjbacsa.jjbacsabackend.user.entity.oauth.OAuth2UserInfo;
 import com.jjbacsa.jjbacsabackend.user.entity.oauth.OAuth2UserInfoFactory;
 import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
+import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -29,7 +28,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
     private final OAuthInfoRepository oAuthInfoRepository;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisUtil redisUtil;
 
 
     @Override
@@ -47,12 +46,11 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String accessToken = jwtUtil.generateToken(oAuthInfoEntity.getUser().getId(),
                 TokenType.ACCESS, String.valueOf(oAuthInfoEntity.getUser().getUserType().getUserType()));
 
-        String existToken = redisTemplate.opsForValue().get(String.valueOf(oAuthInfoEntity.getUser().getId()));
+        String existToken = redisUtil.getStringValue(String.valueOf(oAuthInfoEntity.getUser().getId()));
 
         if (existToken == null) {
-            existToken = jwtUtil.generateToken(oAuthInfoEntity.getUser().getId(),
-                    TokenType.REFRESH, String.valueOf(oAuthInfoEntity.getUser().getUserType()));
-            redisTemplate.opsForValue().set(String.valueOf(oAuthInfoEntity.getUser().getId()), existToken, 14, TimeUnit.DAYS);
+            existToken = jwtUtil.generateToken(oAuthInfoEntity.getUser().getId(), TokenType.REFRESH, oAuthInfoEntity.getUser().getUserType().getUserType());
+            redisUtil.setToken(String.valueOf(oAuthInfoEntity.getUser().getId()), existToken);
         }
 
         response.getWriter().write(objectMapper.writeValueAsString(accessToken));
