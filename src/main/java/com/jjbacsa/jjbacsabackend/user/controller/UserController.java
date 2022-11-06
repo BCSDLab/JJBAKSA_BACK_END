@@ -34,8 +34,8 @@ public class UserController {
             notes = "회원가입을 진행합니다.\n\n" +
                     "필요한 필드\n\n\t" +
                     "{\n\n     " +
-                    "account : 유저 계정,\n\n     " +
-                    "password : 유저 패스워드,\n\n     " +
+                    "account : 유저 계정(1~20글자의 영문자 및 숫자),\n\n     " +
+                    "password : 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열),\n\n     " +
                     "email : 유저 이메일(차후 인증 추가)\n\n\t}")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponses({
@@ -69,8 +69,8 @@ public class UserController {
             notes = "로그인을 진행합니다.\n\n" +
                     "필요한 필드\n\n\t" +
                     "{\n\n     " +
-                    "account : 유저 계정,\n\n     " +
-                    "password : 유저 패스워드,\n\n" +
+                    "account : 유저 계정(1~20글자의 영문자 및 숫자),\n\n     " +
+                    "password : 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열),\n\n" +
                     "\t}")
     @ApiResponses({
             @ApiResponse(code = 200,
@@ -161,8 +161,8 @@ public class UserController {
                     "\tAuthorization : Bearer + access token\n\n" +
                     "필요한 필드\n\n" +
                     "\t{\n\n     " +
-                    "password : 변경할 유저 패스워드(차후 인증 적용),\n\n     " +
-                    "nickname : 변경할 유저 닉네임,\n\n     " +
+                    "password : 변경할 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열)(차후 인증 적용),\n\n     " +
+                    "nickname : 변경할 유저 닉네임(영문자, 한글, 숫자로 이루어진 1~20글자의 문자열),\n\n     " +
                     "email : 변경할 유저 계정 (차후 인증 적용),\n\n" +
                     "\t}",
             authorizations = @Authorization(value = "Bearer + refreshToken"))
@@ -213,7 +213,7 @@ public class UserController {
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping(value = "/user/profile")
     public ResponseEntity<UserResponse> modifyProfile(@RequestPart(value = "profile", required = false)
-                                                                  MultipartFile profile) throws Exception {
+                                                              MultipartFile profile) throws Exception {
         return new ResponseEntity<>(userService.modifyProfile(profile), HttpStatus.OK);
     }
 
