@@ -1,5 +1,3 @@
-ALTER TABLE user ADD auth_email TINYINT(1) NOT NULL DEFAULT 0;
-
 CREATE TABLE IF NOT EXISTS auth_email
 (
     id               BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
