@@ -10,6 +10,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
+import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
@@ -43,6 +44,7 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
+    private final OAuthInfoRepository oAuthInfoRepository;
 
     //TODO : OAuth별 작동
     //TODO : 이메일 인증 추가 시 인증 코드 파라미터 추가 (변경 시 채널에 고지 )
@@ -177,20 +179,47 @@ public class UserServiceImpl implements UserService {
         if (existToken != null) redisUtil.deleteValue(String.valueOf(user.getId()));
     }
 
+    //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
     @Override
+    @Transactional
     public void sendAuthEmail(String email) throws Exception{
         emailService.sendAuthEmail(email);
     }
 
     @Override
-    public void findAccount(String email, String code) throws Exception {
-        if (!emailService.codeCertification(email, code))
-            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+    public String findAccount(String email, String code) throws Exception {
 
         UserEntity user = userService.getUserByEmail(email);
 
-        //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
-        emailService.sendAccountEmail(email, user.getAccount());
+        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
+
+        if (!emailService.codeCertification(email, code))
+            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+
+        return user.getAccount();
+    }
+
+    @Override
+    @Transactional
+    public void findPassword(String account, String email, String code, String password) throws Exception{
+
+        if(!userRepository.existsByAccount(account)) {
+            throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+        }
+
+        UserEntity user = userService.getUserByEmail(email);
+
+        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
+
+        if (!emailService.codeCertification(email, code))
+            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
     }
 
     private boolean existAccount(String account) {

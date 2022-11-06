@@ -216,7 +216,7 @@ public class UserController {
     }
 
     @ApiOperation(
-            value = "아이디 발송",
+            value = "아이디 찾기",
             notes = "찾을 이메일 발송\n\n" +
                     "email : 아이디를 찾을 이메일 - 메일 받을 주소\n\n" +
                     "code : 인증 코드"
@@ -230,8 +230,8 @@ public class UserController {
     public ResponseEntity<String> findAccount(@Email(message = "이메일은 형식을 지켜야 합니다.")
                                                   @RequestParam String email,
                                               @RequestParam String code) throws Exception {
-        userService.findAccount(email, code);
-        return new ResponseEntity<>("OK", HttpStatus.OK);
+
+        return new ResponseEntity<>(userService.findAccount(email, code), HttpStatus.OK);
     }
 
     @GetMapping("/user/test-auth")
@@ -240,5 +240,30 @@ public class UserController {
         return emailService.codeCertification(email, code)?
                 new ResponseEntity<>("True", HttpStatus.OK):
                 new ResponseEntity<>("False", HttpStatus.OK);
+    }
+
+    @ApiOperation(
+            value = "비밀번호 찾기",
+            notes = "비밀번호 찾기 이메일 발송\n\n" +
+                    "account : 비밀번호 찾을 계정\n\n" +
+                    "email : 비밀번호 찾을 이메일 - 메일 받을 주소\n\n" +
+                    "code : 인증 코드\n\n" +
+                    "password : 변경할 비밀번호"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "OK")
+    })
+    @PostMapping("user/password")
+    public ResponseEntity<String> findPassword(@RequestParam String account,
+                                 @Email(message = "이메일은 형식을 지켜야 합니다.")
+                                 @RequestParam String email,
+                                 @RequestParam String code,
+                                 @Pattern(regexp = "(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[0-9])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[a-zA-z])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[~!@#$%^&*()\\-_=+]).{8,16}",
+                                 groups = {ValidationGroups.Create.class, ValidationGroups.Update.class}, message = "올바른 형식의 비밀번호가 아닙니다.")
+                                 @RequestParam String password) throws Exception {
+        userService.findPassword(account, email, code, password);
+        return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 }

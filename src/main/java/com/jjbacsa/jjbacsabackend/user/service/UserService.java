@@ -17,5 +17,7 @@ public interface UserService {
     UserResponse modifyUser(UserRequest request) throws Exception;
     void withdraw() throws Exception;
     void sendAuthEmail(String email) throws Exception;
-    void findAccount(String email, String code) throws Exception;
+    String findAccount(String email, String code) throws Exception;
+
+    void findPassword(String account, String email, String code, String password) throws Exception;
 }
