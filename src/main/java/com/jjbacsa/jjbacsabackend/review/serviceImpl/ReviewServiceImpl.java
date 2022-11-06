@@ -43,7 +43,6 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public ReviewResponse createReview(ReviewRequest reviewRequest) throws Exception {
         ReviewEntity review = reviewRepository.save(createReviewEntity(reviewRequest));
-        log.info(review.getCreatedAt().toString());
         return ReviewResponse.from(review);
     }
 
