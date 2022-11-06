@@ -23,6 +23,7 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
         List<UserEntity> users = from(qUser).select(qUser)
                 .join(qUser.userCount).fetchJoin()
                 .where(qUser.nickname.contains(keyword), qUser.id.gt(cursor == null ? 0 : cursor))
+                .join(qUser.profileImage).fetchJoin()
                 .orderBy(new CaseBuilder()
                         .when(qUser.nickname.eq(keyword)).then(0)
                         .when(qUser.nickname.like(keyword + "%")).then(1)
@@ -41,6 +42,7 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
     public UserEntity findUserByIdWithCount(Long id){
         return from(qUser).select(qUser)
                 .join(qUser.userCount).fetchJoin()
+                .join(qUser.profileImage).fetchJoin()
                 .where(qUser.id.eq(id))
                 .fetchOne();
     }

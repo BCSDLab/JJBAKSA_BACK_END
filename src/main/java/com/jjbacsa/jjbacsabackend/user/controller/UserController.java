@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.controller;
 
+import com.amazonaws.Response;
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
@@ -11,10 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -31,8 +34,8 @@ public class UserController {
             notes = "회원가입을 진행합니다.\n\n" +
                     "필요한 필드\n\n\t" +
                     "{\n\n     " +
-                    "account : 유저 계정,\n\n     " +
-                    "password : 유저 패스워드,\n\n     " +
+                    "account : 유저 계정(1~20글자의 영문자 및 숫자),\n\n     " +
+                    "password : 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열),\n\n     " +
                     "email : 유저 이메일(차후 인증 추가)\n\n\t}")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponses({
@@ -42,7 +45,7 @@ public class UserController {
     })
     @PostMapping(value = "/user")
     public ResponseEntity<UserResponse> register(@Validated(ValidationGroups.Create.class)
-                                                     @RequestBody UserRequest request) throws Exception {
+                                                 @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.register(request), HttpStatus.CREATED);
     }
 
@@ -66,8 +69,8 @@ public class UserController {
             notes = "로그인을 진행합니다.\n\n" +
                     "필요한 필드\n\n\t" +
                     "{\n\n     " +
-                    "account : 유저 계정,\n\n     " +
-                    "password : 유저 패스워드,\n\n" +
+                    "account : 유저 계정(1~20글자의 영문자 및 숫자),\n\n     " +
+                    "password : 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열),\n\n" +
                     "\t}")
     @ApiResponses({
             @ApiResponse(code = 200,
@@ -76,7 +79,7 @@ public class UserController {
     })
     @PostMapping(value = "/user/login")
     public ResponseEntity<Token> login(@Validated(ValidationGroups.Login.class)
-                                           @RequestBody UserRequest request) throws Exception {
+                                       @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.login(request), HttpStatus.OK);
     }
 
@@ -158,8 +161,8 @@ public class UserController {
                     "\tAuthorization : Bearer + access token\n\n" +
                     "필요한 필드\n\n" +
                     "\t{\n\n     " +
-                    "password : 변경할 유저 패스워드(차후 인증 적용),\n\n     " +
-                    "nickname : 변경할 유저 닉네임,\n\n     " +
+                    "password : 변경할 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열)(차후 인증 적용),\n\n     " +
+                    "nickname : 변경할 유저 닉네임(영문자, 한글, 숫자로 이루어진 1~20글자의 문자열),\n\n     " +
                     "email : 변경할 유저 계정 (차후 인증 적용),\n\n" +
                     "\t}",
             authorizations = @Authorization(value = "Bearer + refreshToken"))
@@ -171,7 +174,7 @@ public class UserController {
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping("/user/me")
     public ResponseEntity<UserResponse> modifyUser(@Validated(ValidationGroups.Update.class)
-                                                       @RequestBody UserRequest request) throws Exception {
+                                                   @RequestBody UserRequest request) throws Exception {
         return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
     }
 
@@ -191,6 +194,27 @@ public class UserController {
     public ResponseEntity<Void> withdraw() throws Exception {
         userService.withdraw();
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @ApiOperation(
+            value = "회원 프로필 사진 수정",
+            notes = "회원 프로필 사진 수정\n\n" +
+                    "필요 헤더\n\n" +
+                    "\tAuthorization : Bearer + access token\n\n" +
+                    "필요한 필드\n\n" +
+                    "\t프로필 사진 : 파일 업로드\n\n" +
+                    "\t업로드할 사진을 올리지 않을 시 기본 프로필로 변경"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "변경된 유저 정보")
+    })
+    @PreAuthorize("hasRole('NORMAL')")
+    @PatchMapping(value = "/user/profile")
+    public ResponseEntity<UserResponse> modifyProfile(@RequestPart(value = "profile", required = false)
+                                                              MultipartFile profile) throws Exception {
+        return new ResponseEntity<>(userService.modifyProfile(profile), HttpStatus.OK);
     }
 
     @ApiOperation(

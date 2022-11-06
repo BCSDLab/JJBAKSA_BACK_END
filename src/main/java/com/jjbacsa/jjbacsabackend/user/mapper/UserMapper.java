@@ -13,6 +13,7 @@ public interface UserMapper {
 
     UserEntity toUserEntity(UserRequest userRequest);
 
+    @Mapping(target = "profileImage", source = "profileImage.url")
     @Mapping(target = "userCountResponse", source = "userCount")
     UserResponse toUserResponse(UserEntity userEntity);
 }

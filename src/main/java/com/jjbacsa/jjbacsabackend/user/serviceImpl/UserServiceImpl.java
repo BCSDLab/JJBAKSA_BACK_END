@@ -6,13 +6,14 @@ import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
+import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
@@ -21,18 +22,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl implements UserService {
     private final InternalUserService userService;
     private final InternalFollowService followService;
+    private final InternalProfileService profileService;
     private final UserRepository userRepository;
     private final UserCountRepository userCountRepository;
     private final JwtUtil jwtUtil;
@@ -173,6 +173,21 @@ public class UserServiceImpl implements UserService {
         //회원 탈퇴에 따른 리프레시 토큰 삭제
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
         if (existToken != null) redisUtil.deleteValue(String.valueOf(user.getId()));
+    }
+
+    @Override
+    @Transactional
+    public UserResponse modifyProfile(MultipartFile profile) throws Exception {
+        UserEntity user = userService.getLoginUser();
+        if(user.getProfileImage() != null)
+            profileService.deleteProfileImage(user.getProfileImage());
+
+        ImageEntity image = null;
+        if (profile != null)
+            image = profileService.createProfileImage(profile);
+
+        user.setProfileImage(image);
+        return UserMapper.INSTANCE.toUserResponse(user);
     }
 
     private boolean existAccount(String account) {
