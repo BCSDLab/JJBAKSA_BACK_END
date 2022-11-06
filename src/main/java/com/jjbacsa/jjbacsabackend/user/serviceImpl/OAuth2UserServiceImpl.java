@@ -12,8 +12,8 @@ import com.jjbacsa.jjbacsabackend.user.entity.oauth.OAuth2UserInfo;
 import com.jjbacsa.jjbacsabackend.user.entity.oauth.OAuth2UserInfoFactory;
 import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
+import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +35,7 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
 
     private final OAuthInfoRepository oAuthInfoRepository;
     private final JwtUtil jwtUtil;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisUtil redisUtil;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -72,11 +71,11 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
             oAuthInfoRepository.save(oAuthInfoEntity);
         }
 
-        String existToken = redisTemplate.opsForValue().get(String.valueOf(user.getId()));
+        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
 
         if (existToken == null) {
             existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH, user.getUserType().getUserType());
-            redisTemplate.opsForValue().set(String.valueOf(user.getId()), existToken, 14, TimeUnit.DAYS);
+            redisUtil.setToken(String.valueOf(user.getId()), existToken);
         }
 
         return new Token(jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()), existToken);
@@ -94,6 +93,7 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
         // TODO : dto
         ImageEntity imageEntity = ImageEntity.builder()
                 .path(oAuth2UserInfo.getProfileImage())
+                .url(oAuth2UserInfo.getProfileImage())
                 .originalName("original_name")
                 .build();
 
