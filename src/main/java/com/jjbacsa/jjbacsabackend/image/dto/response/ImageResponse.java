@@ -11,5 +11,5 @@ public class ImageResponse {
     private Long id;
     private String path;
     private String originalName;
-    private String imageUrl;
+    private String url;
 }
