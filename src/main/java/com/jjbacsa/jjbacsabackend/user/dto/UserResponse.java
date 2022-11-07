@@ -3,6 +3,7 @@ package com.jjbacsa.jjbacsabackend.user.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.image.dto.response.ImageResponse;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,8 +28,7 @@ public class UserResponse {
     @ApiModelProperty(notes = "유저 계정", example = "jjbcsa@naver.com")
     private String email;
 
-    @ApiModelProperty(notes = "유저 프로필 url", example = "https://static.api.stage.jjbaksa.com/profile/test.jpg")
-    private String profileImage;
+    private ImageResponse profileImage;
 
     @ApiModelProperty(notes = "OAuth 타입", example = "NAVER")
     private OAuthType oAuthType;

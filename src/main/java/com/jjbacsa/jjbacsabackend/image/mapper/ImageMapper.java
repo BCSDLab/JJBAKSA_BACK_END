@@ -14,7 +14,6 @@ public interface ImageMapper {
     @Mapping(source = "imageUrl", target="url")
     ImageEntity toImageEntity(ImageRequest imageRequest);
 
-    @Mapping(source = "url", target="imageUrl")
     ImageResponse toImageResponse(ImageEntity imageEntity);
 
 }
