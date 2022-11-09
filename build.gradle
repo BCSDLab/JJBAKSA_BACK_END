@@ -45,14 +45,14 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	testImplementation 'org.springframework.security:spring-security-test'
-	runtimeOnly 'com.h2database:h2:1.4.199'
+	runtimeOnly 'com.h2database:h2:1.4.200'
 
 	//querydsl
 	implementation 'com.querydsl:querydsl-jpa:5.0.0'
 	implementation 'com.querydsl:querydsl-apt:5.0.0'
 	//mapstruct
-	implementation 'org.mapstruct:mapstruct:1.5.1.Final'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.1.Final'
+	implementation 'org.mapstruct:mapstruct:1.5.2.Final'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.2.Final'
 	//swagger
 	implementation 'io.springfox:springfox-boot-starter:3.0.0'
 	implementation 'io.springfox:springfox-swagger-ui:3.0.0'
@@ -65,13 +65,16 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	// multipartFile
-	implementation 'commons-io:commons-io:2.6'
+	implementation 'commons-io:commons-io:2.11.0'
 
 	// https://mvnrepository.com/artifact/org.mindrot/jbcrypt
 	implementation group: 'org.mindrot', name: 'jbcrypt', version: '0.4'
 
 	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-oauth2-client
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	// aws s3
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
 	// aws-sdk
 	implementation 'com.amazonaws:aws-java-sdk:1.12.321'

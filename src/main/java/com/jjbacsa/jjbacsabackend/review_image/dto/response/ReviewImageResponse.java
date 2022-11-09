@@ -11,4 +11,5 @@ public class ReviewImageResponse {
     Long imageId;
     String originalName;
     String path;
+    String imageUrl;
 }
