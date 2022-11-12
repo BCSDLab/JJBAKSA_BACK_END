@@ -12,10 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -26,13 +23,13 @@ public class ShopController {
     private final ShopService shopService;
 
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping(value="/shop")
+    @GetMapping(value="/shop/{placeId}")
     @ApiOperation(
             value="단일 상점 정보 조회",
             notes = "place_id에 대한 상점 상세정보를 조회한다.",
             authorizations = @Authorization(value = "Bearer + accessToken")
     )
-    @ApiImplicitParam(name="place_id",value="상점 아이디",dataType = "String",dataTypeClass = String.class)
+    @ApiImplicitParam(name="placeId",value="상점 아이디",dataType = "String",dataTypeClass = String.class, paramType = "path")
     @ApiResponses({
             @ApiResponse(
                     code = 200,
@@ -40,7 +37,7 @@ public class ShopController {
                     response = ShopResponse.class
             )
     })
-    public ResponseEntity<ShopResponse> getShop(@RequestParam("place_id")String placeId) {
+    public ResponseEntity<ShopResponse> getShop(@PathVariable("placeId")String placeId) {
         return new ResponseEntity<>(shopService.getShop(placeId), HttpStatus.OK);
     }
 
