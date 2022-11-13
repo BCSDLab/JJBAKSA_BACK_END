@@ -3,6 +3,7 @@ package com.jjbacsa.jjbacsabackend.user.controller;
 import com.amazonaws.Response;
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
@@ -204,7 +205,7 @@ public class UserController {
             notes = "인증 이메일 발송\n\n" +
                     "필요한 필드\n\n" +
                     "\t{\n\n     " +
-                    "email : 이메일을 받을 이메일\n\n" +
+                    "email : 인증 받을 이메일\n\n" +
                     "\t}"
     )
     @ResponseStatus(HttpStatus.OK)
@@ -222,17 +223,20 @@ public class UserController {
 
     @ApiOperation(
             value = "아이디 찾기",
-            notes = "찾을 이메일 발송\n\n" +
-                    "email : 아이디를 찾을 이메일 - 메일 받을 주소\n\n" +
-                    "code : 인증 코드"
+            notes = "아이디 찾기\n\n" +
+                    "필요한 필드\n\n" +
+                    "\t{\n\n     " +
+                    "email : 아이디를 찾을 이메일 - 메일 받은 주소\n\n     " +
+                    "code : 인증 코드\n\n\t}"
     )
     @ResponseStatus(HttpStatus.OK)
     @ApiResponses({
             @ApiResponse(code = 200,
-                    message = "OK")
+                    message = "아이디 찾기",
+                    response = UserResponse.class)
     })
     @GetMapping("user/account")
-    public ResponseEntity<String> findAccount(@Email(message = "이메일은 형식을 지켜야 합니다.")
+    public ResponseEntity<UserResponse> findAccount(@Email(message = "이메일은 형식을 지켜야 합니다.")
                                                   @RequestParam String email,
                                               @RequestParam String code) throws Exception {
 
@@ -250,26 +254,24 @@ public class UserController {
     @ApiOperation(
             value = "비밀번호 찾기",
             notes = "비밀번호 찾기 이메일 발송\n\n" +
-                    "account : 비밀번호 찾을 계정\n\n" +
-                    "email : 비밀번호 찾을 이메일 - 메일 받을 주소\n\n" +
-                    "code : 인증 코드\n\n" +
-                    "password : 변경할 비밀번호"
+                    "필요한 필드\n\n" +
+                    "\t{\n\n     " +
+                    "account : 비밀번호 찾을 계정\n\n     " +
+                    "email : 비밀번호 찾을 이메일 - 메일 받은 주소\n\n     " +
+                    "code : 인증 코드\n\n     " +
+                    "password : 변경할 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열)\n\n" +
+                    "\t}"
     )
     @ResponseStatus(HttpStatus.OK)
     @ApiResponses({
             @ApiResponse(code = 200,
-                    message = "OK")
+                    message = "비밀번호 찾기",
+                    response = UserResponse.class)
     })
     @PostMapping("user/password")
-    public ResponseEntity<String> findPassword(@RequestParam String account,
-                                 @Email(message = "이메일은 형식을 지켜야 합니다.")
-                                 @RequestParam String email,
-                                 @RequestParam String code,
-                                 @Pattern(regexp = "(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[0-9])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[a-zA-z])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[~!@#$%^&*()\\-_=+]).{8,16}",
-                                 groups = {ValidationGroups.Create.class, ValidationGroups.Update.class}, message = "올바른 형식의 비밀번호가 아닙니다.")
-                                 @RequestParam String password) throws Exception {
-        userService.findPassword(account, email, code, password);
-        return new ResponseEntity<>("OK", HttpStatus.OK);
+    public ResponseEntity<UserResponse> findPassword(@Validated(ValidationGroups.Update.class)
+                                                         @RequestBody EmailRequest request) throws Exception {
+        return new ResponseEntity<>(userService.findPassword(request), HttpStatus.OK);
     }
 
     @ApiOperation(

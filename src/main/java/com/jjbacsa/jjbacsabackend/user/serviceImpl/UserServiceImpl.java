@@ -7,6 +7,7 @@ import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
+import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -206,7 +207,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String findAccount(String email, String code) throws Exception {
+    public UserResponse findAccount(String email, String code) throws Exception {
 
         UserEntity user = userService.getUserByEmail(email);
 
@@ -217,28 +218,30 @@ public class UserServiceImpl implements UserService {
         if (!emailService.codeCertification(email, code))
             throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
 
-        return user.getAccount();
+        return UserMapper.INSTANCE.toUserResponse(user);
     }
 
     @Override
     @Transactional
-    public void findPassword(String account, String email, String code, String password) throws Exception{
+    public UserResponse findPassword(EmailRequest request) throws Exception{
 
-        if(!userRepository.existsByAccount(account)) {
+        if(!userRepository.existsByAccount(request.getAccount())) {
             throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
         }
 
-        UserEntity user = userService.getUserByEmail(email);
+        UserEntity user = userService.getUserByEmail(request.getEmail());
 
         if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
         }
 
-        if (!emailService.codeCertification(email, code))
+        if (!emailService.codeCertification(request.getEmail(), request.getCode()))
             throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
 
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
+
+        return UserMapper.INSTANCE.toUserResponse(user);
     }
 
     private boolean existAccount(String account) {

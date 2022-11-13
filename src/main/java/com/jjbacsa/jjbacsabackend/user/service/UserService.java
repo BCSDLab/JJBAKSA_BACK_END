@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.user.service;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import org.springframework.data.domain.Page;
@@ -31,7 +32,7 @@ public interface UserService {
 
     void sendAuthEmail(String email) throws Exception;
 
-    String findAccount(String email, String code) throws Exception;
+    UserResponse findAccount(String email, String code) throws Exception;
 
-    void findPassword(String account, String email, String code, String password) throws Exception;
+    UserResponse findPassword(EmailRequest request) throws Exception;
 }
