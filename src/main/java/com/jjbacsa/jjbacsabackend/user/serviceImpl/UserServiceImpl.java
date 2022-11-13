@@ -155,6 +155,7 @@ public class UserServiceImpl implements UserService {
 
     //TODO : Email 인증 추가 완료 시 파라미터 추가 (변경 시 채널에 고지 )
     @Override
+    @Transactional
     public UserResponse modifyUser(UserRequest request) throws Exception {
         UserEntity user = userService.getLoginUser();
 
