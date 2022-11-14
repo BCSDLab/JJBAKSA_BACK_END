@@ -20,11 +20,10 @@ public class ShopResponse {
     private String phone;
     private String businessDay;
 
-    //ShopCount
     private Integer totalRating;
     private Integer ratingCount;
 
-    public boolean setShopCount(Integer totalRating,Integer ratingCount){
+    public boolean setShopCount(Integer totalRating, Integer ratingCount){
         try{
             this.totalRating=totalRating;
             this.ratingCount=ratingCount;

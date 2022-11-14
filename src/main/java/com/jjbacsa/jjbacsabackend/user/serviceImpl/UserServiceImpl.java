@@ -5,40 +5,46 @@ import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
+import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
+import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
+import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final InternalUserService userService;
+    private final InternalFollowService followService;
+    private final InternalProfileService profileService;
     private final UserRepository userRepository;
+    private final UserCountRepository userCountRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisUtil redisUtil;
 
     //TODO : OAuth별 작동
     @Override
@@ -47,7 +53,7 @@ public class UserServiceImpl implements UserService {
         //TODO : 이메일 인증 확인 절차 추가
 
         //TODO : Default Profile 등록하기
-        //TODO : Validation 추가하면서 수정
+        existAccount(request.getAccount());
         request.setNickname(UUID.randomUUID().toString());
 
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
@@ -61,9 +67,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String checkDuplicateAccount(String account) throws Exception {
-        if (userRepository.existsByAccount(account)) {
-            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
-        }
+        existAccount(account);
         return "OK";
     }
 
@@ -76,11 +80,11 @@ public class UserServiceImpl implements UserService {
             throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
         }
 
-        String existToken = redisTemplate.opsForValue().get(user.getAccount());
+        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
 
         if (existToken == null) {
             existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH, user.getUserType().getUserType());
-            redisTemplate.opsForValue().set(user.getAccount(), existToken, 14, TimeUnit.DAYS);
+            redisUtil.setToken(String.valueOf(user.getId()), existToken);
         }
 
         Token token = new Token(
@@ -107,7 +111,7 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
-        String existToken = redisTemplate.opsForValue().get(user.getAccount());
+        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
 
         //null인 경우에는 다시 로그인 필요
         if (existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH)))
@@ -124,11 +128,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponse> searchUsers(String keyword, Pageable pageable, Long cursor) throws Exception {
+    public Page<UserResponse> searchUsers(String keyword, Integer pageSize, Long cursor) throws Exception {
+        Pageable pageable = PageRequest.of(0, pageSize);
+
         Page<UserResponse> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor)
                 .map(UserMapper.INSTANCE::toUserResponse);
-
-        if (result == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
 
         return result;
     }
@@ -144,13 +148,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse modifyUser(UserRequest request) throws Exception {
-        Long id = ((CustomUserDetails) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal())
-                .getId();
-
-        UserEntity user = userRepository.getById(id);
+        UserEntity user = userService.getLoginUser();
 
         if (request.getPassword() != null)
             user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -160,5 +158,42 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public void withdraw() throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        userCountRepository.updateAllFriendsCountByUser(user);
+        followService.deleteFollowWithUser(user);
+
+        user.setIsDeleted(1);
+
+        //회원 탈퇴에 따른 리프레시 토큰 삭제
+        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
+        if (existToken != null) redisUtil.deleteValue(String.valueOf(user.getId()));
+    }
+
+    @Override
+    @Transactional
+    public UserResponse modifyProfile(MultipartFile profile) throws Exception {
+        UserEntity user = userService.getLoginUser();
+        if(user.getProfileImage() != null)
+            profileService.deleteProfileImage(user.getProfileImage());
+
+        ImageEntity image = null;
+        if (profile != null)
+            image = profileService.createProfileImage(profile);
+
+        user.setProfileImage(image);
+        return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    private boolean existAccount(String account) {
+        if (userRepository.existsByAccount(account)) {
+            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
+        }
+        return true;
     }
 }

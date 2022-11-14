@@ -29,8 +29,15 @@ public class ImageEntity extends BaseEntity {
     @Column(name = "originalName")
     private String originalName;
 
-    public void updateImage(String path, String originalName){
+    @Basic(optional = false)
+    @Column(name = "url")
+    private String url;
+
+
+
+    public void updateImage(String path, String originalName, String imageUrl){
         this.path = path;
         this.originalName = originalName;
+        this.url = imageUrl;
     }
 }

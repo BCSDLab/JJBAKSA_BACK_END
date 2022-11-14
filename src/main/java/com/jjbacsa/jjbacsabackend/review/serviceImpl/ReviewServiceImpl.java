@@ -3,7 +3,6 @@ package com.jjbacsa.jjbacsabackend.review.serviceImpl;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
-import com.jjbacsa.jjbacsabackend.image.service.ImageService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
@@ -12,7 +11,7 @@ import com.jjbacsa.jjbacsabackend.review.mapper.ReviewMapper;
 import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.service.ReviewService;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
-import com.jjbacsa.jjbacsabackend.review_image.repository.ReviewImageRepository;
+import com.jjbacsa.jjbacsabackend.review_image.service.InternalReviewImageService;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.service.InternalShopService;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -33,12 +32,11 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ReviewServiceImpl implements ReviewService {
-    private final ImageService imageService;
     private final InternalUserService userService;
     private final InternalShopService shopService;
     private final InternalFollowService followService;
+    private final InternalReviewImageService reviewImageService;
 
-    private final ReviewImageRepository reviewImageRepository;
     private final ReviewRepository reviewRepository;
 
     @Override
@@ -68,6 +66,10 @@ public class ReviewServiceImpl implements ReviewService {
         ReviewEntity reviewEntity = reviewRepository.findByReviewId(reviewId);
         if(reviewEntity == null) throw new RequestInputException(ErrorMessage.REVIEW_NOT_EXISTS_EXCEPTION);
         if(!reviewEntity.getWriter().equals(userEntity)) throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_REVIEW);
+
+        for(ReviewImageEntity reviewImage: reviewEntity.getReviewImages()){ // 리뷰 이미지를 버킷에서 삭제
+            reviewImageService.delete(reviewImage);
+        }
         reviewRepository.deleteById(reviewId);
 
         // 리뷰 수, 별점 처리
@@ -147,7 +149,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
 
         if (reviewRequest.getReviewImages() != null) {
-            List<ReviewImageEntity> reviewImageEntities = imageService.createReviewImages(reviewRequest.getReviewImages());
+            List<ReviewImageEntity> reviewImageEntities = reviewImageService.createReviewImages(reviewRequest.getReviewImages());
             for (ReviewImageEntity reviewImageEntity : reviewImageEntities) {
                 reviewEntity.addReviewImageEntity(reviewImageEntity);
             }
@@ -170,14 +172,13 @@ public class ReviewServiceImpl implements ReviewService {
             shopService.addTotalRating(review.getShop().getId(), modRate - curRate);
             review.setRate(modRate);
         }
-
         if(reviewRequest.getReviewImages() != null) {
-            imageService.modifyReviewImages(reviewRequest.getReviewImages(), review);
+            reviewImageService.modifyReviewImages(reviewRequest.getReviewImages(), review);
         }
         else{
             if(review.getReviewImages() != null){
-                for(ReviewImageEntity image: review.getReviewImages()){
-                    reviewImageRepository.deleteById(image.getId());
+                for(ReviewImageEntity reviewImage: review.getReviewImages()){
+                    reviewImageService.delete(reviewImage);
                 }
                 review.getReviewImages().clear();
             }

@@ -14,7 +14,7 @@ public interface ShopService {
     ShopResponse getShop(String placeId);
 
     //DB 내 상점 검색
-    Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Pageable pageable);
+    Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Integer page, Integer size);
 
     //인기검색어
     TrendingResponse getTrending();
