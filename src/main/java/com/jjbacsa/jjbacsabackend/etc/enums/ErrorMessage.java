@@ -38,6 +38,8 @@ public enum ErrorMessage {
     IMAGE_UPLOAD_FAIL_EXCEPTION(32, "이미지 업로드에 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     IMAGE_SIZE_OVERFLOW_EXCEPTION(33, "이미지 파일크기가 10MB이상 입니다.", HttpStatus.BAD_REQUEST),
     INVALID_SOCIAL_TYPE(34, "유효하지 않은 소셜 로그인 타입입니다.", HttpStatus.BAD_REQUEST),
+
+    IMAGE_RESIZING_EXCEPTION(35, "이미지 리사이징에 실패했습니다.", HttpStatus.BAD_REQUEST)
     ;
 
     Integer code;

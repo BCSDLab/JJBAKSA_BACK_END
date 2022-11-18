@@ -16,6 +16,7 @@ import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
+    private final ImageUtil imageUtil;
 
     //TODO : OAuth별 작동
     @Override
@@ -147,13 +149,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponse modifyUser(UserRequest request) throws Exception {
         UserEntity user = userService.getLoginUser();
 
-        if (request.getPassword() != null)
+        if (request.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
-        if (request.getNickname() != null)
+        }
+
+        if (request.getNickname() != null) {
             user.setNickname(request.getNickname());
+        }
         //TODO : email 변경시 인증된 이메일 확인
 
         userRepository.save(user);
@@ -179,12 +185,17 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse modifyProfile(MultipartFile profile) throws Exception {
         UserEntity user = userService.getLoginUser();
-        if(user.getProfileImage() != null)
+
+        if (user.getProfileImage() != null) {
             profileService.deleteProfileImage(user.getProfileImage());
+        }
 
         ImageEntity image = null;
-        if (profile != null)
+        if (profile != null) {
+            profile = imageUtil.resizing(profile, 500);
+            System.out.println(profile.getContentType());
             image = profileService.createProfileImage(profile);
+        }
 
         user.setProfileImage(image);
         return UserMapper.INSTANCE.toUserResponse(user);
