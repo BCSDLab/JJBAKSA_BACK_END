@@ -76,6 +76,10 @@ flyway:
 server:
   port: 8080
 
+image:
+  review:
+    path:
+
 jwt:
   key: Secret Key Random String
   access: access
