@@ -45,6 +45,12 @@ public class InternalUserServiceImpl implements InternalUserService {
     }
 
     @Override
+    public UserEntity getUserByEmail(String email) throws RequestInputException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+    }
+
+    @Override
     @Transactional
     public void increaseReviewCount(Long userId) {
 

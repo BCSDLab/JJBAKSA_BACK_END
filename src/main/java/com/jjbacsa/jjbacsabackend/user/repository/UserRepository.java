@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, DslUser
 
     Optional<UserEntity> findByAccount(String account);
 
+    Optional<UserEntity> findByEmail(String email);
+
     boolean existsByAccount(String account);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

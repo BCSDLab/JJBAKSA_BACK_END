@@ -15,6 +15,10 @@ public class RedisUtil {
         return stringRedisTemplate.opsForValue().get(key);
     }
 
+    public void setStringValue(String key, String value){
+        stringRedisTemplate.opsForValue().set(key, value);
+    }
+
     public void setToken(String key, String token) {
         stringRedisTemplate.opsForValue().set(key, token, 14, TimeUnit.DAYS);
     }

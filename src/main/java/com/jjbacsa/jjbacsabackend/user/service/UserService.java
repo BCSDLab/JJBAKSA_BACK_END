@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.user.service;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import org.springframework.data.domain.Page;
@@ -28,4 +29,10 @@ public interface UserService {
     void withdraw() throws Exception;
 
     UserResponse modifyProfile(MultipartFile profile) throws Exception;
+
+    void sendAuthEmail(String email) throws Exception;
+
+    UserResponse findAccount(String email, String code) throws Exception;
+
+    UserResponse findPassword(EmailRequest request) throws Exception;
 }

@@ -7,13 +7,16 @@ import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
+import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
+import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
+import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
@@ -40,17 +43,21 @@ public class UserServiceImpl implements UserService {
     private final InternalUserService userService;
     private final InternalFollowService followService;
     private final InternalProfileService profileService;
+    private final InternalEmailService emailService;
     private final UserRepository userRepository;
     private final UserCountRepository userCountRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
+    private final OAuthInfoRepository oAuthInfoRepository;
 
     //TODO : OAuth별 작동
+    //TODO : 이메일 인증 추가 시 인증 코드 파라미터 추가 (변경 시 채널에 고지 )
     @Override
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
         //TODO : 이메일 인증 확인 절차 추가
+//        emailService.codeCertification(request.getEmail(), code);
 
         //TODO : Default Profile 등록하기
         existAccount(request.getAccount());
@@ -146,15 +153,18 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
+    //TODO : Email 인증 추가 완료 시 파라미터 추가 (변경 시 채널에 고지 )
     @Override
+    @Transactional
     public UserResponse modifyUser(UserRequest request) throws Exception {
         UserEntity user = userService.getLoginUser();
 
-        if (request.getPassword() != null)
+        if (request.getPassword() != null) {
+//            emailService.codeCertification(request.getEmail(), code);
             user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
         if (request.getNickname() != null)
             user.setNickname(request.getNickname());
-        //TODO : email 변경시 인증된 이메일 확인
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
@@ -187,6 +197,51 @@ public class UserServiceImpl implements UserService {
             image = profileService.createProfileImage(profile);
 
         user.setProfileImage(image);
+        return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
+    @Override
+    @Transactional
+    public void sendAuthEmail(String email) throws Exception{
+        emailService.sendAuthEmail(email);
+    }
+
+    @Override
+    public UserResponse findAccount(String email, String code) throws Exception {
+
+        UserEntity user = userService.getUserByEmail(email);
+
+        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
+
+        if (!emailService.codeCertification(email, code))
+            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+
+        return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse findPassword(EmailRequest request) throws Exception{
+
+        if(!userRepository.existsByAccount(request.getAccount())) {
+            throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+        }
+
+        UserEntity user = userService.getUserByEmail(request.getEmail());
+
+        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
+
+        if (!emailService.codeCertification(request.getEmail(), request.getCode()))
+            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
+
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
