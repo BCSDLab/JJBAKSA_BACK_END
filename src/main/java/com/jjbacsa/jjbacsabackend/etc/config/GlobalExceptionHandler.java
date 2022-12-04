@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.ValidationException;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
@@ -123,11 +124,8 @@ public class GlobalExceptionHandler {
         String errorMessage = e.getMessage();
         int errorLine = e.getStackTrace()[0].getLineNumber();
 
-//		String requestBody = IOUtils.toString(request.getReader());
         String requestParam = new ObjectMapper().writeValueAsString(ParserUtil.splitQueryString(request.getQueryString()));
-        String requestBody = "";
-        //Todo: request body read 해결
-        //request                .getReader()                .lines()                .collect(Collectors.joining(System.lineSeparator()));
+        String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         String message = String.format("```%s %s Line %d```\n```===== [Message] ===== \n%s\n\n===== [Controller] =====\n%s\n\n===== [RequestParameter] =====\n%s\n\n===== [RequestBody] =====\n%s```",
                 errorName, errorFile, errorLine, errorMessage, handlerMethod, requestParam, requestBody);
 

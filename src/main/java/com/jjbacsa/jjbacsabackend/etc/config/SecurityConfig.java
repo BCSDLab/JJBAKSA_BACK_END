@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.etc.config;
 
 import com.jjbacsa.jjbacsabackend.etc.filter.JwtTokenFilter;
+import com.jjbacsa.jjbacsabackend.etc.filter.RequestWrappingFilter;
 import com.jjbacsa.jjbacsabackend.etc.security.JwtTokenProvider;
 import com.jjbacsa.jjbacsabackend.etc.security.OAuth2SuccessHandler;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.OAuth2UserServiceImpl;
@@ -59,7 +60,9 @@ public class SecurityConfig {
                 .antMatchers("/**").permitAll()
                 .and()
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider),
-                        UsernamePasswordAuthenticationFilter.class);
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new RequestWrappingFilter(),
+                        JwtTokenFilter.class);
 
         //세션 사용 X
         http
