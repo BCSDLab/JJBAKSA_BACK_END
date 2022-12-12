@@ -35,17 +35,16 @@ public class ShopResponse {
         }
     }
     public static ShopResponse from(ShopEntity entity){
-        return new ShopResponse(
-                entity.getId(),
-                entity.getPlaceId(),
-                entity.getPlaceName(),
-                entity.getX(),
-                entity.getY(),
-                entity.getCategoryName(),
-                entity.getPhone(),
-                entity.getBusinessDay(),
-                entity.getShopCount().getTotalRating(),
-                entity.getShopCount().getRatingCount()
-        );
+        return ShopResponse.builder()
+                .shopId(entity.getId())
+                .placeId(entity.getPlaceId())
+                .placeName(entity.getPlaceName())
+                .x(entity.getX())
+                .y(entity.getY())
+                .categoryName(entity.getCategoryName())
+                .businessDay(entity.getBusinessDay())
+                .totalRating(entity.getShopCount().getTotalRating())
+                .ratingCount(entity.getShopCount().getRatingCount())
+                .build();
     }
 }
