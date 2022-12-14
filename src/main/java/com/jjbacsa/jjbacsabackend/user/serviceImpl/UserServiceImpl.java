@@ -19,6 +19,7 @@ import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,7 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
+    private final ImageUtil imageUtil;
     private final OAuthInfoRepository oAuthInfoRepository;
 
     //TODO : OAuth별 작동
@@ -189,12 +191,16 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse modifyProfile(MultipartFile profile) throws Exception {
         UserEntity user = userService.getLoginUser();
-        if(user.getProfileImage() != null)
+
+        if (user.getProfileImage() != null) {
             profileService.deleteProfileImage(user.getProfileImage());
+        }
 
         ImageEntity image = null;
-        if (profile != null)
+        if (profile != null) {
+            profile = imageUtil.resizing(profile, 500);
             image = profileService.createProfileImage(profile);
+        }
 
         user.setProfileImage(image);
         return UserMapper.INSTANCE.toUserResponse(user);
