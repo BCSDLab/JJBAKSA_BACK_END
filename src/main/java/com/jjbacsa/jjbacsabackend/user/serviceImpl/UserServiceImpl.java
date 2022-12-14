@@ -199,7 +199,6 @@ public class UserServiceImpl implements UserService {
         ImageEntity image = null;
         if (profile != null) {
             profile = imageUtil.resizing(profile, 500);
-            System.out.println(profile.getContentType());
             image = profileService.createProfileImage(profile);
         }
 
