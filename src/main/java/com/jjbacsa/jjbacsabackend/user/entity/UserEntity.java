@@ -73,6 +73,10 @@ public class UserEntity extends BaseEntity {
 
     }
 
+    public void modifyUserRole(UserType userType){
+        this.userType = userType;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
