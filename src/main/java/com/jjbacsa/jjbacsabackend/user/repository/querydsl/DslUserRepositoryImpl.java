@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.user.repository.querydsl;
 
 import com.jjbacsa.jjbacsabackend.follow.entity.QFollowEntity;
+import com.jjbacsa.jjbacsabackend.image.entity.QImageEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserCount;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -15,20 +16,25 @@ import java.util.List;
 
 public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements DslUserRepository {
     private static final QUserEntity qUser = QUserEntity.userEntity;
+    private static final QImageEntity qImage = QImageEntity.imageEntity;
 
-    public DslUserRepositoryImpl(){ super(UserEntity.class); }
+    public DslUserRepositoryImpl() {
+        super(UserEntity.class);
+    }
 
     @Override
-    public Page<UserEntity> findAllByUserNameWithCursor(String keyword, Pageable pageable, Long cursor){
+    public Page<UserEntity> findAllByUserNameWithCursor(String keyword, Pageable pageable, Long cursor) {
         List<UserEntity> users = from(qUser).select(qUser)
                 .join(qUser.userCount).fetchJoin()
-                .where(qUser.nickname.contains(keyword), qUser.id.gt(cursor == null ? 0 : cursor))
-                .join(qUser.profileImage).fetchJoin()
+                .leftJoin(qImage).on(qUser.profileImage.eq(qImage))
+                .where(qUser.nickname.contains(keyword).or(qUser.account.contains(keyword)))
+                .where(qUser.id.gt(cursor == null ? 0 : cursor))
                 .orderBy(new CaseBuilder()
-                        .when(qUser.nickname.eq(keyword)).then(0)
-                        .when(qUser.nickname.like(keyword + "%")).then(1)
-                        .when(qUser.nickname.like("%" + keyword + "%")).then(2)
-                        .otherwise(3).asc(), qUser.id.asc())
+                        .when(qUser.nickname.eq(keyword)
+                                .or(qUser.account.eq(keyword))).then(0)
+                        .when(qUser.nickname.like(keyword + "%")
+                                .or(qUser.account.like(keyword + "%"))).then(1)
+                        .otherwise(2).asc(), qUser.id.asc())
                 .limit(pageable.getPageSize())
                 .fetch();
 
@@ -39,16 +45,16 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
     }
 
     @Override
-    public UserEntity findUserByIdWithCount(Long id){
+    public UserEntity findUserByIdWithCount(Long id) {
         return from(qUser).select(qUser)
                 .join(qUser.userCount).fetchJoin()
-                .join(qUser.profileImage).fetchJoin()
+                .leftJoin(qImage).on(qUser.profileImage.eq(qImage))
                 .where(qUser.id.eq(id))
                 .fetchOne();
     }
 
     @Override
-    public List<UserEntity> findAllUserByIdAndFollowWithCount(Long id){
+    public List<UserEntity> findAllUserByIdAndFollowWithCount(Long id) {
         QFollowEntity follow = QFollowEntity.followEntity;
         QUserCount userCount = QUserCount.userCount;
 

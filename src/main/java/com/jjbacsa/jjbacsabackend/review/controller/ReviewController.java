@@ -5,10 +5,12 @@ import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.service.ReviewService;
+import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -63,6 +65,7 @@ public class ReviewController {
             value = "상점에 대한 모든 리뷰 조회",
             notes = "상점에 대한 모든 리뷰를 조회합니다.\n\n", authorizations = @Authorization(value = "Bearer +accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
+    @GetMapping(value = "/review/search/shop/{shop-id}")
     public ResponseEntity<Page<ReviewResponse>> searchShopReview(@ApiParam("조회할 상점id") @PathVariable("shop-id") Long shopId, @ApiParam("조회할 페이지") @RequestParam(value = "page", required = false, defaultValue = "0")Integer page, @ApiParam("페이징 사이즈") @RequestParam(value = "size", required=false, defaultValue="3")Integer size){
         return new ResponseEntity<>(reviewService.searchShopReviews(shopId, page, size), HttpStatus.OK);
     }
@@ -128,5 +131,15 @@ public class ReviewController {
     @GetMapping(value="/review/search/shop/{shop-id}/follower")
     public ResponseEntity<Page<ReviewResponse>> searchFollowersShopReviews(@ApiParam("조회할 상점id") @PathVariable("shop-id") Long shopId, @ApiParam("조회할 페이지") @RequestParam(value = "page", required = false, defaultValue = "0")Integer page, @ApiParam("페이징 사이즈") @RequestParam(value = "size", required=false, defaultValue="3")Integer size) throws Exception {
         return new ResponseEntity<>(reviewService.searchFollowersShopReviews(shopId, page, size), HttpStatus.OK);
+    }
+
+    @ApiOperation(
+            value = "팔로워들이 작성한 리뷰에 검색어가 포함된 상점 조회",
+            notes = "팔로워들이 작성한 리뷰 중 검색어가 포함된 리뷰들이 작성된 상점을 조회합니다.\n\n"+
+                    "Cursor기반 Cursor는 마지막 반환 객체를 기준으로 만든다.\n\n", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @PreAuthorize("hasRole('NORMAL')")
+    @GetMapping(value = "/review/search/shop")
+    public ResponseEntity<Page<ShopResponse>> searchShopByKeyword(@RequestParam(required = false) String cursor, @ApiParam("리뷰 내용 검색어")@RequestParam String searchWord, @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100)Integer size) throws Exception{
+        return new ResponseEntity<>(reviewService.searchShopByReviewContentsAndFollowers(cursor, searchWord, size), HttpStatus.OK);
     }
 }

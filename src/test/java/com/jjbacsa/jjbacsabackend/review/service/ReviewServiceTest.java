@@ -8,6 +8,7 @@ import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review.serviceImpl.ReviewServiceImpl;
+import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
@@ -268,6 +269,23 @@ public class ReviewServiceTest {
         Long shopId2 = 2L;
         Page<ReviewResponse> emptyReviews = reviewService.searchFollowersShopReviews(shopId2, page, size);
         assertThat(emptyReviews).isEmpty();
+
+    }
+
+    @DisplayName("검색 내용이 주어지면 검색 내용이 포함된 친구 리뷰가 있는 상점을 반환한다.")
+    @Test
+    void givenKeyword_whenSearchShopByReviewContentAndFollowers_thenReturnShopInfo() throws Exception {
+        // Given
+        user = userRepository.getById(1L);
+        String searchWord = "content";
+        Integer size = 3;
+
+        // When
+        testLogin(user);
+        Page<ShopResponse> shops = reviewService.searchShopByReviewContentsAndFollowers(null, searchWord, size);
+
+        // Then
+        assertThat(shops).isNotEmpty();
 
     }
 

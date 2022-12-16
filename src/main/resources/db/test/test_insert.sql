@@ -4,7 +4,9 @@ insert into image (id, path, created_at, updated_at, is_deleted, original_name, 
 insert into user (id, account, password, nickname, email, profile_image_id, user_type, created_at, updated_at, is_deleted) values
     (1, 'dpwns1', 'asdf1234', 'Dpwns', 'dpwns@mail.com', 1, 'NORMAL', now(), now(), 0),
     (2, 'dpwns2', 'asdf1234', 'dpwns2', 'dpwns2@mail.com', 1, 'NORMAL', now(), now(), 0),
-    (3, 'dpwns3', 'asdf1234', 'dpwns2', 'dpwns2@mail.com', 1, 'NORMAL', now(), now(), 0);
+    (3, 'dpwns3', 'asdf1234', 'dpwns2', 'dpwns3@mail.com', 1, 'NORMAL', now(), now(), 0),
+    (4, 'dpwns4', 'asdf1234', 'dpwns2', 'dpwns4@mail.com', 1, 'ADMIN', now(), now(), 0),
+    (5, 'admin', 'asdf1234', 'admin', 'admin@mail.com', 1, 'ROOT', now(), now(), 0);
 
 insert into shop (id, place_id, place_name, x, y, category_name, created_at, updated_at, is_deleted, address) values
     (1, '병천면', '빽다방', '0', '0', '카페', now(), now(), 0, 'address')
