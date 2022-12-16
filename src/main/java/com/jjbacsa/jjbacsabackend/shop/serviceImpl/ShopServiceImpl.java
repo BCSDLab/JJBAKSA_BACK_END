@@ -8,11 +8,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
 import com.jjbacsa.jjbacsabackend.etc.exception.CriticalException;
+import com.jjbacsa.jjbacsabackend.search.entity.SearchEntity;
+import com.jjbacsa.jjbacsabackend.search.repository.SearchRepository;
 import com.jjbacsa.jjbacsabackend.shop.dto.*;
 import com.jjbacsa.jjbacsabackend.shop.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
-import com.jjbacsa.jjbacsabackend.shop.dto.response.TrendingResponse;
+import com.jjbacsa.jjbacsabackend.search.dto.TrendingResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.mapper.ShopMapper;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
@@ -42,6 +44,7 @@ import java.util.stream.Collectors;
 public class ShopServiceImpl implements ShopService {
 
     private final ShopRepository shopRepository;
+    private final SearchRepository searchRepository;
     private final WebClient webClient;
     private final String BASE_URL="https://maps.googleapis.com/maps/api/place";
     private final StringRedisTemplate redisTemplate;
@@ -54,7 +57,7 @@ public class ShopServiceImpl implements ShopService {
 
     private String API_KEY;
 
-    public ShopServiceImpl(ShopRepository shopRepository, ObjectMapper objectMapper,StringRedisTemplate redisTemplate,@Value("${external.api.key}") String key) {
+    public ShopServiceImpl(ShopRepository shopRepository, ObjectMapper objectMapper,StringRedisTemplate redisTemplate,@Value("${external.api.key}") String key,SearchRepository searchRepository) {
 
         this.shopRepository=shopRepository;
         this.redisTemplate=redisTemplate;
@@ -62,6 +65,7 @@ public class ShopServiceImpl implements ShopService {
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false);
         this.objectMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
         this.API_KEY=key;
+        this.searchRepository=searchRepository;
 
         DefaultUriBuilderFactory factory=new DefaultUriBuilderFactory(BASE_URL);
         factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.TEMPLATE_AND_VALUES);
@@ -159,12 +163,15 @@ public class ShopServiceImpl implements ShopService {
         return shopApiDto;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Integer page,Integer size) {
         //keyword Redis 저장
         String keyword=shopRequest.getKeyword();
         saveRedis(keyword);
+
+        //검색어 저장 (AutoComplete)
+        saveForAutoComplete(keyword);
 
         //키워드 검색 타입 판별
         SearchType searchType=typeSetting(keyword);
@@ -286,13 +293,17 @@ public class ShopServiceImpl implements ShopService {
 
     }
 
-    @Override
-    public TrendingResponse getTrending() {
-        return TrendingResponse.builder().
-                trendings(redisTemplate.opsForZSet().reverseRange(KEY,0,-1).stream().collect(Collectors.toList()))
-                .build();
-    }
+    //todo: @Transactional(read-only=false) 검색어 저장
+    public void saveForAutoComplete(String keyword){
+        if(searchRepository.existsByContent(keyword)){
+            SearchEntity searchEntity=searchRepository.getByContent(keyword).get();
+            Long latestScore=searchEntity.getScore();
+            searchEntity.updateScore(latestScore+1);
 
+        }else{
+            searchRepository.save(new SearchEntity(keyword));
+        }
+    }
 }
 enum SearchType{
     cafe, restaurant, NONE, cafe_category,restaurant_category, one
