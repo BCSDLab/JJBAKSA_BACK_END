@@ -74,6 +74,31 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
+    @Transactional
+    @Override
+    public void authEmail(String accessToken, String refreshToken) throws Exception {
+        jwtUtil.isValid("Bearer " + accessToken, TokenType.ACCESS);
+
+        Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(accessToken).get("id")));
+
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+
+        user.setAuthEmail(true);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    @Override
+    public UserResponse modifyNickname(String nickname) throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        user.setNickname(nickname);
+        userRepository.save(user);
+
+        return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
     @Override
     public String checkDuplicateAccount(String account) throws Exception {
         existAccount(account);
@@ -84,6 +109,10 @@ public class UserServiceImpl implements UserService {
     public Token login(UserRequest request) throws Exception {
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+
+        if(!user.isAuthEmail()) {
+            throw new RequestInputException(ErrorMessage.INVALID_AUTHENTICATE_EMAIL);
+        }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
@@ -209,8 +238,14 @@ public class UserServiceImpl implements UserService {
     //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
     @Override
     @Transactional
-    public void sendAuthEmail(String email) throws Exception{
-        emailService.sendAuthEmail(email);
+    public void sendAuthEmailCode(String email) throws Exception{
+        emailService.sendAuthEmailCode(email);
+    }
+
+    @Override
+    @Transactional
+    public void sendAuthEmailLink(String email) throws Exception{
+        emailService.sendAuthEmailLink(email);
     }
 
     @Override

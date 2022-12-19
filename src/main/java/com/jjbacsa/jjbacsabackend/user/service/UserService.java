@@ -10,6 +10,10 @@ import org.springframework.web.multipart.MultipartFile;
 public interface UserService {
     UserResponse register(UserRequest request) throws Exception;
 
+    void authEmail(String accessToken, String refreshToken) throws Exception;
+
+    UserResponse modifyNickname(String nickname) throws Exception;
+
     String checkDuplicateAccount(String account) throws Exception;
 
     Token login(UserRequest request) throws Exception;
@@ -30,7 +34,9 @@ public interface UserService {
 
     UserResponse modifyProfile(MultipartFile profile) throws Exception;
 
-    void sendAuthEmail(String email) throws Exception;
+    void sendAuthEmailCode(String email) throws Exception;
+
+    void sendAuthEmailLink(String email) throws Exception;
 
     UserResponse findAccount(String email, String code) throws Exception;
 
