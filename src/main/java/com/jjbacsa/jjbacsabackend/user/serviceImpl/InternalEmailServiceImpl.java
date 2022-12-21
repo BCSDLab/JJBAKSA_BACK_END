@@ -21,11 +21,13 @@ import org.springframework.beans.factory.annotation.Value;
 import java.sql.Timestamp;
 import java.util.*;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class InternalEmailServiceImpl implements InternalEmailService {
     @Value("${context-path}")
     private String contextPath;
@@ -88,7 +90,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Timestamp(System.currentTimeMillis()));
-        calendar.add(Calendar.SECOND, 60 * 60);
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
 
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
 

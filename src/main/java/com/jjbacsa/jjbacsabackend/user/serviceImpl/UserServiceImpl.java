@@ -85,7 +85,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
         user.setAuthEmail(true);
-        userRepository.save(user);
     }
 
     @Transactional
@@ -94,7 +93,6 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userService.getLoginUser();
 
         user.setNickname(nickname);
-        userRepository.save(user);
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
