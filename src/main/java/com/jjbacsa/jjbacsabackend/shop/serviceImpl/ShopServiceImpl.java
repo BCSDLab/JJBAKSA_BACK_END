@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.shop.serviceImpl;
+package com.jjbacsa.jjbacsabackend.shop.serviceimpl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
