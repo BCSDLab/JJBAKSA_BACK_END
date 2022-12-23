@@ -46,28 +46,28 @@ public class ShopServiceImpl implements ShopService {
     private final ShopRepository shopRepository;
     private final SearchRepository searchRepository;
     private final WebClient webClient;
-    private final String BASE_URL="https://maps.googleapis.com/maps/api/place";
+    private final String BASE_URL = "https://maps.googleapis.com/maps/api/place";
     private final StringRedisTemplate redisTemplate;
-    private final String KEY="ranking";
+    private final String KEY = "ranking";
 
-    private final List<String>cafe= Arrays.asList("카페","디저트","커피","후식");
-    private final List<String>restaurant=Arrays.asList("맛집","식당","레스토랑","음식점");
+    private final List<String> cafe = Arrays.asList("카페", "디저트", "커피", "후식");
+    private final List<String> restaurant = Arrays.asList("맛집", "식당", "레스토랑", "음식점");
 
     private final ObjectMapper objectMapper;
 
     private String API_KEY;
 
-    public ShopServiceImpl(ShopRepository shopRepository, ObjectMapper objectMapper,StringRedisTemplate redisTemplate,@Value("${external.api.key}") String key,SearchRepository searchRepository) {
+    public ShopServiceImpl(ShopRepository shopRepository, ObjectMapper objectMapper, StringRedisTemplate redisTemplate, @Value("${external.api.key}") String key, SearchRepository searchRepository) {
 
-        this.shopRepository=shopRepository;
-        this.redisTemplate=redisTemplate;
-        this.objectMapper=objectMapper;
-        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false);
+        this.shopRepository = shopRepository;
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
-        this.API_KEY=key;
-        this.searchRepository=searchRepository;
+        this.API_KEY = key;
+        this.searchRepository = searchRepository;
 
-        DefaultUriBuilderFactory factory=new DefaultUriBuilderFactory(BASE_URL);
+        DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory(BASE_URL);
         factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.TEMPLATE_AND_VALUES);
 
         HttpClient httpClient = HttpClient.create()
@@ -76,7 +76,7 @@ public class ShopServiceImpl implements ShopService {
                 .doOnConnected(conn ->
                         conn.addHandlerLast(new ReadTimeoutHandler(5000, TimeUnit.MILLISECONDS)));
 
-        ClientHttpConnector clientHttpConnector=new ReactorClientHttpConnector(httpClient);
+        ClientHttpConnector clientHttpConnector = new ReactorClientHttpConnector(httpClient);
 
         this.webClient = WebClient.builder().clientConnector(clientHttpConnector)
                 .uriBuilderFactory(factory).baseUrl(BASE_URL)
@@ -85,30 +85,30 @@ public class ShopServiceImpl implements ShopService {
 
     @Transactional
     @Override
-    public ShopResponse getShop(String placeId){
+    public ShopResponse getShop(String placeId) {
 
-        if(shopRepository.existsByPlaceId(placeId)){
-            Optional<ShopEntity> shopEntity=shopRepository.findByPlaceId(placeId);
+        if (shopRepository.existsByPlaceId(placeId)) {
+            Optional<ShopEntity> shopEntity = shopRepository.findByPlaceId(placeId);
 
-            ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity.get());
+            ShopResponse shopResponse = ShopMapper.INSTANCE.toShopResponse(shopEntity.get());
             shopResponse.setShopCount(shopRepository.getTotalRating(shopResponse.getShopId()), shopRepository.getRatingCount(shopResponse.getShopId()));
 
             return shopResponse;
-        }else{
+        } else {
             ShopApiDto shopApiDto;
 
-            try{
-                shopApiDto=getShopDetails(placeId);
-            }catch(JsonProcessingException e){
+            try {
+                shopApiDto = getShopDetails(placeId);
+            } catch (JsonProcessingException e) {
                 throw new CriticalException(ErrorMessage.JSON_PROCESSING_EXCEPTION);
-            }catch(ApiException apiException){
+            } catch (ApiException apiException) {
                 throw apiException;
             }
 
-            ShopDto shopDto=ShopDto.ShopDto(shopApiDto);
-            ShopEntity shopEntity=register(shopDto);
+            ShopDto shopDto = ShopDto.ShopDto(shopApiDto);
+            ShopEntity shopEntity = register(shopDto);
 
-            ShopResponse shopResponse=ShopMapper.INSTANCE.toShopResponse(shopEntity);
+            ShopResponse shopResponse = ShopMapper.INSTANCE.toShopResponse(shopEntity);
             shopResponse.setShopCount(shopRepository.getTotalRating(shopResponse.getShopId()), shopRepository.getRatingCount(shopResponse.getShopId()));
 
             return shopResponse;
@@ -116,18 +116,18 @@ public class ShopServiceImpl implements ShopService {
     }
 
     private ShopEntity register(ShopDto shopDto) {
-        ShopEntity shopEntity= ShopMapper.INSTANCE.toEntity(shopDto);
+        ShopEntity shopEntity = ShopMapper.INSTANCE.toEntity(shopDto);
 
         return shopRepository.save(shopEntity);
     }
 
     private ShopApiDto getShopDetails(String placeId) throws JsonProcessingException {
-        String shopStr=webClient.get().uri(uriBuilder ->
+        String shopStr = webClient.get().uri(uriBuilder ->
                 uriBuilder.path("/details/json")
-                        .queryParam("place_id",placeId)
-                        .queryParam("language","ko")
-                        .queryParam("key",API_KEY)
-                        .queryParam("fields","formatted_address,formatted_phone_number,name,geometry/location/lat,geometry/location/lng,types,place_id,opening_hours/weekday_text")
+                        .queryParam("place_id", placeId)
+                        .queryParam("language", "ko")
+                        .queryParam("key", API_KEY)
+                        .queryParam("fields", "formatted_address,formatted_phone_number,name,geometry/location/lat,geometry/location/lng,types,place_id,opening_hours/weekday_text")
                         .build()
         ).retrieve().bodyToMono(String.class).block();
 
@@ -136,12 +136,13 @@ public class ShopServiceImpl implements ShopService {
 
     private ShopApiDto jsonToShop(String jsonStr) throws JsonProcessingException {
 
-        Map<String,Object> map=objectMapper.readValue(jsonStr, new TypeReference<HashMap<String, Object>>() {});
+        Map<String, Object> map = objectMapper.readValue(jsonStr, new TypeReference<HashMap<String, Object>>() {
+        });
 
-        String status=(String)map.get("status");
+        String status = (String) map.get("status");
 
-        if(!status.equals("OK")) {
-            switch(status){
+        if (!status.equals("OK")) {
+            switch (status) {
                 case "ZERO_RESULTS":
                     throw new ApiException(ErrorMessage.ZERO_RESULTS_EXCEPTION);
                 case "NOT_FOUND":
@@ -157,33 +158,33 @@ public class ShopServiceImpl implements ShopService {
             }
         }
 
-        String resultStr=objectMapper.writeValueAsString(map.get("result"));
-        ShopApiDto shopApiDto=objectMapper.readValue(resultStr, ShopApiDto.class);
+        String resultStr = objectMapper.writeValueAsString(map.get("result"));
+        ShopApiDto shopApiDto = objectMapper.readValue(resultStr, ShopApiDto.class);
 
         return shopApiDto;
     }
 
     @Transactional
     @Override
-    public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Integer page,Integer size) {
+    public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Integer page, Integer size) {
         //keyword Redis 저장
-        String keyword=shopRequest.getKeyword();
+        String keyword = shopRequest.getKeyword();
         saveRedis(keyword);
 
         //검색어 저장 (AutoComplete)
         saveForAutoComplete(keyword);
 
         //키워드 검색 타입 판별
-        SearchType searchType=typeSetting(keyword);
-        List<ShopSummaryResponse> shopList=new ArrayList<>();
+        SearchType searchType = typeSetting(keyword);
+        List<ShopSummaryResponse> shopList = new ArrayList<>();
         String keywordForQuery;
 
-        switch (searchType){
+        switch (searchType) {
             case cafe:
             case restaurant:
                 //키워드 정제
-                keywordForQuery=getKeywordForQuery(keyword);
-                shopList.addAll(shopRepository.search(keywordForQuery,searchType.name()));
+                keywordForQuery = getKeywordForQuery(keyword);
+                shopList.addAll(shopRepository.search(keywordForQuery, searchType.name()));
                 break;
             case cafe_category:
                 shopList.addAll(shopRepository.findAllByCategoryName("cafe"));
@@ -195,17 +196,17 @@ public class ShopServiceImpl implements ShopService {
                 shopList.addAll(shopRepository.findByPlaceNameContaining(keyword));
                 break;
             case NONE:
-                keywordForQuery=getKeywordForQuery(keyword);
-                shopList.addAll(shopRepository.search(keywordForQuery,null));
+                keywordForQuery = getKeywordForQuery(keyword);
+                shopList.addAll(shopRepository.search(keywordForQuery, null));
                 break;
         }
 
         //거리 계산
-        for(ShopSummaryResponse shop:shopList){
+        for (ShopSummaryResponse shop : shopList) {
             shop.setDist(shopRequest.getX(), shopRequest.getY());
         }
 
-        if(searchType!=SearchType.cafe_category&&searchType!=SearchType.restaurant_category&&searchType!=SearchType.one) {
+        if (searchType != SearchType.cafe_category && searchType != SearchType.restaurant_category && searchType != SearchType.one) {
             //정확도 순으로 정렬(거리순은 2차 정렬)
             Collections.sort(shopList, new Comparator<ShopSummaryResponse>() {
                 @Override
@@ -217,41 +218,41 @@ public class ShopServiceImpl implements ShopService {
                         return -1;
                 }
             });
-        } else{
+        } else {
             Collections.sort(shopList);
         }
 
         //pagination
-        Pageable pageable= PageRequest.of(page,size);
+        Pageable pageable = PageRequest.of(page, size);
 
-        int start=Math.min((int)pageable.getOffset(),shopList.size());
-        int end=(start+pageable.getPageSize()>shopList.size()? shopList.size() : (start+ pageable.getPageSize()));
+        int start = Math.min((int) pageable.getOffset(), shopList.size());
+        int end = (start + pageable.getPageSize() > shopList.size() ? shopList.size() : (start + pageable.getPageSize()));
 
-        return new PageImpl<>(shopList.subList(start,end),pageable,shopList.size());
+        return new PageImpl<>(shopList.subList(start, end), pageable, shopList.size());
     }
 
-    private SearchType typeSetting(String keyword){
+    private SearchType typeSetting(String keyword) {
 
-        if(keyword.length()==1){
+        if (keyword.length() == 1) {
             return SearchType.one;
         }
 
-        for(String str:cafe){
-            if(keyword.equals(str)){
+        for (String str : cafe) {
+            if (keyword.equals(str)) {
                 return SearchType.cafe_category;
             }
 
-            if(keyword.contains(str)){
+            if (keyword.contains(str)) {
                 return SearchType.cafe;
             }
         }
 
-        for(String str:restaurant){
-            if(keyword.equals(str)){
+        for (String str : restaurant) {
+            if (keyword.equals(str)) {
                 return SearchType.restaurant_category;
             }
 
-            if(keyword.contains(str)){
+            if (keyword.contains(str)) {
                 return SearchType.restaurant;
             }
         }
@@ -260,51 +261,52 @@ public class ShopServiceImpl implements ShopService {
     }
 
     //키워드 정제
-    private String getKeywordForQuery(String keyword){
-        String replaceKeyword=keyword.replace(" ","");
-        int length=replaceKeyword.length();
+    private String getKeywordForQuery(String keyword) {
+        String replaceKeyword = keyword.replace(" ", "");
+        int length = replaceKeyword.length();
 
-        String resString="";
+        String resString = "";
 
-        for(int i=0;i<length-1;i++){
-            resString+=keyword.substring(i,i+2);
-            resString+=" ";
+        for (int i = 0; i < length - 1; i++) {
+            resString += keyword.substring(i, i + 2);
+            resString += " ";
         }
 
-        return resString.substring(0,resString.length()-1);
+        return resString.substring(0, resString.length() - 1);
     }
 
-    private void saveRedis(String keyword){
-        List<String> rankingList=redisTemplate.opsForZSet().reverseRange(KEY,0,-1).stream().collect(Collectors.toList());
+    private void saveRedis(String keyword) {
+        List<String> rankingList = redisTemplate.opsForZSet().reverseRange(KEY, 0, -1).stream().collect(Collectors.toList());
 
-        redisTemplate.opsForZSet().incrementScore(KEY,keyword,2);
+        redisTemplate.opsForZSet().incrementScore(KEY, keyword, 2);
 
-        for(String ranking:rankingList){
-            if(!ranking.equals(keyword)){
-                redisTemplate.opsForZSet().incrementScore(KEY,ranking,-1);
+        for (String ranking : rankingList) {
+            if (!ranking.equals(keyword)) {
+                redisTemplate.opsForZSet().incrementScore(KEY, ranking, -1);
             }
         }
 
-        long size=redisTemplate.opsForZSet().zCard(KEY);
-        if(size>10){
-            long offset=size-10;
-            redisTemplate.opsForZSet().removeRange(KEY,0,offset-1);
+        long size = redisTemplate.opsForZSet().zCard(KEY);
+        if (size > 10) {
+            long offset = size - 10;
+            redisTemplate.opsForZSet().removeRange(KEY, 0, offset - 1);
         }
 
     }
 
     //todo: @Transactional(read-only=false) 검색어 저장
-    public void saveForAutoComplete(String keyword){
-        if(searchRepository.existsByContent(keyword)){
-            SearchEntity searchEntity=searchRepository.getByContent(keyword).get();
-            Long latestScore=searchEntity.getScore();
-            searchEntity.updateScore(latestScore+1);
+    public void saveForAutoComplete(String keyword) {
+        if (searchRepository.existsByContent(keyword)) {
+            SearchEntity searchEntity = searchRepository.findByContent(keyword).get();
+            Long latestScore = searchEntity.getScore();
+            searchEntity.updateScore(latestScore + 1);
 
-        }else{
+        } else {
             searchRepository.save(new SearchEntity(keyword));
         }
     }
 }
-enum SearchType{
-    cafe, restaurant, NONE, cafe_category,restaurant_category, one
+
+enum SearchType {
+    cafe, restaurant, NONE, cafe_category, restaurant_category, one
 }

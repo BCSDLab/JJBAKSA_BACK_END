@@ -19,14 +19,14 @@ public class SearchServiceImpl implements SearchService {
 
     private final StringRedisTemplate redisTemplate;
     private final SearchRepository searchRepository;
-    private final String KEY="ranking";
+    private final String KEY = "ranking";
 
     @Override
     public AutoCompleteResponse getAutoCompletes(String word) {
-        List<SearchEntity> autoCompletes=searchRepository.findTop5ByContentContainingOrderByScoreDesc(word);
-        List<String> autoCompletesStrs=new ArrayList<>();
+        List<SearchEntity> autoCompletes = searchRepository.findTop5ByContentContainingOrderByScoreDesc(word);
+        List<String> autoCompletesStrs = new ArrayList<>();
 
-        for(SearchEntity ac:autoCompletes){
+        for (SearchEntity ac : autoCompletes) {
             autoCompletesStrs.add(ac.getContent());
         }
 
@@ -36,7 +36,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public TrendingResponse getTrending() {
         return TrendingResponse.builder().
-                trendings(redisTemplate.opsForZSet().reverseRange(KEY,0,-1).stream().collect(Collectors.toList()))
+                trendings(redisTemplate.opsForZSet().reverseRange(KEY, 0, -1).stream().collect(Collectors.toList()))
                 .build();
     }
 }

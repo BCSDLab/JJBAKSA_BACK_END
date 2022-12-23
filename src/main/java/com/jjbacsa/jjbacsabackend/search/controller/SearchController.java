@@ -18,10 +18,10 @@ public class SearchController {
 
     private final SearchService searchService;
 
-    @GetMapping(value="/autoComplete/{word}")
+    @GetMapping(value = "/auto-complete/{word}")
     @ApiOperation(
-            value="검색어 자동 완성",
-            notes="현재 검색어의 자동 완성 검색어를 조회한다."
+            value = "검색어 자동 완성",
+            notes = "현재 검색어의 자동 완성 검색어를 조회한다."
     )
     @ApiResponses({
             @ApiResponse(
@@ -30,16 +30,16 @@ public class SearchController {
                     response = AutoCompleteResponse.class
             )
     })
-    @ApiImplicitParam(name="word",value="검색어",dataType = "String",dataTypeClass = String.class, paramType = "path")
-    public ResponseEntity<AutoCompleteResponse> getAutoCompletes(@PathVariable("word") String word){
+    @ApiImplicitParam(name = "word", value = "검색어", dataType = "String", dataTypeClass = String.class, paramType = "path")
+    public ResponseEntity<AutoCompleteResponse> getAutoCompletes(@PathVariable("word") String word) {
         return new ResponseEntity<>(searchService.getAutoCompletes(word), HttpStatus.OK);
     }
 
 
-    @GetMapping(value="/trending")
+    @GetMapping(value = "/trending")
     @ApiOperation(
-            value="인기 검색어 조회",
-            notes="현재 시점의 인기 검색어를 조회한다."
+            value = "인기 검색어 조회",
+            notes = "현재 시점의 인기 검색어를 조회한다."
     )
     @ApiResponses({
             @ApiResponse(
@@ -48,7 +48,7 @@ public class SearchController {
                     response = TrendingResponse.class
             )
     })
-    public ResponseEntity<TrendingResponse> getTrending(){
+    public ResponseEntity<TrendingResponse> getTrending() {
         return new ResponseEntity<>(searchService.getTrending(), HttpStatus.OK);
     }
 }

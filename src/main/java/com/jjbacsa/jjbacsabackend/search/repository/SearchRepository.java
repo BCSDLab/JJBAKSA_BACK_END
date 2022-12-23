@@ -8,9 +8,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface SearchRepository extends JpaRepository<SearchEntity,Long> {
+public interface SearchRepository extends JpaRepository<SearchEntity, Long> {
     boolean existsByContent(String content);
-    Optional<SearchEntity> getByContent(String Content);
+
+    Optional<SearchEntity> findByContent(String Content);
 
     List<SearchEntity> findTop5ByContentContainingOrderByScoreDesc(String content);
 

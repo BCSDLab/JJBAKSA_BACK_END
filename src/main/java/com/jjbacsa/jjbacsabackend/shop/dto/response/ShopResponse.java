@@ -24,17 +24,18 @@ public class ShopResponse {
     private Integer totalRating;
     private Integer ratingCount;
 
-    public boolean setShopCount(Integer totalRating, Integer ratingCount){
-        try{
-            this.totalRating=totalRating;
-            this.ratingCount=ratingCount;
+    public boolean setShopCount(Integer totalRating, Integer ratingCount) {
+        try {
+            this.totalRating = totalRating;
+            this.ratingCount = ratingCount;
 
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             return false;
         }
     }
-    public static ShopResponse from(ShopEntity entity){
+
+    public static ShopResponse from(ShopEntity entity) {
         return ShopResponse.builder()
                 .shopId(entity.getId())
                 .placeId(entity.getPlaceId())

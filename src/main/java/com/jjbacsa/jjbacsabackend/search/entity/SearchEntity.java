@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.search.entity;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicInsert;
@@ -13,19 +14,19 @@ import java.util.Date;
 @NoArgsConstructor
 @Entity
 @DynamicInsert
-@Table(name="search")
+@Table(name = "search")
 public class SearchEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="id")
+    @Column(name = "id")
     private Long id;
 
     @Basic
-    @Column(name="content",nullable = false)
+    @Column(name = "content", nullable = false)
     private String content;
 
-    @Column(name="score",nullable=false)
+    @Column(name = "score", nullable = false)
     private Long score;
 
     @Temporal(TemporalType.TIMESTAMP)
@@ -38,12 +39,14 @@ public class SearchEntity {
     @LastModifiedDate
     private Date updatedAt;
 
+    @Builder
     public SearchEntity(String content) {
         this.content = content;
     }
 
-    public Long updateScore(Long score){
-        this.score=score;
+    public Long updateScore(Long score) {
+        this.score = score;
         return this.score;
     }
+
 }
