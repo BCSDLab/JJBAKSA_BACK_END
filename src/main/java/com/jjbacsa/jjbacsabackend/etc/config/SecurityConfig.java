@@ -87,9 +87,8 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // TODO: front 웹 도메인으로 변경
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(List.of("HEAD","POST","GET","DELETE","PUT", "PATCH"));
+        configuration.setAllowedOriginPatterns(List.of("https://stage.jjbaksa.com", "https://api.stage.jjbaksa.com"));
+        configuration.setAllowedMethods(List.of("HEAD","POST","GET","DELETE","PUT", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
