@@ -13,7 +13,7 @@ public class CustomCorsConfigSource {
     public CorsConfigurationSource getCorsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(List.of("https://stage.jjbaksa.com", "https://api.stage.jjbaksa.com"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("OPTIONS", "HEAD","POST","GET","DELETE","PUT", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
