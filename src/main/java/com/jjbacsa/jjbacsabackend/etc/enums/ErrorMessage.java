@@ -47,6 +47,7 @@ public enum ErrorMessage {
     INVALID_AUTHORITY(41, "사용자 권한이 없습니다.", HttpStatus.UNAUTHORIZED),
     POST_NOT_EXISTS_EXCEPTION(42, "게시글이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_AUTHENTICATE_EMAIL(43, "이메일 인증이 완료되지 않았습니다.", HttpStatus.BAD_REQUEST),
+    ALREADY_EXISTS_EMAIL(44, "이미 존재하는 이메일입니다.", HttpStatus.CONFLICT),
     ;
 
     Integer code;

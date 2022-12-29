@@ -53,16 +53,15 @@ public class UserServiceImpl implements UserService {
     private final ImageUtil imageUtil;
     private final OAuthInfoRepository oAuthInfoRepository;
 
-    //TODO : OAuth별 작동
-    //TODO : 이메일 인증 추가 시 인증 코드 파라미터 추가 (변경 시 채널에 고지 )
     @Override
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
-        //TODO : 이메일 인증 확인 절차 추가
-//        emailService.codeCertification(request.getEmail(), code);
-
-        //TODO : Default Profile 등록하기
         existAccount(request.getAccount());
+
+        if (userRepository.existsByEmailAndPasswordIsNotNull(request.getEmail())) {
+            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_EMAIL);
+        }
+
         request.setNickname(UUID.randomUUID().toString());
 
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
@@ -83,6 +82,9 @@ public class UserServiceImpl implements UserService {
 
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+
+        if (!emailService.linkCertification(user.getEmail()))
+            throw new RequestInputException(ErrorMessage.EMAIL_EXPIRED_EXCEPTION);
 
         user.setAuthEmail(true);
     }
@@ -249,7 +251,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse findAccount(String email, String code) throws Exception {
 
-        UserEntity user = userService.getUserByEmail(email);
+        UserEntity user = userService.getLocalUserByEmail(email);
 
         if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
@@ -269,7 +271,7 @@ public class UserServiceImpl implements UserService {
             throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
         }
 
-        UserEntity user = userService.getUserByEmail(request.getEmail());
+        UserEntity user = userService.getLocalUserByEmail(request.getEmail());
 
         if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
@@ -279,7 +281,6 @@ public class UserServiceImpl implements UserService {
             throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        userRepository.save(user);
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }

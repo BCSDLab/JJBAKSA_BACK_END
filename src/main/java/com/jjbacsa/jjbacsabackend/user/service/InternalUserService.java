@@ -13,6 +13,8 @@ public interface InternalUserService {
 
     UserEntity getUserByEmail(String email) throws RequestInputException;
 
+    UserEntity getLocalUserByEmail(String email) throws Exception;
+
     void increaseReviewCount(Long userId);
 
     void increaseScrapCount(Long userId);

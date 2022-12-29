@@ -6,4 +6,6 @@ public interface InternalEmailService {
     void sendAuthEmailLink(String email) throws Exception;
 
     Boolean codeCertification(String email, String code) throws Exception;
+
+    Boolean linkCertification(String email) throws Exception;
 }

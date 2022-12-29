@@ -44,7 +44,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
     @Override
     public void sendAuthEmailCode(String email) throws Exception {
 
-        UserEntity user = userService.getUserByEmail(email);
+        UserEntity user = userService.getLocalUserByEmail(email);
 
         if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
@@ -60,7 +60,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
 
         String secret = getRandomNumber();
 
-        if(userRepository.findByEmail(email).isPresent()) {
+        if(userRepository.findByEmailAndPasswordIsNotNull(email).isPresent()) {
             AuthEmailEntity authEmail = AuthEmailEntity.builder()
                     .secret(secret)
                     .expiredAt(new Timestamp(calendar.getTimeInMillis()))
@@ -78,7 +78,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
     @Override
     public void sendAuthEmailLink(String email) throws Exception {
 
-        UserEntity user = userService.getUserByEmail(email);
+        UserEntity user = userService.getLocalUserByEmail(email);
 
         if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
@@ -109,7 +109,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
         Context context = new Context(Locale.KOREA, model);
         String text = templateEngine.process("register_authenticate", context);
 
-        if(userRepository.findByEmail(email).isPresent()) {
+        if(userRepository.findByEmailAndPasswordIsNotNull(email).isPresent()) {
             AuthEmailEntity authEmail = AuthEmailEntity.builder()
                     .secret("secret")
                     .expiredAt(new Timestamp(calendar.getTimeInMillis()))
@@ -127,7 +127,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
     @Override
     public Boolean codeCertification(String email, String code) throws Exception {
 
-        UserEntity user = userService.getUserByEmail(email);
+        UserEntity user = userService.getLocalUserByEmail(email);
 
         AuthEmailEntity authEmail = authEmailRepository.findAuthEmailEntityByUserIdAndIsDeleted(user.getId(), 0);
 
@@ -137,6 +137,20 @@ public class InternalEmailServiceImpl implements InternalEmailService {
 
         if(!authEmail.getSecret().equals(code)) {
             throw new RequestInputException(ErrorMessage.EMAIL_CODE_FAIL_EXCEPTION);
+        }
+
+        return true;
+    }
+
+    @Override
+    public Boolean linkCertification(String email) throws Exception {
+
+        UserEntity user = userService.getLocalUserByEmail(email);
+
+        AuthEmailEntity authEmail = authEmailRepository.findAuthEmailEntityByUserIdAndIsDeleted(user.getId(), 0);
+
+        if(authEmail.getExpiredAt().before(new Timestamp(System.currentTimeMillis()))) {
+            throw new RequestInputException(ErrorMessage.EMAIL_EXPIRED_EXCEPTION);
         }
 
         return true;
