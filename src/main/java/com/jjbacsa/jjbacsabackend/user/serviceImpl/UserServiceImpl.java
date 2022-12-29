@@ -56,11 +56,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
-        existAccount(request.getAccount());
-
-        if (userRepository.existsByEmailAndPasswordIsNotNull(request.getEmail())) {
-            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_EMAIL);
-        }
+        validateExistAccount(request.getAccount());
+        validateExistEmail(request.getEmail());
 
         request.setNickname(UUID.randomUUID().toString());
 
@@ -101,7 +98,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String checkDuplicateAccount(String account) throws Exception {
-        existAccount(account);
+        validateExistAccount(account);
         return "OK";
     }
 
@@ -267,9 +264,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse findPassword(EmailRequest request) throws Exception{
 
-        if(!userRepository.existsByAccount(request.getAccount())) {
-            throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
-        }
+        validateExistAccount(request.getAccount());
 
         UserEntity user = userService.getLocalUserByEmail(request.getEmail());
 
@@ -285,10 +280,16 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
-    private boolean existAccount(String account) {
+    private void validateExistAccount(String account) {
         if (userRepository.existsByAccount(account)) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
-        return true;
     }
+
+    private void validateExistEmail(String email) {
+        if (userRepository.existsByEmailAndPasswordIsNotNull(email)) {
+            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_EMAIL);
+        }
+    }
+
 }
