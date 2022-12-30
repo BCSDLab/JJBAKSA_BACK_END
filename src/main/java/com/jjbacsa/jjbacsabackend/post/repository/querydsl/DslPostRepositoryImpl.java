@@ -1,15 +1,8 @@
 package com.jjbacsa.jjbacsabackend.post.repository.querydsl;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
-import com.jjbacsa.jjbacsabackend.follow.entity.QFollowEntity;
-import com.jjbacsa.jjbacsabackend.image.entity.QImageEntity;
 import com.jjbacsa.jjbacsabackend.post.entity.PostEntity;
 import com.jjbacsa.jjbacsabackend.post.entity.QPostEntity;
-import com.jjbacsa.jjbacsabackend.review.entity.QReviewEntity;
-import com.jjbacsa.jjbacsabackend.review_image.entity.QReviewImageEntity;
-import com.jjbacsa.jjbacsabackend.shop.entity.QShopEntity;
-import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
@@ -29,10 +22,11 @@ public class DslPostRepositoryImpl extends QuerydslRepositorySupport implements 
     }
 
     @Override
-    public Page<PostEntity> findAllFAQs(Pageable pageable) {
+    public Page<PostEntity> findAllPosts(String boardType, Pageable pageable) {
+
         List<PostEntity> postEntities = queryFactory
                 .selectFrom(post)
-                .where(post.boardType.eq(BoardType.FAQ))
+                .where(post.boardType.eq(BoardType.valueOf(boardType)))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .orderBy(post.createdAt.desc())
@@ -45,24 +39,5 @@ public class DslPostRepositoryImpl extends QuerydslRepositorySupport implements 
 
         return PageableExecutionUtils.getPage(postEntities, pageable, countQuery::fetchOne);
     }
-
-    @Override
-    public Page<PostEntity> findAllNotices(Pageable pageable) {
-        List<PostEntity> postEntities = queryFactory
-                .selectFrom(post)
-                .where(post.boardType.eq(BoardType.NOTICE))
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .orderBy(post.createdAt.desc())
-                .fetch();
-
-        JPAQuery<Long> countQuery = queryFactory
-                .select(post.count())
-                .from(post)
-                .where(post.boardType.eq(BoardType.NOTICE));
-
-        return PageableExecutionUtils.getPage(postEntities, pageable, countQuery::fetchOne);
-    }
-
 
 }
