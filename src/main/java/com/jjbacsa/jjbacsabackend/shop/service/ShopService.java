@@ -12,4 +12,6 @@ public interface ShopService {
 
     //DB 내 상점 검색
     Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Integer page, Integer size);
+
+    void saveRedis(String keyword, String key);
 }

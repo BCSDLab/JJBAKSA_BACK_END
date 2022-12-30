@@ -169,7 +169,7 @@ public class ShopServiceImpl implements ShopService {
     public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Integer page, Integer size) {
         //keyword Redis 저장
         String keyword = shopRequest.getKeyword();
-        saveRedis(keyword);
+        saveRedis(keyword, KEY);
 
         //검색어 저장 (AutoComplete)
         saveForAutoComplete(keyword);
@@ -275,27 +275,27 @@ public class ShopServiceImpl implements ShopService {
         return resString.substring(0, resString.length() - 1);
     }
 
-    private void saveRedis(String keyword) {
-        List<String> rankingList = redisTemplate.opsForZSet().reverseRange(KEY, 0, -1).stream().collect(Collectors.toList());
+    public void saveRedis(String keyword, String key) {
+        List<String> rankingList = redisTemplate.opsForZSet().reverseRange(key, 0, -1).stream().collect(Collectors.toList());
 
-        redisTemplate.opsForZSet().incrementScore(KEY, keyword, 2);
+        redisTemplate.opsForZSet().incrementScore(key, keyword, 2);
 
         for (String ranking : rankingList) {
             if (!ranking.equals(keyword)) {
-                redisTemplate.opsForZSet().incrementScore(KEY, ranking, -1);
+                redisTemplate.opsForZSet().incrementScore(key, ranking, -1);
             }
         }
 
-        long size = redisTemplate.opsForZSet().zCard(KEY);
+        long size = redisTemplate.opsForZSet().zCard(key);
         if (size > 10) {
             long offset = size - 10;
-            redisTemplate.opsForZSet().removeRange(KEY, 0, offset - 1);
+            redisTemplate.opsForZSet().removeRange(key, 0, offset - 1);
         }
 
     }
 
     //todo: @Transactional(read-only=false) 검색어 저장
-    public void saveForAutoComplete(String keyword) {
+    private void saveForAutoComplete(String keyword) {
         if (searchRepository.existsByContent(keyword)) {
             SearchEntity searchEntity = searchRepository.findByContent(keyword).get();
             Long latestScore = searchEntity.getScore();

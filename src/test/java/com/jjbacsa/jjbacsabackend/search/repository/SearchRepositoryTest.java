@@ -1,6 +1,6 @@
 package com.jjbacsa.jjbacsabackend.search.repository;
 
-import com.jjbacsa.jjbacsabackend.etc.config.TestBeanConfig;
+import com.jjbacsa.jjbacsabackend.config.TestBeanConfig;
 import com.jjbacsa.jjbacsabackend.search.entity.SearchEntity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -128,9 +128,9 @@ public class SearchRepositoryTest {
         SearchEntity searchEntity6 = searchRepository.save(search6);
         SearchEntity searchEntity7 = searchRepository.save(search7);
 
-        List<SearchEntity> res=searchRepository.findTop5ByContentContainingOrderByScoreDesc("떡");
+        List<SearchEntity> res = searchRepository.findTop5ByContentContainingOrderByScoreDesc("떡");
 
-        for(SearchEntity s: res){
+        for (SearchEntity s : res) {
             System.out.println(s.getContent());
         }
         assertEquals(2, searchRepository.findTop5ByContentContainingOrderByScoreDesc("떡").size());

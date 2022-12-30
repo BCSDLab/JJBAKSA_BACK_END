@@ -7,5 +7,5 @@ public interface SearchService {
 
     AutoCompleteResponse getAutoCompletes(String word);
 
-    TrendingResponse getTrending();
+    TrendingResponse getTrending(String key);
 }

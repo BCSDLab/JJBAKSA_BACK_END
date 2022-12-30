@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SearchController {
 
     private final SearchService searchService;
+    private final String KEY="ranking";
 
     @GetMapping(value = "/auto-complete/{word}")
     @ApiOperation(
@@ -49,6 +50,6 @@ public class SearchController {
             )
     })
     public ResponseEntity<TrendingResponse> getTrending() {
-        return new ResponseEntity<>(searchService.getTrending(), HttpStatus.OK);
+        return new ResponseEntity<>(searchService.getTrending(KEY), HttpStatus.OK);
     }
 }

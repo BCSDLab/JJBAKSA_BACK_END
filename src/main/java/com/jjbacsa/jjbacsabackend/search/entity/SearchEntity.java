@@ -44,6 +44,12 @@ public class SearchEntity {
         this.content = content;
     }
 
+    @Builder
+    public SearchEntity(String content, Long score) {
+        this.content = content;
+        this.score = score;
+    }
+
     public Long updateScore(Long score) {
         this.score = score;
         return this.score;

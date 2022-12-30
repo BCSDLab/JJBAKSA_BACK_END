@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.search.dto.TrendingResponse;
 import com.jjbacsa.jjbacsabackend.search.entity.SearchEntity;
 import com.jjbacsa.jjbacsabackend.search.repository.SearchRepository;
 import com.jjbacsa.jjbacsabackend.search.service.SearchService;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,6 @@ public class SearchServiceImpl implements SearchService {
 
     private final StringRedisTemplate redisTemplate;
     private final SearchRepository searchRepository;
-    private final String KEY = "ranking";
 
     @Override
     public AutoCompleteResponse getAutoCompletes(String word) {
@@ -34,9 +34,9 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public TrendingResponse getTrending() {
+    public TrendingResponse getTrending(String key) {
         return TrendingResponse.builder().
-                trendings(redisTemplate.opsForZSet().reverseRange(KEY, 0, -1).stream().collect(Collectors.toList()))
+                trendings(redisTemplate.opsForZSet().reverseRange(key, 0, -1).stream().collect(Collectors.toList()))
                 .build();
     }
 }
