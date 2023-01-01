@@ -1,6 +1,5 @@
 package com.jjbacsa.jjbacsabackend.user.controller;
 
-import com.amazonaws.Response;
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
@@ -14,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -55,7 +53,8 @@ public class UserController {
 
     @ApiOperation(
             value = "아이디 중복 확인",
-            notes = "아이디 중복을 확인합니다.\n\n")
+            notes = "아이디 중복을 확인합니다." +
+            "\n\n\taccount : 유저 계정(1~20글자의 영문자 및 숫자)")
     @ApiResponses({
             @ApiResponse(code = 200,
                     message = "OK",
@@ -122,9 +121,9 @@ public class UserController {
 
     @ApiOperation(
             value = "유저 목록 검색",
-            notes = "keyword가 포함된 유저 닉네임 검색\n\n" +
-                    "keyword : 검색에 사용할 문자열 (Not Null)\n\n" +
-                    "pageSize : 한 번에 출력할 결과 갯수(1~100, Default = 20)\n\n" +
+            notes = "keyword가 포함된 유저 닉네임 검색\n\n\t" +
+                    "keyword : 검색에 사용할 문자열 (Not Null)\n\n\t" +
+                    "pageSize : 한 번에 출력할 결과 갯수(1~100, Default = 20)\n\n\t" +
                     "cursor : 마지막으로 조회한 유저의 id\n\n" +
                     "keyword 제외하고 모두 null을 주면 검색 첫페이지가 반환됩니다."
     )
@@ -146,7 +145,7 @@ public class UserController {
 
     @ApiOperation(
             value = "유저 검색",
-            notes = "id : 검색할 유저의 id"
+            notes = "\n\n\tid : 검색할 유저의 id"
     )
     @ApiResponses({
             @ApiResponse(code = 200,
@@ -201,33 +200,45 @@ public class UserController {
     }
 
     @ApiOperation(
-            value = "인증 이메일 발송",
-            notes = "인증 이메일 발송\n\n" +
-                    "필요한 필드\n\n" +
-                    "\t{\n\n     " +
-                    "email : 인증 받을 이메일\n\n" +
-                    "\t}"
+            value = "아이디 찾기, 비밀번호 찾기용 인증 이메일 발송",
+            notes = "아이디 찾기, 비밀번호 찾기용 인증 이메일 발송\n\n" +
+                    "\n\n\temail : 인증 받을 이메일"
     )
     @ResponseStatus(HttpStatus.OK)
     @ApiResponses({
             @ApiResponse(code = 200,
                     message = "OK")
     })
-    //TODO : 이메일 로직에 따라 인증용 파라미터 설정
     @PostMapping("/user/email")
-    public ResponseEntity<String> sendAuthEmail (@Email(message = "이메일은 형식을 지켜야 합니다.")
-                                                     @RequestBody String email) throws Exception {
-        userService.sendAuthEmail(email);
+    public ResponseEntity<String> sendAuthEmailCode (@Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                     @RequestParam String email) throws Exception {
+        userService.sendAuthEmailCode(email);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 
     @ApiOperation(
+            value = "회원가입 인증 이메일 발송",
+            notes = "회원가입 인증 이메일 발송\n\n" +
+                    "\n\n\temail : 인증 받을 이메일"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "OK")
+    })
+    @PostMapping("/user/authenticate")
+    public ResponseEntity<String> sendAuthEmailLink (@Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                 @RequestParam String email) throws Exception {
+        userService.sendAuthEmailLink(email);
+        return new ResponseEntity<>("OK", HttpStatus.OK);
+    }
+
+
+    @ApiOperation(
             value = "아이디 찾기",
-            notes = "아이디 찾기\n\n" +
-                    "필요한 필드\n\n" +
-                    "\t{\n\n     " +
-                    "email : 아이디를 찾을 이메일 - 메일 받은 주소\n\n     " +
-                    "code : 인증 코드\n\n\t}"
+            notes = "아이디 찾기\n\n\t" +
+                    "email : 아이디를 찾을 이메일 - 메일 받은 주소\n\n\t" +
+                    "code : 인증 코드"
     )
     @ResponseStatus(HttpStatus.OK)
     @ApiResponses({
@@ -241,14 +252,6 @@ public class UserController {
                                               @RequestParam String code) throws Exception {
 
         return new ResponseEntity<>(userService.findAccount(email, code), HttpStatus.OK);
-    }
-
-    @GetMapping("/user/test-auth")
-    public ResponseEntity<String> testAuthCode(@RequestParam String email,
-                                                @RequestParam String code) throws Exception {
-        return emailService.codeCertification(email, code)?
-                new ResponseEntity<>("True", HttpStatus.OK):
-                new ResponseEntity<>("False", HttpStatus.OK);
     }
 
     @ApiOperation(
@@ -299,12 +302,52 @@ public class UserController {
             value = "APPLE 로그인",
             notes = "APPLE 로그인\n\n" +
                     "필요 헤더\n\n" +
-                    "{\n\n     " +
-                    "Authorization : 클라이언트 측에서 발급 받은 id token\n\n" +
-                    "}"
+                    "\n\n\tAuthorization : 클라이언트 측에서 발급 받은 id token"
     )
     @PostMapping(value = "/login/apple")
     public ResponseEntity<Token> oauth2AppleLogin() throws Exception {
         return new ResponseEntity<>(oAuth2UserService.appleLogin(), HttpStatus.OK);
     }
+
+    @ApiOperation(
+            value = "회원가입 이메일 인증",
+            notes = "회원가입 이메일 인증\n\n" +
+                    "\n\n\taccess_token : 이메일에 전송한 링크에 포함된 access_token" +
+                    "\n\n\trefresh_token : 이메일에 전송한 링크에 포함된 refresh_token"
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiResponses({
+            @ApiResponse(code = 204,
+                    message = "반환값 없음")
+    })
+    @GetMapping("/user/check-email")
+    public ResponseEntity<Void> authenticate(
+            @RequestParam(value = "access_token") String accessToken,
+            @RequestParam(value = "refresh_token") String refreshToken) throws Exception {
+        userService.authEmail(accessToken, refreshToken);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @ApiOperation(
+            value = "닉네임 변경",
+            notes = "닉네임 변경\n\n" +
+                    "필요 헤더" +
+                    "\n\n\tAuthorization : Bearer + access token\n\n" +
+                    "필요한 필드" +
+                    "\n\n\tnickname : 변경할 유저 닉네임(영문자, 한글, 숫자로 이루어진 1~20글자의 문자열)\n\n\t",
+            authorizations = @Authorization(value = "Bearer + accessToken"))
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "변경된 유저 정보",
+                    response = UserResponse.class)
+    })
+    @PreAuthorize("hasRole('NORMAL')")
+    @PatchMapping("/user/nickname")
+    public ResponseEntity<UserResponse> modifyNickname(@Validated(ValidationGroups.Update.class)
+                                                       @RequestParam String nickname) throws Exception {
+        return new ResponseEntity<>(userService.modifyNickname(nickname), HttpStatus.OK);
+    }
+
+
 }

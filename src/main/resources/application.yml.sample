@@ -125,3 +125,5 @@ spring:
     password:
   flyway:
     enabled: false
+
+context-path: "http://localhost:8080"

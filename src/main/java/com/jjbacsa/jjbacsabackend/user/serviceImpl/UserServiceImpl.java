@@ -53,16 +53,12 @@ public class UserServiceImpl implements UserService {
     private final ImageUtil imageUtil;
     private final OAuthInfoRepository oAuthInfoRepository;
 
-    //TODO : OAuth별 작동
-    //TODO : 이메일 인증 추가 시 인증 코드 파라미터 추가 (변경 시 채널에 고지 )
     @Override
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
-        //TODO : 이메일 인증 확인 절차 추가
-//        emailService.codeCertification(request.getEmail(), code);
+        validateExistAccount(request.getAccount());
+        validateExistEmail(request.getEmail());
 
-        //TODO : Default Profile 등록하기
-        existAccount(request.getAccount());
         request.setNickname(UUID.randomUUID().toString());
 
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
@@ -74,9 +70,35 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
+    @Transactional
+    @Override
+    public void authEmail(String accessToken, String refreshToken) throws Exception {
+        jwtUtil.isValid("Bearer " + accessToken, TokenType.ACCESS);
+
+        Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(accessToken).get("id")));
+
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+
+        if (!emailService.linkCertification(user.getEmail()))
+            throw new RequestInputException(ErrorMessage.EMAIL_EXPIRED_EXCEPTION);
+
+        user.setAuthEmail(true);
+    }
+
+    @Transactional
+    @Override
+    public UserResponse modifyNickname(String nickname) throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        user.setNickname(nickname);
+
+        return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
     @Override
     public String checkDuplicateAccount(String account) throws Exception {
-        existAccount(account);
+        validateExistAccount(account);
         return "OK";
     }
 
@@ -84,6 +106,10 @@ public class UserServiceImpl implements UserService {
     public Token login(UserRequest request) throws Exception {
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+
+        if(!user.isAuthEmail()) {
+            throw new RequestInputException(ErrorMessage.INVALID_AUTHENTICATE_EMAIL);
+        }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
@@ -209,14 +235,20 @@ public class UserServiceImpl implements UserService {
     //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
     @Override
     @Transactional
-    public void sendAuthEmail(String email) throws Exception{
-        emailService.sendAuthEmail(email);
+    public void sendAuthEmailCode(String email) throws Exception{
+        emailService.sendAuthEmailCode(email);
+    }
+
+    @Override
+    @Transactional
+    public void sendAuthEmailLink(String email) throws Exception{
+        emailService.sendAuthEmailLink(email);
     }
 
     @Override
     public UserResponse findAccount(String email, String code) throws Exception {
 
-        UserEntity user = userService.getUserByEmail(email);
+        UserEntity user = userService.getLocalUserByEmail(email);
 
         if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
@@ -232,11 +264,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse findPassword(EmailRequest request) throws Exception{
 
-        if(!userRepository.existsByAccount(request.getAccount())) {
-            throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
-        }
+        validateExistAccount(request.getAccount());
 
-        UserEntity user = userService.getUserByEmail(request.getEmail());
+        UserEntity user = userService.getLocalUserByEmail(request.getEmail());
 
         if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
@@ -246,15 +276,20 @@ public class UserServiceImpl implements UserService {
             throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        userRepository.save(user);
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
-    private boolean existAccount(String account) {
+    private void validateExistAccount(String account) {
         if (userRepository.existsByAccount(account)) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
-        return true;
     }
+
+    private void validateExistEmail(String email) {
+        if (userRepository.existsByEmailAndPasswordIsNotNull(email)) {
+            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_EMAIL);
+        }
+    }
+
 }

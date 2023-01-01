@@ -54,11 +54,11 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
         Optional<OAuthInfoEntity> oauthOptional =
                 oAuthInfoRepository.findByApiKeyAndOauthType(String.valueOf(payloads.get("sub")), OAuthType.APPLE);
 
-        // TODO: default Profile Image
         UserEntity user = UserEntity.builder()
                 .email(String.valueOf(payloads.get("email")))
                 .nickname("APPLE_" + String.valueOf(payloads.get("sub")).substring(15, 20))
                 .userType(UserType.NORMAL)
+                .authEmail(true)
                 .build();
 
         if(oauthOptional.isEmpty()) {
@@ -102,6 +102,7 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
                 .nickname(oAuth2UserInfo.getName())
                 .userType(UserType.NORMAL)
                 .profileImage(imageEntity)
+                .authEmail(true)
                 .build();
 
         // 회원 가입
