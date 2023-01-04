@@ -119,13 +119,4 @@ public class ShopServiceTest {
         //then
         assertThat(res.stream().collect(Collectors.toList()).size()).isNotEqualTo(0);
     }
-
-    @Order(6)
-    @DisplayName("인기검색어")
-    @Test
-    public void getTranding(){
-        //then
-        assertThat(shopService.getTrending().getTrendings().size()).isEqualTo(2);
-        redisTemplate.opsForZSet().removeRange(KEY,0,-1); //redis KEY=ranking 삭제
-    }
 }

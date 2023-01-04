@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.shop.dto.response;
+package com.jjbacsa.jjbacsabackend.search.dto;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -15,7 +15,7 @@ public interface ShopMapper {
 
     ShopEntity toEntity(ShopDto shopDto);
 
-    @Mapping(source="id",target="shopId")
+    @Mapping(source = "id", target = "shopId")
     ShopResponse toShopResponse(ShopEntity shopEntity);
 
 }
