@@ -30,8 +30,8 @@ public class PostController {
                 message = "읽어온 Post 정보",
                 response = PostResponse.class)
     })
-    @GetMapping(value = "/post/{post-id}")
-    public ResponseEntity<PostResponse> get(@ApiParam("조회할 Post id") @PathVariable("post-id") Long postId){
+    @GetMapping(value = "/post/{postId}")
+    public ResponseEntity<PostResponse> get(@ApiParam("조회할 Post id") @PathVariable Long postId){
         return new ResponseEntity<>(postService.getPost(postId), HttpStatus.OK);
     }
 
@@ -69,8 +69,8 @@ public class PostController {
                     response = PostResponse.class)
     })
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping(value = "/admin/post/{post-id}")
-    public ResponseEntity<PostResponse> modify(@RequestBody PostRequest postRequest, @ApiParam("수정할 Post Id") @PathVariable("post-id") Long postId){
+    @PatchMapping(value = "/admin/post/{postId}")
+    public ResponseEntity<PostResponse> modify(@RequestBody PostRequest postRequest, @ApiParam("수정할 Post Id") @PathVariable Long postId){
         return new ResponseEntity<>(postService.modifyAdminPost(postRequest, postId), HttpStatus.OK);
     }
 
@@ -84,8 +84,8 @@ public class PostController {
                     message = "반환값 없음")
     })
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping(value = "/admin/post/{post-id}")
-    public ResponseEntity<Void> delete(@ApiParam("삭제할 Post Id") @PathVariable("post-id") Long postId){
+    @DeleteMapping(value = "/admin/post/{postId}")
+    public ResponseEntity<Void> delete(@ApiParam("삭제할 Post Id") @PathVariable Long postId){
         postService.deletePost(postId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -101,7 +101,7 @@ public class PostController {
                     response = Page.class)
     })
     @GetMapping(value = "/post")
-    public ResponseEntity<Page<PostResponse>> getPosts(@RequestParam String boardType, @ApiParam("조회할 페이지") @RequestParam(value = "page", required = false, defaultValue = "0")Integer page, @ApiParam("페이징 사이즈") @RequestParam(value = "size", required=false, defaultValue="3")Integer size){
+    public ResponseEntity<Page<PostResponse>> getPosts(@RequestParam String boardType, @ApiParam("조회할 페이지") @RequestParam(value = "page", required = false, defaultValue = "0")Integer page, @ApiParam("페이징 사이즈") @RequestParam(value = "size", required = false, defaultValue = "3")Integer size){
         return new ResponseEntity<>(postService.getPosts(boardType, page, size), HttpStatus.OK);
     }
 
