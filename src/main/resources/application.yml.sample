@@ -126,4 +126,8 @@ spring:
   flyway:
     enabled: false
 
+slack:
+  url: https://hooks.slack.com/services/~~~~
+
 context-path: "http://localhost:8080"
+
