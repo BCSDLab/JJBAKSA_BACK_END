@@ -2,7 +2,8 @@ package com.jjbacsa.jjbacsabackend.etc.enums;
 
 public enum UserType {
     NORMAL("ROLE_NORMAL"),
-    ADMIN("ROLE_NORMAL, ROLE_ADMIN");
+    ADMIN("ROLE_NORMAL,ROLE_ADMIN"),
+    ROOT("ROLE_NORMAL,ROLE_ADMIN,ROLE_ROOT");
 
     private String authority;
 

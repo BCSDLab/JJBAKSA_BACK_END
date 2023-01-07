@@ -104,7 +104,7 @@ public class GlobalExceptionHandler {
     }
 
     private BaseException convertDeniedToBase(AccessDeniedException e) {
-        BaseException baseException = new BaseException(e.getClass().getSimpleName(), ErrorMessage.INVALID_TOKEN);
+        BaseException baseException = new BaseException(e.getClass().getSimpleName(), ErrorMessage.INVALID_AUTHORITY);
         baseException.setErrorTrace(e.getStackTrace()[0].toString());
         return baseException;
     }

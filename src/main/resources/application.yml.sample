@@ -76,6 +76,10 @@ flyway:
 server:
   port: 8080
 
+image:
+  review:
+    path:
+
 jwt:
   key: Secret Key Random String
   access: access
@@ -124,3 +128,6 @@ spring:
 
 slack:
   url: https://hooks.slack.com/services/~~~~
+
+context-path: "http://localhost:8080"
+

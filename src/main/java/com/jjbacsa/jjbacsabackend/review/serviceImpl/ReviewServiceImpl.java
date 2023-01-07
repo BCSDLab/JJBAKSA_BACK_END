@@ -12,6 +12,7 @@ import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.service.ReviewService;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.review_image.service.InternalReviewImageService;
+import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.service.InternalShopService;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -136,6 +137,14 @@ public class ReviewServiceImpl implements ReviewService {
         UserEntity user = userService.getLoginUser();
         PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
         return reviewRepository.findAllFollowersReviewsByShopId(user.getId(), shopId, pageRequest).map(ReviewResponse::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ShopResponse> searchShopByReviewContentsAndFollowers(String cursor, String searchWord, Integer size) throws Exception {
+        UserEntity user = userService.getLoginUser();
+        PageRequest pageRequest = PageRequest.of(0, size);
+        return reviewRepository.findAllShopBySearchWordInReviewWithCursor(cursor, user.getId(), searchWord, pageRequest).map(ShopResponse::from);
     }
 
     private ReviewEntity createReviewEntity(ReviewRequest reviewRequest) throws Exception {

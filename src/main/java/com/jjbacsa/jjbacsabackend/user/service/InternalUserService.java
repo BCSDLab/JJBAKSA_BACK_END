@@ -1,7 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.service;
 
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 
 public interface InternalUserService {
@@ -11,6 +10,10 @@ public interface InternalUserService {
     UserEntity getUserByAccount(String account) throws RequestInputException;
 
     UserEntity getLoginUser() throws Exception;
+
+    UserEntity getUserByEmail(String email) throws RequestInputException;
+
+    UserEntity getLocalUserByEmail(String email) throws Exception;
 
     void increaseReviewCount(Long userId);
 

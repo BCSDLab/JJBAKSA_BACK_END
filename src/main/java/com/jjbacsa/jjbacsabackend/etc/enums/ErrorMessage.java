@@ -38,6 +38,16 @@ public enum ErrorMessage {
     IMAGE_UPLOAD_FAIL_EXCEPTION(32, "이미지 업로드에 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     IMAGE_SIZE_OVERFLOW_EXCEPTION(33, "이미지 파일크기가 10MB이상 입니다.", HttpStatus.BAD_REQUEST),
     INVALID_SOCIAL_TYPE(34, "유효하지 않은 소셜 로그인 타입입니다.", HttpStatus.BAD_REQUEST),
+    BAD_AUTHENTICATION_CODE(35, "잘못된 인가 코드입니다.", HttpStatus.BAD_REQUEST),
+    EMAIL_EXPIRED_EXCEPTION(36, "이메일 인증 시간이 만료되었습니다.", HttpStatus.BAD_REQUEST),
+    EMAIL_CODE_FAIL_EXCEPTION(37, "인증 번호가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    EMAIL_SEND_EXCEED_EXCEPTION(38, "이메일 전송 횟수가 초과되었습니다.", HttpStatus.BAD_REQUEST),
+    SOCIAL_ACCOUNT_EXCEPTION(39, "소셜 로그인 사용자는 수행할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    IMAGE_RESIZING_EXCEPTION(40, "이미지 리사이징에 실패했습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_AUTHORITY(41, "사용자 권한이 없습니다.", HttpStatus.UNAUTHORIZED),
+    POST_NOT_EXISTS_EXCEPTION(42, "게시글이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_AUTHENTICATE_EMAIL(43, "이메일 인증이 완료되지 않았습니다.", HttpStatus.BAD_REQUEST),
+    ALREADY_EXISTS_EMAIL(44, "이미 존재하는 이메일입니다.", HttpStatus.CONFLICT),
     ;
 
     Integer code;

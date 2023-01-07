@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.user.service;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import org.springframework.data.domain.Page;
@@ -8,6 +9,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
     UserResponse register(UserRequest request) throws Exception;
+
+    void authEmail(String accessToken, String refreshToken) throws Exception;
+
+    UserResponse modifyNickname(String nickname) throws Exception;
 
     String checkDuplicateAccount(String account) throws Exception;
 
@@ -28,4 +33,12 @@ public interface UserService {
     void withdraw() throws Exception;
 
     UserResponse modifyProfile(MultipartFile profile) throws Exception;
+
+    void sendAuthEmailCode(String email) throws Exception;
+
+    void sendAuthEmailLink(String email) throws Exception;
+
+    UserResponse findAccount(String email, String code) throws Exception;
+
+    UserResponse findPassword(EmailRequest request) throws Exception;
 }

@@ -7,12 +7,19 @@ import com.jjbacsa.jjbacsabackend.review.entity.QReviewEntity;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review_image.entity.QReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
+import com.jjbacsa.jjbacsabackend.shop.entity.QShopCount;
 import com.jjbacsa.jjbacsabackend.shop.entity.QShopEntity;
+import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.StringExpressions;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.data.support.PageableExecutionUtils;
@@ -31,6 +38,7 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
     private static QReviewImageEntity reviewImageEntity = QReviewImageEntity.reviewImageEntity;
     private static QImageEntity image = QImageEntity.imageEntity;
     private static QFollowEntity follow = QFollowEntity.followEntity;
+    private static QShopCount shopCount = QShopCount.shopCount;
 
     public DslReviewRepositoryImpl(JPAQueryFactory queryFactory){
         super(ReviewEntity.class);
@@ -128,6 +136,29 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
         return PageableExecutionUtils.getPage(reviewEntities, pageable, countQuery::fetchOne);
     }
 
+    @Override
+    public Page<ShopEntity> findAllShopBySearchWordInReviewWithCursor(String cursor, Long userId, String searchWord, Pageable pageable) {
+        List<Long> followerId = findAllFollowersId(userId);
+
+        // 팔로워들이 작성한 리뷰에 searchWord가 포함된 상점 List
+        List<ShopEntity> reviewShopEntities = queryFactory
+                .selectFrom(shop)
+                .where(shop.id.in(
+                        JPAExpressions.select(review.shop.id).from(review)
+                        .where(review.writer.id.in(followerId), review.content.contains(searchWord))
+                        .distinct()
+                        ), customCursor(cursor))
+                .innerJoin(shop.shopCount, shopCount).fetchJoin()
+                .limit(pageable.getPageSize())
+                .orderBy(shop.placeName.asc(), shop.id.asc())
+                .fetch();
+        JPAQuery<Long> countQuery = queryFactory
+                .select(shop.count())
+                .from(shop);
+
+        return PageableExecutionUtils.getPage(reviewShopEntities, pageable, countQuery::fetchOne);
+    }
+
     private List<Long> findAllFollowersId(Long userId){
         List<FollowEntity> followers = queryFactory
                 .selectFrom(follow)
@@ -144,5 +175,13 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
                 .innerJoin(reviewImageEntity.image, image).fetchJoin()
                 .where(reviewImageEntity.review.id.eq(reviewId))
                 .fetch();
+    }
+    private BooleanExpression customCursor(String cursor){
+        if(cursor==null) return null;
+
+        return StringExpressions.lpad(shop.placeName.stringValue(), 20, '0')
+                .concat(StringExpressions.lpad(shop.id.stringValue(), 10, '0'))
+                .gt(cursor);
+
     }
 }
