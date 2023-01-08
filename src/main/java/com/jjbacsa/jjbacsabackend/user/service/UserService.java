@@ -40,5 +40,7 @@ public interface UserService {
 
     UserResponse findAccount(String email, String code) throws Exception;
 
-    UserResponse findPassword(EmailRequest request) throws Exception;
+    String findPassword(EmailRequest request) throws Exception;
+
+    UserResponse modifyPassword(String password) throws Exception;
 }

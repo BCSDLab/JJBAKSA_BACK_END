@@ -262,7 +262,6 @@ public class UserController {
                     "account : 비밀번호 찾을 계정\n\n     " +
                     "email : 비밀번호 찾을 이메일 - 메일 받은 주소\n\n     " +
                     "code : 인증 코드\n\n     " +
-                    "password : 변경할 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열)\n\n" +
                     "\t}"
     )
     @ResponseStatus(HttpStatus.OK)
@@ -272,9 +271,30 @@ public class UserController {
                     response = UserResponse.class)
     })
     @PostMapping("user/password")
-    public ResponseEntity<UserResponse> findPassword(@Validated(ValidationGroups.Update.class)
+    public ResponseEntity<String> findPassword(@Validated(ValidationGroups.Update.class)
                                                          @RequestBody EmailRequest request) throws Exception {
         return new ResponseEntity<>(userService.findPassword(request), HttpStatus.OK);
+    }
+
+    @ApiOperation(
+            value = "비밀번호 변경",
+            notes = "비밀번호 변경\n\n" +
+                    "필요 헤더" +
+                    "\n\n\tAuthorization : Bearer + access token\n\n" +
+                    "필요한 필드" +
+                    "\n\n\tpassword : 변경할 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열)\n\n\t",
+            authorizations = @Authorization(value = "Bearer + accessToken"))
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "변경된 유저 정보",
+                    response = UserResponse.class)
+    })
+    @PreAuthorize("hasRole('NORMAL')")
+    @PatchMapping("/user/password")
+    public ResponseEntity<UserResponse> modifyPassword(@Pattern(regexp = "(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[0-9])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[a-zA-z])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[~!@#$%^&*()\\-_=+]).{8,16}",
+            groups = {ValidationGroups.Update.class}, message = "올바른 형식의 비밀번호가 아닙니다.")
+                                                       @RequestParam String password) throws Exception {
+        return new ResponseEntity<>(userService.modifyPassword(password), HttpStatus.OK);
     }
 
     @ApiOperation(
@@ -344,8 +364,9 @@ public class UserController {
     })
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping("/user/nickname")
-    public ResponseEntity<UserResponse> modifyNickname(@Validated(ValidationGroups.Update.class)
-                                                       @RequestParam String nickname) throws Exception {
+    public ResponseEntity<UserResponse> modifyNickname(@Pattern(regexp = "^[a-zA-z가-힣0-9]{1,20}$",
+            groups = {ValidationGroups.Update.class}, message = "닉네임에 특수문자와 초성은 불가능합니다.")
+                                                           @RequestParam String nickname) throws Exception {
         return new ResponseEntity<>(userService.modifyNickname(nickname), HttpStatus.OK);
     }
 
