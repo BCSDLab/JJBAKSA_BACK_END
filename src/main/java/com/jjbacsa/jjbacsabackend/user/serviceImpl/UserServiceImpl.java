@@ -103,14 +103,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public Token login(UserRequest request) throws Exception {
         UserEntity user = userRepository.findByAccount(request.getAccount())
-                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION);
+        }
 
         if(!user.isAuthEmail()) {
             throw new RequestInputException(ErrorMessage.INVALID_AUTHENTICATE_EMAIL);
-        }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
         }
 
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
