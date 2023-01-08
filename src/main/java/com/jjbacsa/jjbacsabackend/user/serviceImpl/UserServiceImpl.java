@@ -12,7 +12,6 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
-import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
@@ -51,7 +50,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
     private final ImageUtil imageUtil;
-    private final OAuthInfoRepository oAuthInfoRepository;
 
     @Override
     @Transactional
@@ -105,14 +103,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public Token login(UserRequest request) throws Exception {
         UserEntity user = userRepository.findByAccount(request.getAccount())
-                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION);
+        }
 
         if(!user.isAuthEmail()) {
             throw new RequestInputException(ErrorMessage.INVALID_AUTHENTICATE_EMAIL);
-        }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
         }
 
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
@@ -250,10 +248,6 @@ public class UserServiceImpl implements UserService {
 
         UserEntity user = userService.getLocalUserByEmail(email);
 
-        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
-            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
-        }
-
         if (!emailService.codeCertification(email, code))
             throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
 
@@ -262,20 +256,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse findPassword(EmailRequest request) throws Exception{
+    public String findPassword(EmailRequest request) throws Exception{
 
-        validateExistAccount(request.getAccount());
+        UserEntity user = userService.getUserByAccount(request.getAccount());
 
-        UserEntity user = userService.getLocalUserByEmail(request.getEmail());
-
-        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
-            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        if (!Objects.equals(request.getEmail(), user.getEmail())) {
+            throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
         }
 
-        if (!emailService.codeCertification(request.getEmail(), request.getCode()))
+        if (!emailService.codeCertification(request.getEmail(), request.getCode())) {
             throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+        }
 
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        return jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType());
+    }
+
+    @Override
+    @Transactional
+    public UserResponse modifyPassword(String password) throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        user.setPassword(passwordEncoder.encode(password));
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
