@@ -10,4 +10,6 @@ public final class ValidationGroups {
     public interface Update extends Default {};
 
     public interface Login extends Default {};
+
+    public interface Get extends Default {};
 }

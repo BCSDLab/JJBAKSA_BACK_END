@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.post.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
 import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
+import com.jjbacsa.jjbacsabackend.post.dto.request.PostRequest;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -30,4 +31,13 @@ public class PostEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "board_type", nullable = false)
     private BoardType boardType;
+
+    public void update(PostRequest postRequest){
+        if(postRequest.getTitle() != null){
+            this.title = postRequest.getTitle();
+        }
+        if(postRequest.getContent() != null){
+            this.content = postRequest.getContent();
+        }
+    }
 }
