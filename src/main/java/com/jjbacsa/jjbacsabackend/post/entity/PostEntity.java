@@ -2,9 +2,9 @@ package com.jjbacsa.jjbacsabackend.post.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
 import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
+import com.jjbacsa.jjbacsabackend.post.dto.request.PostRequest;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -12,7 +12,6 @@ import org.hibernate.annotations.Where;
 import javax.persistence.*;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @SuperBuilder(toBuilder = true)
 @Entity
@@ -32,4 +31,13 @@ public class PostEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "board_type", nullable = false)
     private BoardType boardType;
+
+    public void update(PostRequest postRequest){
+        if(postRequest.getTitle() != null){
+            this.title = postRequest.getTitle();
+        }
+        if(postRequest.getContent() != null){
+            this.content = postRequest.getContent();
+        }
+    }
 }

@@ -47,8 +47,7 @@ public class PostServiceImpl implements PostService {
         // BoardType은 수정이 불가능 함
         PostEntity postEntity = postRepository.findById(postId)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.POST_NOT_EXISTS_EXCEPTION));
-        modifyPostInfo(postEntity, postRequest);
-
+        postEntity.update(postRequest);
         return PostMapper.INSTANCE.toPostResponse(postEntity);
 
     }
@@ -70,8 +69,5 @@ public class PostServiceImpl implements PostService {
         return PostMapper.INSTANCE.toPostEntity(postRequest);
     }
 
-    private void modifyPostInfo(PostEntity postEntity, PostRequest postRequest) {
-        if(postRequest.getTitle() != null) postEntity.setTitle(postRequest.getTitle());
-        if(postRequest.getContent() != null) postEntity.setContent(postRequest.getContent());
-    }
+
 }

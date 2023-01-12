@@ -62,7 +62,7 @@ public class PostController {
                     "수정할 수 있는 필드\n\n\t" +
                     "{\n\n     " +
                     "title : 제목,\n\n     " +
-                    "content : 내용,\n\n     ")
+                    "content : 내용 \n\n\t}     ")
     @ApiResponses({
             @ApiResponse(code = 200,
                     message = "수정한 Post 정보",

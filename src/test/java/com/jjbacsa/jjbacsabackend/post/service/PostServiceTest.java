@@ -73,7 +73,7 @@ public class PostServiceTest {
     void givenPostInfo_whenUpdatePost_thenUpdatePost(){
         //Given
         PostEntity postEntity = createPostEntity(createPostRequest("title", "content", BoardType.NOTICE.getBoardType()));
-        PostRequest modifyPost = createPostRequest("new title", "new content");
+        PostRequest modifyPost = createPostRequest("new title", null);
         Long postId = 1L;
 
         given(postRepository.findById(postId)).willReturn(Optional.of(postEntity));
@@ -82,6 +82,7 @@ public class PostServiceTest {
         PostResponse postResponse = postService.modifyAdminPost(modifyPost, postId);
 
         // Then
+        assertThat(postEntity.getContent()).isEqualTo(postResponse.getContent());
         assertThat(postResponse)
                 .hasFieldOrPropertyWithValue("title", postResponse.getTitle())
                 .hasFieldOrPropertyWithValue("content", postResponse.getContent());
