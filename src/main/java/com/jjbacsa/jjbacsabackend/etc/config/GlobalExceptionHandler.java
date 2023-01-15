@@ -22,7 +22,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.HandlerMethod;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ValidationException;
 import java.io.IOException;
@@ -119,7 +118,6 @@ public class GlobalExceptionHandler {
         SlackTarget slackTarget = new SlackTarget(notifyErrorUrl, "");
         SlackParameter slackParameter = new SlackParameter();
         slackParameter.setText(String.format("`%s` 서버에서 에러가 발생했습니다.", host));
-        SlackAttachment slackAttachment = new SlackAttachment();
         String errorName = e.getClass().getSimpleName();
         String errorFile = e.getStackTrace()[0].getFileName();
         String errorMessage = e.getMessage();
@@ -130,8 +128,10 @@ public class GlobalExceptionHandler {
         String message = String.format("```%s %s Line %d```\n```===== [Message] ===== \n%s\n\n===== [Controller] =====\n%s\n\n===== [RequestParameter] =====\n%s\n\n===== [RequestBody] =====\n%s```",
                 errorName, errorFile, errorLine, errorMessage, handlerMethod, requestParam, requestBody);
 
-        slackAttachment.setTitle(String.format("URI : %s", uri));
-        slackAttachment.setText(message);
+        SlackAttachment slackAttachment = SlackAttachment.builder()
+                .title(String.format("URI : %s", uri))
+                .text(message)
+                .build();
         slackParameter.getSlackAttachments().add(slackAttachment);
         slackNotiSender.send(slackTarget, slackParameter);
     }
