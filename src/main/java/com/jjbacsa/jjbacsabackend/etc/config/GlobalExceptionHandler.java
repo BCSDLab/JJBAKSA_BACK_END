@@ -8,6 +8,7 @@ import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.etc.exception.CriticalException;
 import com.jjbacsa.jjbacsabackend.util.ParserUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,11 +30,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @Resource
-    private SlackNotiSender slackNotiSender;
+    private final SlackNotiSender slackNotiSender;
 
     @Value("${slack.url}")
     private String notifyErrorUrl;
