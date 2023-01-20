@@ -84,7 +84,14 @@ public class ReviewController {
 
     @ApiOperation(
             value = "특정사용자가 작성한 모든 리뷰 조회",
-            notes = "사용자에 대한 모든 리뷰를 조회합니다.\n\n", authorizations = @Authorization(value = "Bearer +accessToken"))
+            notes = "사용자에 대한 모든 리뷰를 조회합니다.\n\n"+
+                    "example : \n\n" +
+                    "{\n\n" +
+                    "       \"page\" : \"페이지 default: 0\"\n\n" +
+                    "       \"size\" : \"페이지 크기 default: 10\"\n\n" +
+                    "       \"direction\" : \"정렬 방식 DESC, ASC default: DESC\"\n\n" +
+                    "       \"sort\": \"정렬 기준 컬럼명 기재 ','로 우선순위 구분 default: createdAt,id 생성일시 기준, 생성일시가 같으면 id로 구분\"\n\n" +
+                    "}", authorizations = @Authorization(value = "Bearer +accessToken"))
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping(value = "/review/search/writer/{writer-id}")
     public ResponseEntity<Page<ReviewResponse>>searchWriterReview(@ApiParam("작성자 id") @PathVariable("writer-id") Long writerId, @Validated CustomPageRequest pageable){
@@ -119,7 +126,14 @@ public class ReviewController {
 
     @ApiOperation(
             value = "팔로워 리뷰 조회",
-            notes = "팔로워가 작성한 리뷰를 조회합니다.\n\n", authorizations = @Authorization(value = "Bearer +accessToken"))
+            notes = "팔로워가 작성한 리뷰를 조회합니다.\n\n"+
+                    "example : \n\n" +
+                    "{\n\n" +
+                    "       \"page\" : \"페이지 default: 0\"\n\n" +
+                    "       \"size\" : \"페이지 크기 default: 10\"\n\n" +
+                    "       \"direction\" : \"정렬 방식 DESC, ASC default: DESC\"\n\n" +
+                    "       \"sort\": \"정렬 기준 컬럼명 기재 ','로 우선순위 구분 default: createdAt,id 생성일시 기준, 생성일시가 같으면 id로 구분\"\n\n" +
+                    "}", authorizations = @Authorization(value = "Bearer +accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value="/review/search/follower")
     public ResponseEntity<Page<ReviewResponse>> searchFollowerReview(@ApiParam("팔로워 account") @RequestParam("follower-account") String account, @Validated CustomPageRequest pageable) throws Exception {
@@ -128,7 +142,14 @@ public class ReviewController {
 
     @ApiOperation(
             value = "팔로워들이 작성한 모든 리뷰 조회",
-            notes = "팔로워들이 작성한 모든 리뷰를 조회합니다.\n\n", authorizations = @Authorization(value = "Bearer +accessToken"))
+            notes = "팔로워들이 작성한 모든 리뷰를 조회합니다.\n\n"+
+                    "example : \n\n" +
+                    "{\n\n" +
+                    "       \"page\" : \"페이지 default: 0\"\n\n" +
+                    "       \"size\" : \"페이지 크기 default: 10\"\n\n" +
+                    "       \"direction\" : \"정렬 방식 DESC, ASC default: DESC\"\n\n" +
+                    "       \"sort\": \"정렬 기준 컬럼명 기재 ','로 우선순위 구분 default: createdAt,id 생성일시 기준, 생성일시가 같으면 id로 구분\"\n\n" +
+                    "}", authorizations = @Authorization(value = "Bearer +accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value="/review/follower")
     public ResponseEntity<Page<ReviewResponse>> getFollowersReviews(@Validated CustomPageRequest pageable) throws Exception {
@@ -137,7 +158,14 @@ public class ReviewController {
 
     @ApiOperation(
             value = "특정 상점에 대해 팔로워들이 작성한 리뷰 조회",
-            notes = "특정 상점에 대해 팔로워들이 작성한 리뷰를 조회합니다.\n\n", authorizations = @Authorization(value = "Bearer +accessToken"))
+            notes = "특정 상점에 대해 팔로워들이 작성한 리뷰를 조회합니다.\n\n"+
+                    "example : \n\n" +
+                    "{\n\n" +
+                    "       \"page\" : \"페이지 default: 0\"\n\n" +
+                    "       \"size\" : \"페이지 크기 default: 10\"\n\n" +
+                    "       \"direction\" : \"정렬 방식 DESC, ASC default: DESC\"\n\n" +
+                    "       \"sort\": \"정렬 기준 컬럼명 기재 ','로 우선순위 구분 default: createdAt,id 생성일시 기준, 생성일시가 같으면 id로 구분\"\n\n" +
+                    "}", authorizations = @Authorization(value = "Bearer +accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value="/review/search/shop/{shop-id}/follower")
     public ResponseEntity<Page<ReviewResponse>> searchFollowersShopReviews(@ApiParam("조회할 상점id") @PathVariable("shop-id") Long shopId, @Validated CustomPageRequest pageable) throws Exception {
