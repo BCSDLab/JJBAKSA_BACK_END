@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,51 +92,45 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> searchShopReviews(Long shopId, Integer page, Integer size) {
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
-        return reviewRepository.findAllByShopId(shopId, pageRequest).map(ReviewMapper.INSTANCE::fromReviewEntity);
+    public Page<ReviewResponse> searchShopReviews(Long shopId, Pageable pageable) {
+        return reviewRepository.findAllByShopId(shopId, pageable).map(ReviewMapper.INSTANCE::fromReviewEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> searchWriterReviews(Long writerId,  Integer page, Integer size){
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
-        return reviewRepository.findAllByWriterId(writerId, pageRequest).map(ReviewMapper.INSTANCE::fromReviewEntity);
+    public Page<ReviewResponse> searchWriterReviews(Long writerId,  Pageable pageable){
+        return reviewRepository.findAllByWriterId(writerId, pageable).map(ReviewMapper.INSTANCE::fromReviewEntity);
     }
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> getMyReviews(Integer page, Integer size) throws Exception {
+    public Page<ReviewResponse> getMyReviews(Pageable pageable) throws Exception {
         UserEntity user = userService.getLoginUser();
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
-        return reviewRepository.findAllByWriterId(user.getId(), pageRequest).map(ReviewMapper.INSTANCE::fromReviewEntity);
+        return reviewRepository.findAllByWriterId(user.getId(), pageable).map(ReviewMapper.INSTANCE::fromReviewEntity);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> getFollowersReviews(Integer page, Integer size) throws Exception {
+    public Page<ReviewResponse> getFollowersReviews(Pageable pageable) throws Exception {
         UserEntity user = userService.getLoginUser();
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
-        return reviewRepository.findAllFriendsReview(user.getId(), pageRequest).map(ReviewResponse::from);
+        return reviewRepository.findAllFriendsReview(user.getId(), pageable).map(ReviewResponse::from);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> searchFollowerReviews(String followerAccount, Integer page, Integer size) throws Exception {
+    public Page<ReviewResponse> searchFollowerReviews(String followerAccount, Pageable pageable) throws Exception {
         UserEntity user = userService.getLoginUser();
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
         UserEntity follower = userService.getUserByAccount(followerAccount);
         if(followService.existsByUserAndFollower(user, follower)){
-            return reviewRepository.findAllByFollowerId(follower.getId(), pageRequest).map(ReviewResponse::from);
+            return reviewRepository.findAllByFollowerId(follower.getId(), pageable).map(ReviewResponse::from);
         }
         else throw new RequestInputException(ErrorMessage.NOT_FOLLOWED_EXCEPTION);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReviewResponse> searchFollowersShopReviews(Long shopId, Integer page, Integer size) throws Exception {
+    public Page<ReviewResponse> searchFollowersShopReviews(Long shopId, Pageable pageable) throws Exception {
         UserEntity user = userService.getLoginUser();
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
-        return reviewRepository.findAllFollowersReviewsByShopId(user.getId(), shopId, pageRequest).map(ReviewResponse::from);
+        return reviewRepository.findAllFollowersReviewsByShopId(user.getId(), shopId, pageable).map(ReviewResponse::from);
     }
 
     @Override
