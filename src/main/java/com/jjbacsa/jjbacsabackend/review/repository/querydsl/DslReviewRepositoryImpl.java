@@ -11,20 +11,23 @@ import com.jjbacsa.jjbacsabackend.shop.entity.QShopCount;
 import com.jjbacsa.jjbacsabackend.shop.entity.QShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
+import com.jjbacsa.jjbacsabackend.util.QueryDslUtil;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.StringExpressions;
 import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
+import com.querydsl.core.types.Order;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,6 +64,8 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
 
     @Override
     public Page<ReviewEntity> findAllByFollowerId(Long followerId, Pageable pageable) {
+        List<OrderSpecifier> orders = getAllOrderSpecifiers(pageable);
+
         List<ReviewEntity> reviewEntities = queryFactory
                 .selectFrom(review)
                 .innerJoin(review.writer, user).fetchJoin()
@@ -68,8 +73,9 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
                 .where(review.writer.id.eq(followerId))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(review.createdAt.desc())
+                .orderBy(orders.stream().toArray(OrderSpecifier[]::new))
                 .fetch();
+
         for(ReviewEntity reviewEntity: reviewEntities){
             if(reviewEntity.getReviewImages() != null) {
                 List<ReviewImageEntity> reviewImages = findAllReviewImages(reviewEntity.getId());
@@ -84,7 +90,7 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
 
     @Override
     public Page<ReviewEntity> findAllFriendsReview(Long userId, Pageable pageable) {
-
+        List<OrderSpecifier> orders = getAllOrderSpecifiers(pageable);
         List<Long> followerId = findAllFollowersId(userId);
 
         // 팔로워들이 작성한 리뷰
@@ -95,7 +101,7 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
                 .where(review.writer.id.in(followerId))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(review.createdAt.desc())
+                .orderBy(orders.stream().toArray(OrderSpecifier[]::new))
                 .fetch();
         for(ReviewEntity reviewEntity: reviewEntities){
             if(reviewEntity.getReviewImages() != null) {
@@ -111,6 +117,7 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
 
     @Override
     public Page<ReviewEntity> findAllFollowersReviewsByShopId(Long userId, Long shopId, Pageable pageable) {
+        List<OrderSpecifier> orders = getAllOrderSpecifiers(pageable);
         List<Long> followerId = findAllFollowersId(userId);
 
         // 팔로워들이 shop에 대해 작성한 리뷰
@@ -121,7 +128,7 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
                 .where(review.writer.id.in(followerId), review.shop.id.eq(shopId))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(review.createdAt.desc())
+                .orderBy(orders.stream().toArray(OrderSpecifier[]::new))
                 .fetch();
 
         for(ReviewEntity reviewEntity: reviewEntities){
@@ -183,5 +190,36 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
                 .concat(StringExpressions.lpad(shop.id.stringValue(), 10, '0'))
                 .gt(cursor);
 
+    }
+
+    private List<OrderSpecifier> getAllOrderSpecifiers(Pageable pageable){
+        List<OrderSpecifier> orders = new ArrayList<>();
+
+        for(Sort.Order order : pageable.getSort()){
+            Order direction = order.getDirection().isAscending() ? Order.ASC : Order.DESC;
+            switch (order.getProperty()){
+                case "id":
+                    OrderSpecifier<?> orderId = QueryDslUtil.getSortedColumn(direction, QReviewEntity.reviewEntity, "id");
+                    orders.add(orderId);
+                    break;
+                case "createdAt":
+                    OrderSpecifier<?> orderCreatedAt = QueryDslUtil.getSortedColumn(direction, QReviewEntity.reviewEntity, "createdAt");
+                    orders.add(orderCreatedAt);
+                    break;
+                case "updatedAt":
+                    OrderSpecifier<?> orderUpdatedAt = QueryDslUtil.getSortedColumn(direction, QReviewEntity.reviewEntity, "updatedAt");
+                    orders.add(orderUpdatedAt);
+                    break;
+                case "rate":
+                    OrderSpecifier<?> orderRate = QueryDslUtil.getSortedColumn(direction, QReviewEntity.reviewEntity, "rate");
+                    orders.add(orderRate);
+                    break;
+                case "content":
+                    OrderSpecifier<?> orderContent = QueryDslUtil.getSortedColumn(direction, QReviewEntity.reviewEntity, "content");
+                    orders.add(orderContent);
+                    break;
+            }
+        }
+        return orders;
     }
 }
