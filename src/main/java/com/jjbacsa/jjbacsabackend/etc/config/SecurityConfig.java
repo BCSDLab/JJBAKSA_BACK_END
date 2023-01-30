@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.etc.config;
 
 import com.jjbacsa.jjbacsabackend.etc.filter.CustomCorsFilter;
 import com.jjbacsa.jjbacsabackend.etc.filter.JwtTokenFilter;
+import com.jjbacsa.jjbacsabackend.etc.filter.RequestWrappingFilter;
 import com.jjbacsa.jjbacsabackend.etc.security.CustomCorsConfigSource;
 import com.jjbacsa.jjbacsabackend.etc.security.JwtTokenProvider;
 import com.jjbacsa.jjbacsabackend.etc.security.OAuth2SuccessHandler;
@@ -59,6 +60,8 @@ public class SecurityConfig {
                 .and()
                 .addFilterBefore(new JwtTokenFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new RequestWrappingFilter(),
+                        JwtTokenFilter.class)
                 .addFilterBefore(new CustomCorsFilter(customCorsConfigSource),  // CORS 필터 추가
                         LogoutFilter.class);
 
