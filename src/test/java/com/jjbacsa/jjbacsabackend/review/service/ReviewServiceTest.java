@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.review.service;
 
 
+import com.jjbacsa.jjbacsabackend.etc.dto.CustomPageRequest;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.follow.serviceimpl.FollowServiceImpl;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
@@ -22,6 +23,9 @@ import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -109,11 +113,10 @@ public class ReviewServiceTest {
     void givenShopId_whenSearchingReviews_thenReturnsReviewPage(){
         // Given
         Long shopId = 1L;
-        Integer page = 0;
-        Integer size = 3;
+        PageRequest pageRequest = createPageRequest();
         // When
-        Page<ReviewResponse> reviews = reviewService.searchShopReviews(shopId, page, size);
-        Page<ReviewResponse> emptyReviews = reviewService.searchShopReviews(0L, page, size);
+        Page<ReviewResponse> reviews = reviewService.searchShopReviews(shopId, pageRequest);
+        Page<ReviewResponse> emptyReviews = reviewService.searchShopReviews(0L, pageRequest);
 
         // Then
         assertThat(reviews).isNotEmpty();
@@ -126,12 +129,11 @@ public class ReviewServiceTest {
     void givenUserId_whenSearchingReviews_thenReturnsReviewPage(){
         // Given
         Long writerId = 1L;
-        Integer page = 0;
-        Integer size = 3;
+        PageRequest pageRequest = createPageRequest();
 
         // When
-        Page<ReviewResponse> reviews = reviewService.searchWriterReviews(writerId, page, size);
-        Page<ReviewResponse> emptyReviews = reviewService.searchWriterReviews(0L, page, size);
+        Page<ReviewResponse> reviews = reviewService.searchWriterReviews(writerId, pageRequest);
+        Page<ReviewResponse> emptyReviews = reviewService.searchWriterReviews(0L, pageRequest);
 
         // Then
         assertThat(reviews).isNotEmpty();
@@ -199,18 +201,18 @@ public class ReviewServiceTest {
         // Given
         user = userRepository.getById(1L);
         user2 = userRepository.getById(2L);
-        Integer page = 0;
-        Integer size = 3;
+        PageRequest pageRequest = createPageRequest();
+
         // When
         testLogin(user);
-        Page<ReviewResponse> reviews = reviewService.searchFollowerReviews(user2.getAccount(), page, size);
+        Page<ReviewResponse> reviews = reviewService.searchFollowerReviews(user2.getAccount(), pageRequest);
         // Then
         assertThat(reviews).isNotEmpty();
         assertThat(reviews).allMatch(review -> review.getUserReviewResponse().getId().equals(user2.getId()));
 
         // 팔로워가 아닌 경우
         user3 = userRepository.getById(3L);
-        assertThrows(RuntimeException.class, () -> reviewService.searchFollowerReviews(user3.getAccount(), page, size));
+        assertThrows(RuntimeException.class, () -> reviewService.searchFollowerReviews(user3.getAccount(), pageRequest));
     }
 
     @DisplayName("사용자의 모든 친구에 대해 리뷰 페이지를 반환한다.")
@@ -218,11 +220,11 @@ public class ReviewServiceTest {
     void givenUser_whenSearchFollowerReviews_thenReturnReviewPage() throws Exception {
         // Given
         user = userRepository.getById(1L);
-        Integer page = 0;
-        Integer size = 3;
+        PageRequest pageRequest = createPageRequest();
+
         // When
         testLogin(user);
-        Page<ReviewResponse> reviews = reviewService.getFollowersReviews(page, size);
+        Page<ReviewResponse> reviews = reviewService.getFollowersReviews(pageRequest);
         // Then
         assertThat(reviews).isNotEmpty();
         assertThat(reviews).allMatch(
@@ -236,9 +238,10 @@ public class ReviewServiceTest {
         user = userRepository.getById(1L);
         Integer page = 0;
         Integer size = 3;
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
         // When
         testLogin(user);
-        Page<ReviewResponse> reviews = reviewService.getMyReviews(page, size);
+        Page<ReviewResponse> reviews = reviewService.getMyReviews(pageRequest);
         // Then
         assertThat(reviews).isNotEmpty();
         assertThat(reviews).allMatch(
@@ -251,11 +254,11 @@ public class ReviewServiceTest {
         // Given
         user = userRepository.getById(1L);
         Long shopId = 1L;
-        Integer page = 0;
-        Integer size = 3;
+        PageRequest pageRequest = createPageRequest();
+
         // When
         testLogin(user);
-        Page<ReviewResponse> reviews = reviewService.searchFollowersShopReviews(shopId, page, size);
+        Page<ReviewResponse> reviews = reviewService.searchFollowersShopReviews(shopId, pageRequest);
         // Then
         assertThat(reviews).isNotEmpty();
         assertThat(reviews).allMatch(
@@ -267,7 +270,7 @@ public class ReviewServiceTest {
 
         // 친구가 작성한 리뷰가 없는 경우
         Long shopId2 = 2L;
-        Page<ReviewResponse> emptyReviews = reviewService.searchFollowersShopReviews(shopId2, page, size);
+        Page<ReviewResponse> emptyReviews = reviewService.searchFollowersShopReviews(shopId2, pageRequest);
         assertThat(emptyReviews).isEmpty();
 
     }
@@ -316,4 +319,7 @@ public class ReviewServiceTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
+    private PageRequest createPageRequest(){
+        return CustomPageRequest.builder().build().of();
+    }
 }
