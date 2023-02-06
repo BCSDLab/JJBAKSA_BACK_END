@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.post.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjbacsa.jjbacsabackend.annotation.WithMockCustomUser;
+import com.jjbacsa.jjbacsabackend.etc.dto.CustomPageRequest;
 import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.post.dto.request.PostRequest;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
@@ -107,16 +109,16 @@ public class PostControllerTest {
     @MethodSource
     @ParameterizedTest(name="[BoardType] \"{0}\"")
     void givenBoardType_whenGetPosts_thenPostsPage(String boardType) throws Exception {
-        int page = 0;
-        int size = 3;
+        PageRequest pageRequest = createPageRequest();
+
 
         mockMvc.perform(get("/post")
                         .queryParam("boardType", boardType)
-                        .queryParam("page", String.valueOf(page))
-                        .queryParam("size", String.valueOf(size))
+                        .queryParam("page", String.valueOf(pageRequest.getOffset()))
+                        .queryParam("size", String.valueOf(pageRequest.getPageSize()))
                 ).andDo(print())
                 .andExpect(status().isOk());
-        then(postService).should().getPosts(boardType, page, size);
+        then(postService).should().getPosts(boardType, pageRequest);
     }
     static Stream<Arguments> givenBoardType_whenGetPosts_thenPostsPage(){return getBoardType();}
 
@@ -146,7 +148,11 @@ public class PostControllerTest {
     private static Stream<Arguments> getBoardType(){
         return Stream.of(
                 arguments(BoardType.NOTICE.getBoardType()),
+                arguments(BoardType.POWER_NOTICE.getBoardType()),
                 arguments(BoardType.FAQ.getBoardType())
-        );
+                );
+    }
+    private PageRequest createPageRequest(){
+        return CustomPageRequest.builder().build().of();
     }
 }
