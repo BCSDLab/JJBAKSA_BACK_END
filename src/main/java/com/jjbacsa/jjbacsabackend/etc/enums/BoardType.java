@@ -2,7 +2,7 @@ package com.jjbacsa.jjbacsabackend.etc.enums;
 
 
 public enum BoardType {
-    NOTICE("NOTICE"), FAQ("FAQ"), INQUIRY("INQUIRY");
+    NOTICE("NOTICE"), FAQ("FAQ"), INQUIRY("INQUIRY"), POWER_NOTICE("POWER_NOTICE");
 
     String boardType;
 
