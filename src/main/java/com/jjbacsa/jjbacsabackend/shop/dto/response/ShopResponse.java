@@ -2,12 +2,10 @@ package com.jjbacsa.jjbacsabackend.shop.dto.response;
 
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopCount;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,6 +21,8 @@ public class ShopResponse {
 
     private Integer totalRating;
     private Integer ratingCount;
+
+    private byte[] photo;
 
     public boolean setShopCount(Integer totalRating, Integer ratingCount) {
         try {

@@ -3,7 +3,6 @@ package com.jjbacsa.jjbacsabackend.search.controller;
 import com.jjbacsa.jjbacsabackend.search.dto.AutoCompleteResponse;
 import com.jjbacsa.jjbacsabackend.search.dto.TrendingResponse;
 import com.jjbacsa.jjbacsabackend.search.service.SearchService;
-import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class SearchController {
 
     private final SearchService searchService;
-    private final String KEY="ranking";
 
     @GetMapping(value = "/auto-complete/{word}")
     @ApiOperation(
@@ -50,6 +48,6 @@ public class SearchController {
             )
     })
     public ResponseEntity<TrendingResponse> getTrending() {
-        return new ResponseEntity<>(searchService.getTrending(KEY), HttpStatus.OK);
+        return new ResponseEntity<>(searchService.getTrending(), HttpStatus.OK);
     }
 }

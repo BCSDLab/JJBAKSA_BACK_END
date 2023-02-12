@@ -5,7 +5,6 @@ import com.jjbacsa.jjbacsabackend.search.dto.TrendingResponse;
 import com.jjbacsa.jjbacsabackend.search.entity.SearchEntity;
 import com.jjbacsa.jjbacsabackend.search.repository.SearchRepository;
 import com.jjbacsa.jjbacsabackend.search.service.SearchService;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -20,6 +19,7 @@ public class SearchServiceImpl implements SearchService {
 
     private final StringRedisTemplate redisTemplate;
     private final SearchRepository searchRepository;
+    private final String KEY = "RANKING";
 
     @Override
     public AutoCompleteResponse getAutoCompletes(String word) {
@@ -34,9 +34,41 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public TrendingResponse getTrending(String key) {
+    public TrendingResponse getTrending() {
         return TrendingResponse.builder().
-                trendings(redisTemplate.opsForZSet().reverseRange(key, 0, -1).stream().collect(Collectors.toList()))
+                trendings(redisTemplate.opsForZSet().reverseRange(KEY, 0, -1).stream().collect(Collectors.toList()))
                 .build();
+    }
+
+    @Override
+    public void saveRedis(String keyword) {
+        List<String> rankingList = redisTemplate.opsForZSet().reverseRange(KEY, 0, -1).stream().collect(Collectors.toList());
+
+        redisTemplate.opsForZSet().incrementScore(KEY, keyword, 2);
+
+        for (String ranking : rankingList) {
+            if (!ranking.equals(keyword)) {
+                redisTemplate.opsForZSet().incrementScore(KEY, ranking, -1);
+            }
+        }
+
+        long size = redisTemplate.opsForZSet().zCard(KEY);
+        if (size > 10) {
+            long offset = size - 10;
+            redisTemplate.opsForZSet().removeRange(KEY, 0, offset - 1);
+        }
+
+    }
+
+    @Override
+    public void saveForAutoComplete(String keyword) {
+        if (searchRepository.existsByContent(keyword)) {
+            SearchEntity searchEntity = searchRepository.findByContent(keyword).get();
+            Long latestScore = searchEntity.getScore();
+            searchEntity.updateScore(latestScore + 1);
+
+        } else {
+            searchRepository.save(new SearchEntity(keyword));
+        }
     }
 }

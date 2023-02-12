@@ -116,7 +116,7 @@ public class GlobalExceptionHandler {
 ////		String requestBody = IOUtils.toString(request.getReader());
 //		String requestParam = new ObjectMapper().writeValueAsString(Parser.splitQueryString(request.getQueryString()));
 //		String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-//		String message = String.format("```%s %s Line %d```\n```===== [Message] ===== \n%s\n\n===== [Controller] =====\n%s\n\n===== [RequestParameter] =====\n%s\n\n===== [RequestBody] =====\n%s```",
+//		String message = String.format("```%s %s Line %d```\n```===== [Message] ===== \n%s\n\n===== [GoogleController] =====\n%s\n\n===== [RequestParameter] =====\n%s\n\n===== [RequestBody] =====\n%s```",
 //				errorName, errorFile, errorLine, errorMessage, handlerMethod, requestParam, requestBody);
 //
 //		slackAttachment.setTitle(String.format("URI : %s", uri));

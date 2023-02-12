@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.shop.entity;
+package com.jjbacsa.jjbacsabackend.google.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,16 +9,15 @@ import javax.persistence.*;
 @Getter
 @NoArgsConstructor
 @Entity
-@Table(name = "shop_count")
-public class ShopCount {
-
+@Table(name = "google_shop_count")
+public class GoogleShopCount {
     @Id
     private Long id;
 
-    @MapsId
     @Setter
+    @MapsId
     @OneToOne(optional = false)
-    private ShopEntity shop;
+    private GoogleShopEntity shop;
 
     @Basic
     @Setter

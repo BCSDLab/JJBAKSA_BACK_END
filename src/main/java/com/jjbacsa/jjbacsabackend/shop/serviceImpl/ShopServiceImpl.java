@@ -8,13 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
 import com.jjbacsa.jjbacsabackend.etc.exception.CriticalException;
-import com.jjbacsa.jjbacsabackend.search.entity.SearchEntity;
 import com.jjbacsa.jjbacsabackend.search.repository.SearchRepository;
 import com.jjbacsa.jjbacsabackend.shop.dto.*;
 import com.jjbacsa.jjbacsabackend.shop.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopSummaryResponse;
-import com.jjbacsa.jjbacsabackend.search.dto.TrendingResponse;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.shop.mapper.ShopMapper;
 import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
@@ -38,7 +36,6 @@ import reactor.netty.http.client.HttpClient;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 public class ShopServiceImpl implements ShopService {
@@ -93,6 +90,9 @@ public class ShopServiceImpl implements ShopService {
             ShopResponse shopResponse = ShopMapper.INSTANCE.toShopResponse(shopEntity.get());
             shopResponse.setShopCount(shopRepository.getTotalRating(shopResponse.getShopId()), shopRepository.getRatingCount(shopResponse.getShopId()));
 
+            byte[] photo=getShopPhoto(shopEntity.get().getPhotoReference());
+            shopResponse.setPhoto(photo);
+
             return shopResponse;
         } else {
             ShopApiDto shopApiDto;
@@ -121,13 +121,24 @@ public class ShopServiceImpl implements ShopService {
         return shopRepository.save(shopEntity);
     }
 
+    private byte[] getShopPhoto(String photoReference) {
+        byte[] image = webClient.get().uri(uriBuilder ->
+                uriBuilder.path("/photo")
+                        .queryParam("photo_reference", photoReference)
+                        .queryParam("key", API_KEY)
+                        .build()
+        ).retrieve().bodyToMono(byte[].class).block();
+
+        return image;
+    }
+
     private ShopApiDto getShopDetails(String placeId) throws JsonProcessingException {
         String shopStr = webClient.get().uri(uriBuilder ->
                 uriBuilder.path("/details/json")
                         .queryParam("place_id", placeId)
                         .queryParam("language", "ko")
                         .queryParam("key", API_KEY)
-                        .queryParam("fields", "formatted_address,formatted_phone_number,name,geometry/location/lat,geometry/location/lng,types,place_id,opening_hours/weekday_text")
+                        .queryParam("fields", "formatted_address,formatted_phone_number,name,geometry/location/lat,geometry/location/lng,types,place_id,opening_hours/weekday_text,photos")
                         .build()
         ).retrieve().bodyToMono(String.class).block();
 
@@ -167,12 +178,7 @@ public class ShopServiceImpl implements ShopService {
     @Transactional
     @Override
     public Page<ShopSummaryResponse> searchShop(ShopRequest shopRequest, Integer page, Integer size) {
-        //keyword Redis 저장
         String keyword = shopRequest.getKeyword();
-        saveRedis(keyword, KEY);
-
-        //검색어 저장 (AutoComplete)
-        saveForAutoComplete(keyword);
 
         //키워드 검색 타입 판별
         SearchType searchType = typeSetting(keyword);
@@ -273,37 +279,6 @@ public class ShopServiceImpl implements ShopService {
         }
 
         return resString.substring(0, resString.length() - 1);
-    }
-
-    public void saveRedis(String keyword, String key) {
-        List<String> rankingList = redisTemplate.opsForZSet().reverseRange(key, 0, -1).stream().collect(Collectors.toList());
-
-        redisTemplate.opsForZSet().incrementScore(key, keyword, 2);
-
-        for (String ranking : rankingList) {
-            if (!ranking.equals(keyword)) {
-                redisTemplate.opsForZSet().incrementScore(key, ranking, -1);
-            }
-        }
-
-        long size = redisTemplate.opsForZSet().zCard(key);
-        if (size > 10) {
-            long offset = size - 10;
-            redisTemplate.opsForZSet().removeRange(key, 0, offset - 1);
-        }
-
-    }
-
-    //todo: @Transactional(read-only=false) 검색어 저장
-    private void saveForAutoComplete(String keyword) {
-        if (searchRepository.existsByContent(keyword)) {
-            SearchEntity searchEntity = searchRepository.findByContent(keyword).get();
-            Long latestScore = searchEntity.getScore();
-            searchEntity.updateScore(latestScore + 1);
-
-        } else {
-            searchRepository.save(new SearchEntity(keyword));
-        }
     }
 }
 

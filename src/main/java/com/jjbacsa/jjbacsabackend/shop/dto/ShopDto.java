@@ -20,6 +20,9 @@ public class ShopDto {
     private String address;
 
     @Nullable
+    private byte[] photo;
+
+    @Nullable
     private String phone;
 
     @Nullable
