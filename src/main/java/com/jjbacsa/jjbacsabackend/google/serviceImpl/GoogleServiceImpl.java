@@ -249,7 +249,6 @@ public class GoogleServiceImpl implements GoogleService {
                 uriBuilder.path("/textsearch/json")
                         .queryParam("query", query)
                         .queryParam("key", API_KEY)
-
                         .queryParam("language", "ko")
                         .queryParam("type", "cafe")
                         .build()
@@ -263,8 +262,6 @@ public class GoogleServiceImpl implements GoogleService {
                 uriBuilder.path("/textsearch/json")
                         .queryParam("query", query)
                         .queryParam("key", API_KEY)
-
-                        //세부 제한
                         .queryParam("language", "ko")
                         .queryParam("type", "restaurant")
                         .build()

@@ -6,6 +6,7 @@ import com.jjbacsa.jjbacsabackend.google.response.ShopQueryResponses;
 import com.jjbacsa.jjbacsabackend.google.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleService;
 import com.jjbacsa.jjbacsabackend.search.service.SearchService;
+import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,31 @@ public class GoogleController {
 //    거리순 정렬은 불가, 반경 radius 받아서 해당 반경에 있는 상점 반환 기능은 추후 추가 예정
 //    google API 상점 조회 (리뷰 작성, 상점 조회시 사용)
 
+    @ApiOperation(
+            value = "키워드에 따른 상점 검색",
+            notes = "키워드로 상점 검색하여 상점들을 반환한다." +
+                    "Request Body(ShopRequest)\n\n" +
+                    "{\n\n     " +
+                    "x : 현재 요청자의 경도(x),\n     " +
+                    "y : 현재 요청자의 위도(y)\n     " +
+                    "\n}"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "상점 키워드 검색 결과",
+                    response = ShopQueryResponses.class
+            )
+    })
+    @ApiImplicitParams({
+            @ApiImplicitParam(
+                    name = "type", value = "상점 카테고리(cafe, restaurant)", required = true, dataType = "string", paramType = "path"
+            ),
+            @ApiImplicitParam(
+                    name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "path"
+            )
+
+    })
     @PreAuthorize("hasRole('NORMAL')")
     @PostMapping("/google/shops/{type}/{keyword}")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("type") String type, @PathVariable("keyword") String keyword) throws JsonProcessingException {
@@ -35,6 +61,25 @@ public class GoogleController {
                 .body(googleService.searchShopQuery(keyword, type, shopRequest.getX(), shopRequest.getY()));
     }
 
+    @ApiOperation(
+            value = "키워드 검색 페이지 토큰 조회",
+            notes = "키워드 검색으로 얻어진 페이지 토근으로 상점들을 반환한다.\n\n" +
+                    "Request Body(ShopRequest)\n\n" +
+                    "{\n\n     " +
+                    "x : 현재 요청자의 경도(x),\n     " +
+                    "y : 현재 요청자의 위도(y)\n     " +
+                    "\n}"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "상점 키워드 페이지 토큰 검색 결과",
+                    response = ShopQueryResponses.class
+            )
+    })
+    @ApiImplicitParam(
+            name = "page_token", value = "키워드 검색어의 다음 페이지", required = true, dataType = "string", paramType = "path"
+    )
     @PreAuthorize("hasRole('NORMAL')")
     @PostMapping("/google/shops/{page_token}")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsNextPage(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("page_token") String pageToken) throws JsonProcessingException {
@@ -42,6 +87,25 @@ public class GoogleController {
                 .body(googleService.searchShopQueryNext(pageToken, shopRequest.getX(), shopRequest.getY()));
     }
 
+    @ApiOperation(
+            value = "단일 상점 조회",
+            notes = "place_id를 기반으로 단일 상점 정보를 조회한다." +
+                    "Request Body(ShopRequest)\n\n" +
+                    "{\n\n     " +
+                    "x : 현재 요청자의 경도(x),\n     " +
+                    "y : 현재 요청자의 위도(y)\n     " +
+                    "\n}"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "단일 상점 조회 결과",
+                    response = ShopResponse.class
+            )
+    })
+    @ApiImplicitParam(
+            name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path"
+    )
     @PreAuthorize("hasRole('NORMAL')")
     @PostMapping("/google/shop/{place_id}")
     //google API 상점 상세정보 조회
