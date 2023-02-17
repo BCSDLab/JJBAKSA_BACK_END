@@ -9,11 +9,14 @@
 <script type="text/javascript" th:inline="javascript">
     /*<![CDATA[*/
 
-    const webURL = [[${urlMap['webURL']}]];
-    const androidURL = [[${urlMap['androidURL']}]];
-    const iosURL = [[${urlMap['iosURL']}]];
-    const googleStoreURL = [[${urlMap['googleStoreURL']}]];
-    const appleStoreURL = [[${urlMap['appleStoreURL']}]];
+    const accessToken = [[${accessToken}]];
+    const refreshToken = [[${refreshToken}]];
+
+    const webURL = [[${@authLinkUtil.getWebUrl(accessToken, refreshToken)}]];
+    const androidURL = [[${@authLinkUtil.getAndroidUrl(accessToken, refreshToken)}]];
+    const iosURL = [[${@authLinkUtil.getIosUrl(accessToken, refreshToken)}]];
+    const googleStoreURL = [[${@authLinkUtil.getGoogleStoreUrl()}]];
+    const appleStoreURL = [[${@authLinkUtil.getAppleStoreUrl()}]];
 
     const os = () => {
         if (!(/iphone|ipad|ipod|android/i.test(navigator.userAgent))) {
