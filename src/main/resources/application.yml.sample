@@ -131,3 +131,9 @@ slack:
 
 context-path: "http://localhost:8080"
 
+auth-url:
+  web-url: "https://www.jjbaksa.com"
+  android-url:
+  ios-url:
+  google-store-url:
+  apple-store-url: "

@@ -344,15 +344,12 @@ public class UserController {
     }
 
     @ApiOperation(
-            value = "회원가입 이메일 인증",
+            value = "회원가입 이메일 인증용 API",
             notes = "회원가입 이메일 인증\n\n" +
+                    "리다이렉션용 뷰 반환\n\n" +
                     "\n\n\taccess_token : 이메일에 전송한 링크에 포함된 access_token" +
                     "\n\n\trefresh_token : 이메일에 전송한 링크에 포함된 refresh_token"
     )
-    @ApiResponses({
-            @ApiResponse(code = 204,
-                    message = "반환값 없음")
-    })
     @GetMapping("/user/check-email")
     public ModelAndView authenticate(
             @RequestParam(value = "access_token") String accessToken,
