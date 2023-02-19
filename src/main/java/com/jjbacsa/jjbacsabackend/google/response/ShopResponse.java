@@ -18,11 +18,10 @@ public class ShopResponse {
     private String formatted_phone_number;
     private String open_now;
     private String businessDay;
-    //todo: 사진
-
     private Integer totalRating;
     private Integer ratingCount;
     private double dist;
+    private String photoToken;
 
     public boolean setShopCount(Integer totalRating, Integer ratingCount) {
         try {

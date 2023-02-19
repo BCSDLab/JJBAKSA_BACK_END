@@ -26,6 +26,8 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
@@ -72,12 +74,8 @@ public class GoogleServiceImpl implements GoogleService {
     public ShopQueryResponses searchShopQuery(String query, String type, double x, double y) throws JsonProcessingException {
         String shopStr = null;
 
-        if (type.equals("cafe")) {
-            shopStr = this.callApiByCafeQuery(query);
-        } else if (type.equals("restaurant")) {
-            shopStr = this.callApiByRestaurantQuery(query);
-        } else {
-            //exception 처리
+        if (type.equals("cafe") || type.equals("restaurant")) {
+            shopStr = this.callApiByQuery(query, type);
         }
 
         ShopQueryDto shopQueryDto = this.jsonToShopQueryDto(shopStr);
@@ -134,6 +132,14 @@ public class GoogleServiceImpl implements GoogleService {
             openNow = null;
         }
 
+        String token;
+        try {
+            token = shopApiDto.getPhotos().get(0).getPhoto_reference();
+        } catch (NullPointerException e) {
+            token = null;
+        }
+
+
         ShopResponse shopResponse = ShopResponse.builder()
                 .place_id(shopApiDto.getPlace_id())
                 .name(shopApiDto.getName())
@@ -142,6 +148,7 @@ public class GoogleServiceImpl implements GoogleService {
                 .x(xTemp)
                 .y(yTemp)
                 .open_now(openNow)
+                .photoToken(token)
                 .businessDay(businessDay)
                 .build();
 
@@ -163,25 +170,6 @@ public class GoogleServiceImpl implements GoogleService {
 
         return shopResponse;
     }
-
-    //todo: 사진 구현
-//    @Override
-//    public byte[] getShopPhoto(String photoToken) {
-//
-//        //redirect
-//
-//
-//        byte[] photo = webClient.get().uri(uriBuilder ->
-//                uriBuilder.path("/photo")
-//                        .queryParam("photo_reference", photoToken)
-//                        .queryParam("key", API_KEY)
-//                        .queryParam("maxwidth", 400)
-//                        .build()
-//        ).retrieve().bodyToMono(byte[].class).block();
-//
-//        return photo;
-//
-//    }
 
     private ShopQueryResponses queryDtoToQueryResponses(ShopQueryDto shopQueryDto, double x, double y) {
         List<ShopQueryResponse> shopQueryResponseList = new ArrayList<>();
@@ -209,6 +197,13 @@ public class GoogleServiceImpl implements GoogleService {
                 openNow = null;
             }
 
+            String token;
+            try {
+                token = dto.getPhotos().get(0).getPhoto_reference();
+            } catch (NullPointerException e) {
+                token = null;
+            }
+
             ShopQueryResponse shopQueryResponse = ShopQueryResponse.builder()
                     .place_id(dto.getPlace_id())
                     .name(dto.getName())
@@ -216,6 +211,7 @@ public class GoogleServiceImpl implements GoogleService {
                     .x(xTemp)
                     .y(yTemp)
                     .open_now(openNow)
+                    .photoToken(token)
                     .build();
 
             if (shopQueryResponse.getX() != null && shopQueryResponse.getY() != null) {
@@ -244,26 +240,13 @@ public class GoogleServiceImpl implements GoogleService {
         return shopStr;
     }
 
-    private String callApiByCafeQuery(String query) {
+    private String callApiByQuery(String query, String type) {
         String shopStr = webClient.get().uri(uriBuilder ->
                 uriBuilder.path("/textsearch/json")
                         .queryParam("query", query)
                         .queryParam("key", API_KEY)
                         .queryParam("language", "ko")
-                        .queryParam("type", "cafe")
-                        .build()
-        ).retrieve().bodyToMono(String.class).block();
-
-        return shopStr;
-    }
-
-    private String callApiByRestaurantQuery(String query) {
-        String shopStr = webClient.get().uri(uriBuilder ->
-                uriBuilder.path("/textsearch/json")
-                        .queryParam("query", query)
-                        .queryParam("key", API_KEY)
-                        .queryParam("language", "ko")
-                        .queryParam("type", "restaurant")
+                        .queryParam("type", type)
                         .build()
         ).retrieve().bodyToMono(String.class).block();
 
@@ -350,5 +333,45 @@ public class GoogleServiceImpl implements GoogleService {
                 .build();
 
         this.googleShopRepository.save(shopEntity);
+    }
+
+    @Override
+    public ShopQueryResponses searchShopQueryWithRadius(String query, String type, double x, double y, double radius) throws JsonProcessingException {
+        String shopStr = callApiByQueryWithRadius(query, type, x, y, radius);
+
+        ShopQueryDto shopQueryDto = this.jsonToShopQueryDto(shopStr);
+        ShopQueryResponses shopQueryResponses = this.queryDtoToQueryResponses(shopQueryDto, x, y);
+
+        return shopQueryResponses;
+    }
+
+    private String callApiByQueryWithRadius(String query, String type, double x, double y, double radius) {
+        String locationQuery = String.valueOf(x) + ", " + String.valueOf(y);
+        String shopStr = webClient.get().uri(uriBuilder ->
+                uriBuilder.path("/textsearch/json")
+                        .queryParam("query", query)
+                        .queryParam("key", API_KEY)
+                        .queryParam("language", "ko")
+                        .queryParam("type", type)
+                        .queryParam("location", locationQuery)
+                        .queryParam("radius", radius)
+                        .build()
+        ).retrieve().bodyToMono(String.class).block();
+
+        return shopStr;
+    }
+
+    @Override
+    public String getPhotoUrl(String token) {
+        String uri = UriComponentsBuilder
+                .fromHttpUrl("https://maps.googleapis.com/maps/api/place/photo")
+                .queryParam("key", API_KEY)
+                .queryParam("maxwidth", 400)
+                .queryParam("photo_reference", token)
+                .toUriString();
+
+        System.out.println("uri: " + uri);
+
+        return uri;
     }
 }

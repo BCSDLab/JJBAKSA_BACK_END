@@ -15,8 +15,7 @@ public class ShopQueryResponse {
     private String open_now;
     private Integer totalRating;
     private Integer ratingCount;
-
-    //todo: 사진
+    private String photoToken;
 
     private double dist;
 

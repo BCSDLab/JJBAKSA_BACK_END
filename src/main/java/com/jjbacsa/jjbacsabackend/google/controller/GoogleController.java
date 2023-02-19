@@ -21,14 +21,16 @@ public class GoogleController {
     private final GoogleService googleService;
     private final SearchService searchService;
 
-    //    각 상점마다 검색시 상세조회 수행 (각각에 대해 상세조회 가격이 들어감<- 1000회 17달러)
-//    ex) 한 쿼리에 대해 검색 결과가 100개 나왔으면 1.7달러
-//    거리순 정렬은 불가, 반경 radius 받아서 해당 반경에 있는 상점 반환 기능은 추후 추가 예정
-//    google API 상점 조회 (리뷰 작성, 상점 조회시 사용)
+    /**
+     * 각 상점마다 검색시 상세조회 수행 (각각에 대해 상세조회 가격이 들어감<- 1000회 17달러)
+    ex) 한 쿼리에 대해 검색 결과가 100개 나왔으면 1.7달러
+    거리순 정렬은 불가, 반경 radius 받아서 해당 반경에 있는 상점 반환 기능은 추후 추가 예정
+    google API 상점 조회 (리뷰 작성, 상점 조회시 사용)
+     */
 
     @ApiOperation(
             value = "키워드에 따른 상점 검색",
-            notes = "키워드로 상점 검색하여 상점들을 반환한다." +
+            notes = "키워드로 상점 검색하여 상점들을 반환한다.\n\n" +
                     "Request Body(ShopRequest)\n\n" +
                     "{\n\n     " +
                     "x : 현재 요청자의 경도(x),\n     " +
@@ -89,7 +91,7 @@ public class GoogleController {
 
     @ApiOperation(
             value = "단일 상점 조회",
-            notes = "place_id를 기반으로 단일 상점 정보를 조회한다." +
+            notes = "place_id를 기반으로 단일 상점 정보를 조회한다.\n\n" +
                     "Request Body(ShopRequest)\n\n" +
                     "{\n\n     " +
                     "x : 현재 요청자의 경도(x),\n     " +
@@ -114,23 +116,54 @@ public class GoogleController {
                 .body(googleService.getShopDetails(placeId, shopRequest.getX(), shopRequest.getY()));
     }
 
-    //todo: image
-//    @GetMapping("/photo/{photo_token}")
-//    public ResponseEntity getGoogleShopPhoto(@PathVariable("photo_token") String photoToken) {
-//
-//        return ResponseEntity.ok().build();
-//
-////        byte[] byteArray = googleService.getShopPhoto(photoToken);
-////
-////
-////        return ResponseEntity.ok()
-////                .contentType(MediaType.IMAGE_JPEG)
-////                //.contentType(MediaType.APPLICATION_OCTET_STREAM)
-////                //.contentLength(Base64.getEncoder().encodeToString(byteArray).length())
-////                //.header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().build().toString())
-////                //.body(byteArray);
-////                //.body(Base64.getEncoder().encodeToString(byteArray));
-////                .body(byteArray);
-//    }
+    @ApiOperation(
+            value = "반경에 따른 키워드 상점 검색",
+            notes = "키워드와 반경으로 상점들을 검색하여 반환한다.\n\n" +
+                    "Request Body(ShopRequest)\n\n" +
+                    "{\n\n     " +
+                    "x : 현재 요청자의 경도(x),\n     " +
+                    "y : 현재 요청자의 위도(y)\n     " +
+                    "\n}"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "반경 키워드 상점 조회 결과",
+                    response = ShopQueryResponses.class
+            )
+    })
+    @ApiImplicitParams({
+            @ApiImplicitParam(
+                    name = "type", value = "상점 카테고리(cafe, restaurant)", required = true, dataType = "string", paramType = "path"
+            ),
+            @ApiImplicitParam(
+                    name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "path"
+            ),
+            @ApiImplicitParam(
+                    name = "radius", value = "반경 radius", required = true, dataType = "double", paramType = "path"
+            )
+    })
+    @PreAuthorize("hasRole('NORMAL')")
+    @PostMapping("/google/shops/{type}/{keyword}/{radius}}")
+    public ResponseEntity<ShopQueryResponses> getGoogleShopsByQueryWithRadius(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("type") String type, @PathVariable("keyword") String keyword, @PathVariable("radius") double radius) throws JsonProcessingException {
+        searchService.saveForAutoComplete(keyword);
+        searchService.saveRedis(keyword);
+
+        return ResponseEntity.ok()
+                .body(googleService.searchShopQueryWithRadius(keyword, type, shopRequest.getX(), shopRequest.getY(), radius));
+    }
+
+
+    @ApiOperation(
+            value = "사진 token에 따른 사진 url 반환 ",
+            notes = "키워드와 반경으로 상점들을 검색하여 반환한다.\n\n"
+    )
+    @ApiImplicitParam(name = "token", value = "가져올 사진 token", required = true, dataType = "string", paramType = "path")
+    @PreAuthorize("hasRole('NORMAL')")
+    @GetMapping("/google/photo/{token}")
+    public ResponseEntity<String> getPhotoUrl(@PathVariable("token") String token) {
+        return ResponseEntity.ok()
+                .body(googleService.getPhotoUrl(token));
+    }
 
 }
