@@ -1,51 +1,42 @@
 package com.jjbacsa.jjbacsabackend.util;
 
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConstructorBinding;
+import org.springframework.web.util.UriComponentsBuilder;
 
-@Component
-@Getter
+import java.net.URI;
+import java.util.Map;
+
+@ConstructorBinding
+@ConfigurationProperties("auth-url")
 public class AuthLinkUtil {
-    @Value("${auth-url.web-url}")
-    private String webUrl;
-    @Value("${auth-url.android-url}")
-    private String androidUrl;
-    @Value("${auth-url.ios-url}")
-    private String iosUrl;
+    private final String rootUrl;
+    private final String link;
+    private final Map<String, String> query;
 
-    @Value("${auth-url.google-store-url}")
-    private String googleStoreUrl;
-    @Value("${auth-url.apple-store-url}")
-    private String appleStoreUrl;
-
-    public String getWebUrl(String accessToken, String refreshToken) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(webUrl);
-        return addToken(sb, accessToken, refreshToken).toString();
+    public AuthLinkUtil(String rootUrl, String link, Map<String, String> query) {
+        this.rootUrl = rootUrl;
+        this.link = link;
+        this.query = query;
     }
 
-    public String getAndroidUrl(String accessToken, String refreshToken) {
-        StringBuilder sb = new StringBuilder();
+    public URI getAuthLink(String accessToken, String refreshToken) {
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(rootUrl)
+                .queryParam("link", addToken(link, accessToken, refreshToken));
 
-        sb.append(androidUrl);
-        return addToken(sb, accessToken, refreshToken).toString();
+        for (String key : query.keySet()) {
+            uriComponentsBuilder.queryParam(key, query.get(key));
+        }
+
+        return uriComponentsBuilder.build().toUri();
     }
 
-    public String getIosUrl(String accessToken, String refreshToken) {
-        StringBuilder sb = new StringBuilder();
+    private String addToken(String str, String accessToken, String refreshToken) {
+        StringBuilder sb = new StringBuilder(str);
 
-        sb.append(iosUrl);
-        return addToken(sb, accessToken, refreshToken).toString();
-    }
+        sb.append("?accessToken=").append(accessToken);
+        sb.append("&refreshToken=").append(refreshToken);
 
-
-    private StringBuilder addToken(StringBuilder sb, String accessToken, String refreshToken) {
-        sb.append("?");
-        sb.append("accessToken=").append(accessToken).append("&");
-        sb.append("refreshToken=").append(refreshToken);
-
-        return sb;
+        return sb.toString();
     }
 }
