@@ -132,8 +132,10 @@ slack:
 context-path: "http://localhost:8080"
 
 auth-url:
+  # DynamicLink Prefix
   root-url:
+  # Web URL 설정 (안드로이드, 애플이 아닌 플랫폼)
   link:
-  #DynamicLink에 들어갈 속성 정보
+  # DynamicLink에 들어갈 속성 정보
   query:
     apn:
