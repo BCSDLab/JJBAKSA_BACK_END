@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.post.serviceImpl;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.post.dto.request.PostRequest;
@@ -11,8 +12,7 @@ import com.jjbacsa.jjbacsabackend.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,9 +60,11 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Page<PostResponse> getPosts(String boardType, Integer page, Integer size) {
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
-        return postRepository.findAllPosts(boardType, pageRequest).map(PostMapper.INSTANCE::toPostResponse);
+    public Page<PostResponse> getPosts(String boardType, Pageable pageable) {
+        if(boardType.equals(BoardType.NOTICE.getBoardType()) || boardType.equals(BoardType.POWER_NOTICE.getBoardType())){
+            return postRepository.findAllNotices(pageable).map(PostMapper.INSTANCE::toPostResponse);
+        }
+        else return postRepository.findAllInquiries(pageable).map(PostMapper.INSTANCE::toPostResponse);
     }
 
     private PostEntity createPostEntity(PostRequest postRequest) {

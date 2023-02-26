@@ -11,5 +11,7 @@ public final class ValidationGroups {
 
     public interface Login extends Default {};
 
-    public interface Get extends Default {};
+    public interface NormalCreate extends Default {};
+    public interface AdminCreate extends Default {};
+
 }

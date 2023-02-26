@@ -13,15 +13,18 @@ import javax.validation.constraints.Pattern;
 @NoArgsConstructor
 public class PostRequest {
     @ApiModelProperty(example = "title")
-    @NotNull(groups = {ValidationGroups.Create.class})
+    @NotNull(groups = {ValidationGroups.AdminCreate.class, ValidationGroups.NormalCreate.class})
     private String title;
 
     @ApiModelProperty(example = "content")
+    @NotNull(groups = {ValidationGroups.AdminCreate.class, ValidationGroups.NormalCreate.class})
     private String content;
 
     @ApiModelProperty(example = "NOTICE")
-    @Pattern(regexp = "^(FAQ|NOTICE|INQUIRY)$", message = "올바른 게시글 타입이 아닙니다.",
-    groups = {ValidationGroups.Create.class, ValidationGroups.Get.class})
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Get.class})
+    @Pattern(regexp = "^(FAQ|NOTICE|INQUIRY|POWER_NOTICE)$", message = "올바른 게시글 타입이 아닙니다.",
+            groups = {ValidationGroups.AdminCreate.class})
+    @Pattern(regexp = "^(INQUIRY)$", message = "올바른 게시글 타입이 아닙니다.",
+            groups = {ValidationGroups.NormalCreate.class})
+    @NotNull(groups = {ValidationGroups.Create.class})
     private String boardType;
 }
