@@ -6,12 +6,13 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
+
+import java.net.URI;
 
 public interface UserService {
     UserResponse register(UserRequest request) throws Exception;
 
-    ModelAndView authEmail(String accessToken, String refreshToken) throws Exception;
+    URI authEmail(String accessToken, String refreshToken) throws Exception;
 
     UserResponse modifyNickname(String nickname) throws Exception;
 

@@ -16,6 +16,7 @@ import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,7 +32,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Pattern;
@@ -346,16 +346,18 @@ public class UserController {
     @ApiOperation(
             value = "회원가입 이메일 인증용 API",
             notes = "회원가입 이메일 인증\n\n" +
-                    "리다이렉션용 뷰 반환\n\n" +
                     "\n\n\taccess_token : 이메일에 전송한 링크에 포함된 access_token" +
                     "\n\n\trefresh_token : 이메일에 전송한 링크에 포함된 refresh_token"
     )
     @GetMapping("/user/check-email")
-    public ModelAndView authenticate(
+    public ResponseEntity<?> authenticate(
             @RequestParam(value = "access_token") String accessToken,
             @RequestParam(value = "refresh_token") String refreshToken) throws Exception {
 
-        return userService.authEmail(accessToken, refreshToken);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setLocation(userService.authEmail(accessToken, refreshToken));
+
+        return new ResponseEntity<>(httpHeaders, HttpStatus.MOVED_PERMANENTLY);
     }
 
     @ApiOperation(

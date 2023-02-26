@@ -32,9 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -73,7 +73,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public ModelAndView authEmail(String accessToken, String refreshToken) throws Exception {
+    public URI authEmail(String accessToken, String refreshToken) throws Exception {
         jwtUtil.isValid("Bearer " + accessToken, TokenType.ACCESS);
 
         Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(accessToken).get("id")));
@@ -86,16 +86,7 @@ public class UserServiceImpl implements UserService {
 
         user.setAuthEmail(true);
 
-        return getAuthPage(accessToken, refreshToken);
-    }
-
-    private ModelAndView getAuthPage(String accessToken, String refreshToken) throws Exception {
-        ModelAndView modelAndView = new ModelAndView("AuthLinkView");
-        modelAndView.addObject("linkUtil", authLinkUtil);
-        modelAndView.addObject("accessToken", accessToken);
-        modelAndView.addObject("refreshToken", refreshToken);
-
-        return modelAndView;
+        return authLinkUtil.getAuthLink(accessToken, refreshToken);
     }
 
     @Transactional
