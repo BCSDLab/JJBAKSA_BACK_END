@@ -349,6 +349,7 @@ public class UserController {
                     "\n\n\taccess_token : 이메일에 전송한 링크에 포함된 access_token" +
                     "\n\n\trefresh_token : 이메일에 전송한 링크에 포함된 refresh_token"
     )
+    @ResponseStatus(HttpStatus.MOVED_PERMANENTLY)
     @GetMapping("/user/check-email")
     public ResponseEntity<?> authenticate(
             @RequestParam(value = "access_token") String accessToken,

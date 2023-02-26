@@ -132,8 +132,8 @@ slack:
 context-path: "http://localhost:8080"
 
 auth-url:
-  web-url: "https://www.jjbaksa.com"
-  android-url:
-  ios-url:
-  google-store-url:
-  apple-store-url: "
+  root-url:
+  link:
+  #DynamicLink에 들어갈 속성 정보
+  query:
+    apn:
