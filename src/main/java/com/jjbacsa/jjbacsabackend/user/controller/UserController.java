@@ -327,9 +327,9 @@ public class UserController {
                     "\n\nKAKAO, NAVER : Access Token" +
                     "\n\nAPPLE, GOOGLE : Id Token"
     )
-    @PostMapping(value = "/login/{snsType}")
+    @PostMapping(value = "/login/{sns-type}")
     public ResponseEntity<Token> snsLogin(
-            @PathVariable(name = "snsType") OAuthType oAuthType
+            @PathVariable(name = "sns-type") OAuthType oAuthType
             ) throws Exception {
         return new ResponseEntity<>(oAuth2UserService.oAuthLoginByToken(oAuthType), HttpStatus.OK);
     }
