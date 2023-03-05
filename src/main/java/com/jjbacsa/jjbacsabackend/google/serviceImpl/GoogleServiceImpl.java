@@ -26,7 +26,6 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
-import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.netty.http.client.HttpClient;
 
@@ -75,7 +74,7 @@ public class GoogleServiceImpl implements GoogleService {
         String shopStr = null;
 
         if (type.equals("cafe") || type.equals("restaurant")) {
-            shopStr = this.callApiByQuery(query, type);
+            shopStr = this.callApiByQuery(query, type, x, y);
         }
 
         ShopQueryDto shopQueryDto = this.jsonToShopQueryDto(shopStr);
@@ -240,13 +239,16 @@ public class GoogleServiceImpl implements GoogleService {
         return shopStr;
     }
 
-    private String callApiByQuery(String query, String type) {
+    private String callApiByQuery(String query, String type, double x, double y) {
+        String locationQuery = String.valueOf(x) + ", " + String.valueOf(y);
+
         String shopStr = webClient.get().uri(uriBuilder ->
                 uriBuilder.path("/textsearch/json")
                         .queryParam("query", query)
                         .queryParam("key", API_KEY)
                         .queryParam("language", "ko")
                         .queryParam("type", type)
+                        .queryParam("location", locationQuery)
                         .build()
         ).retrieve().bodyToMono(String.class).block();
 
