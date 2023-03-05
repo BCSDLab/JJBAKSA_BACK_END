@@ -34,28 +34,28 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public TrendingResponse getTrending() {
+    public TrendingResponse getTrending(String key) {
         return TrendingResponse.builder().
-                trendings(redisTemplate.opsForZSet().reverseRange(KEY, 0, -1).stream().collect(Collectors.toList()))
+                trendings(redisTemplate.opsForZSet().reverseRange(key, 0, -1).stream().collect(Collectors.toList()))
                 .build();
     }
 
     @Override
-    public void saveRedis(String keyword) {
-        List<String> rankingList = redisTemplate.opsForZSet().reverseRange(KEY, 0, -1).stream().collect(Collectors.toList());
+    public void saveRedis(String keyword, String key) {
+        List<String> rankingList = redisTemplate.opsForZSet().reverseRange(key, 0, -1).stream().collect(Collectors.toList());
 
-        redisTemplate.opsForZSet().incrementScore(KEY, keyword, 2);
+        redisTemplate.opsForZSet().incrementScore(key, keyword, 2);
 
         for (String ranking : rankingList) {
             if (!ranking.equals(keyword)) {
-                redisTemplate.opsForZSet().incrementScore(KEY, ranking, -1);
+                redisTemplate.opsForZSet().incrementScore(key, ranking, -1);
             }
         }
 
-        long size = redisTemplate.opsForZSet().zCard(KEY);
+        long size = redisTemplate.opsForZSet().zCard(key);
         if (size > 10) {
             long offset = size - 10;
-            redisTemplate.opsForZSet().removeRange(KEY, 0, offset - 1);
+            redisTemplate.opsForZSet().removeRange(key, 0, offset - 1);
         }
 
     }

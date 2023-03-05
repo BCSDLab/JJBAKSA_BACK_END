@@ -22,6 +22,7 @@ public class ShopController {
 
     private final ShopService shopService;
     private final SearchService searchService;
+    private final String KEY = "RANKING";
 
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value = "/shop/{placeId}")
@@ -65,7 +66,7 @@ public class ShopController {
     public ResponseEntity<Page<ShopSummaryResponse>> searchShop(@RequestBody @Valid ShopRequest shopRequest,
                                                                 @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
                                                                 @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
-        searchService.saveRedis(shopRequest.getKeyword());
+        searchService.saveRedis(shopRequest.getKeyword(),KEY);
         searchService.saveForAutoComplete(shopRequest.getKeyword());
 
         return new ResponseEntity<>(shopService.searchShop(shopRequest, page, size), HttpStatus.OK);

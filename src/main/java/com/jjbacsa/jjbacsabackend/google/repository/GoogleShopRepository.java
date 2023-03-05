@@ -6,6 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface GoogleShopRepository extends JpaRepository<GoogleShopEntity, Long> {
-    boolean existsByPlaceId(String placeId);
     GoogleShopEntity findByPlaceId(String placeId);
 }

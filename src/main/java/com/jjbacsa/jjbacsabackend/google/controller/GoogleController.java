@@ -20,12 +20,13 @@ public class GoogleController {
 
     private final GoogleService googleService;
     private final SearchService searchService;
+    private final String KEY = "RANKING";
 
     /**
      * 각 상점마다 검색시 상세조회 수행 (각각에 대해 상세조회 가격이 들어감<- 1000회 17달러)
-    ex) 한 쿼리에 대해 검색 결과가 100개 나왔으면 1.7달러
-    거리순 정렬은 불가, 반경 radius 받아서 해당 반경에 있는 상점 반환 기능은 추후 추가 예정
-    google API 상점 조회 (리뷰 작성, 상점 조회시 사용)
+     * ex) 한 쿼리에 대해 검색 결과가 100개 나왔으면 1.7달러
+     * 거리순 정렬은 불가, 반경 radius 받아서 해당 반경에 있는 상점 반환 기능은 추후 추가 예정
+     * google API 상점 조회 (리뷰 작성, 상점 조회시 사용)
      */
 
     @ApiOperation(
@@ -57,7 +58,7 @@ public class GoogleController {
     @PostMapping("/google/shops/{type}/{keyword}")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("type") String type, @PathVariable("keyword") String keyword) throws JsonProcessingException {
         searchService.saveForAutoComplete(keyword);
-        searchService.saveRedis(keyword);
+        searchService.saveRedis(keyword, KEY);
 
         return ResponseEntity.ok()
                 .body(googleService.searchShopQuery(keyword, type, shopRequest.getX(), shopRequest.getY()));
@@ -147,7 +148,7 @@ public class GoogleController {
     @PostMapping("/google/shops/{type}/{keyword}/{radius}}")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsByQueryWithRadius(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("type") String type, @PathVariable("keyword") String keyword, @PathVariable("radius") double radius) throws JsonProcessingException {
         searchService.saveForAutoComplete(keyword);
-        searchService.saveRedis(keyword);
+        searchService.saveRedis(keyword, KEY);
 
         return ResponseEntity.ok()
                 .body(googleService.searchShopQueryWithRadius(keyword, type, shopRequest.getX(), shopRequest.getY(), radius));

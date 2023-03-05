@@ -7,9 +7,9 @@ public interface SearchService {
 
     AutoCompleteResponse getAutoCompletes(String word);
 
-    TrendingResponse getTrending();
+    TrendingResponse getTrending(String key);
 
-    void saveRedis(String keyword);
+    void saveRedis(String keyword, String key);
 
     void saveForAutoComplete(String keyword);
 }
