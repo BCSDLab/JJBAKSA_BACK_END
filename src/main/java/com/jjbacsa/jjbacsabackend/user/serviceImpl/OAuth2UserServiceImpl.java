@@ -1,16 +1,20 @@
 package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.OAuthInfoEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.oauth.OAuth2UserInfo;
 import com.jjbacsa.jjbacsabackend.user.entity.oauth.OAuth2UserInfoFactory;
 import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
+import com.jjbacsa.jjbacsabackend.user.service.SnsLogin;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +28,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -36,6 +40,7 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
     private final OAuthInfoRepository oAuthInfoRepository;
     private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
+    private final List<SnsLogin> snsLoginList;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -44,32 +49,15 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
         return processOAuth2User(userRequest, oAuth2User);
     }
 
-    public Token appleLogin() throws Exception {
+    @Transactional
+    public Token oAuthLoginByToken(OAuthType oAuthType) throws Exception {
+        SnsLogin snsLogin = this.initSnsService(oAuthType);
+
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
-        String idToken = request.getHeader("Authorization");
+        String token = request.getHeader("Authorization");
 
-        Map<String, Object> payloads = jwtUtil.getPayloadsFromJwt(idToken);
-
-        Optional<OAuthInfoEntity> oauthOptional =
-                oAuthInfoRepository.findByApiKeyAndOauthType(String.valueOf(payloads.get("sub")), OAuthType.APPLE);
-
-        UserEntity user = UserEntity.builder()
-                .email(String.valueOf(payloads.get("email")))
-                .nickname("APPLE_" + String.valueOf(payloads.get("sub")).substring(15, 20))
-                .userType(UserType.NORMAL)
-                .authEmail(true)
-                .build();
-
-        if(oauthOptional.isEmpty()) {
-            OAuthInfoEntity oAuthInfoEntity = OAuthInfoEntity.builder()
-                    .oauthType(OAuthType.APPLE)
-                    .apiKey(String.valueOf(payloads.get("sub")))
-                    .user(user)
-                    .build();
-
-            oAuthInfoRepository.save(oAuthInfoEntity);
-        }
+        UserResponse user = snsLogin.snsLoginByToken(token);
 
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
 
@@ -122,5 +110,16 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
                 .build();
 
         oAuthInfoRepository.save(oAuthInfoEntity);
+    }
+
+    private SnsLogin initSnsService(OAuthType oAuthType) throws Exception {
+
+        for(SnsLogin snsLogin : snsLoginList){
+            if(snsLogin.getOAuthType().equals(oAuthType)) {
+                return snsLogin;
+            }
+        }
+
+        throw new RequestInputException(ErrorMessage.INVALID_TOKEN_TYPE);
     }
 }
