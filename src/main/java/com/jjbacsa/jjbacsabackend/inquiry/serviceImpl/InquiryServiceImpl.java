@@ -29,6 +29,7 @@ public class InquiryServiceImpl implements InquiryService{
     private final InquiryRepository inquiryRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public InquiryResponse getInquiry(Long inquiryId) throws Exception {
         InquiryEntity inquiry = getInquiryEntity(inquiryId);
         InquiryResponse response = InquiryMapper.INSTANCE.toInquiryResponse(inquiry);
@@ -37,6 +38,7 @@ public class InquiryServiceImpl implements InquiryService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public InquiryResponse getInquiryWithSecret(Long inquiryId, String secret) {
         InquiryEntity inquiry = getInquiryEntity(inquiryId);
         if (inquiry.getSecret() == null || !passwordEncoder.matches(secret, inquiry.getSecret())) {
