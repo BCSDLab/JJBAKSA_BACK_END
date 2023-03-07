@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.user.controller;
 
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
@@ -32,10 +33,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.net.URI;
 
 @RequiredArgsConstructor
 @RestController
@@ -356,9 +360,20 @@ public class UserController {
             @RequestParam(value = "refresh_token") String refreshToken) throws Exception {
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setLocation(userService.authEmail(accessToken, refreshToken));
+        try {
+            httpHeaders.setLocation(userService.authEmail(accessToken, refreshToken));
+        }
+        catch (RequestInputException exception) {
+            httpHeaders.setLocation(URI.create("../email-error"));
+        }
 
         return new ResponseEntity<>(httpHeaders, HttpStatus.MOVED_PERMANENTLY);
+    }
+
+    @ApiIgnore
+    @GetMapping("/email-error")
+    public ModelAndView getEmailErrorPage() {
+        return new ModelAndView("authenticate-failed");
     }
 
     @ApiOperation(

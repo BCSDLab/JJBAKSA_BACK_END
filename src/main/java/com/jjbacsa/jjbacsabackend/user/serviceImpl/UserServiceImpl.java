@@ -81,8 +81,7 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
-        if (!emailService.linkCertification(user.getEmail()))
-            throw new RequestInputException(ErrorMessage.EMAIL_EXPIRED_EXCEPTION);
+        emailService.linkCertification(user.getEmail());
 
         user.setAuthEmail(true);
 
