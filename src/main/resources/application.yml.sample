@@ -104,6 +104,11 @@ cloud:
       profile-url-format:
     stack:
       auto: false
+    ses:
+      access-key:
+      secret-key:
+      domain: jjbaksa.com
+
 
 spring:
   config:
@@ -130,6 +135,9 @@ slack:
   url: https://hooks.slack.com/services/~~~~
 
 context-path: "http://localhost:8080"
+
+#메인 페이지
+home-url: "stage.jjbaksa.com"
 
 auth-url:
   # DynamicLink Prefix
