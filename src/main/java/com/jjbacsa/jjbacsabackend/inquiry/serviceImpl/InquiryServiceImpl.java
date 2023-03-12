@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 @Transactional
-public class InquiryServiceImpl implements InquiryService{
+public class InquiryServiceImpl implements InquiryService {
     private final InternalUserService userService;
     private final PasswordEncoder passwordEncoder;
 
@@ -33,7 +33,7 @@ public class InquiryServiceImpl implements InquiryService{
     public InquiryResponse getInquiry(Long inquiryId) throws Exception {
         InquiryEntity inquiry = getInquiryEntity(inquiryId);
         InquiryResponse response = InquiryMapper.INSTANCE.toInquiryResponse(inquiry);
-        if(inquiry.getIsSecreted() == 1 && checkNormalUser()) response.setSecret();
+        if (inquiry.getIsSecreted() == 1 && checkNormalUser()) response.setSecret();
         return response;
     }
 
@@ -57,15 +57,15 @@ public class InquiryServiceImpl implements InquiryService{
     public InquiryResponse modify(InquiryRequest inquiryRequest, Long inquiryId) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
         InquiryEntity inquiry = getInquiryEntity(inquiryId);
-        if(inquiry.getWriter().equals(userEntity)) inquiry.update(inquiryRequest);
+        if (inquiry.getWriter().equals(userEntity)) inquiry.update(inquiryRequest);
         return InquiryMapper.INSTANCE.toInquiryResponse(inquiry);
     }
 
     @Override
-    public void delete(Long inquiryId) throws Exception{
+    public void delete(Long inquiryId) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
         InquiryEntity inquiry = getInquiryEntity(inquiryId);
-        if(inquiry.getWriter().equals(userEntity)) inquiryRepository.deleteById(inquiryId);
+        if (inquiry.getWriter().equals(userEntity)) inquiryRepository.deleteById(inquiryId);
         else throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_INQUIRY);
     }
 
@@ -76,7 +76,7 @@ public class InquiryServiceImpl implements InquiryService{
         return InquiryMapper.INSTANCE.toInquiryResponse(inquiry);
     }
 
-    private InquiryEntity getInquiryEntity(Long inquiryId){
+    private InquiryEntity getInquiryEntity(Long inquiryId) {
         return inquiryRepository.findById(inquiryId).orElseThrow(
                 () -> new RequestInputException(ErrorMessage.INQUIRY_NOT_EXISTS_EXCEPTION));
     }
@@ -84,12 +84,12 @@ public class InquiryServiceImpl implements InquiryService{
     private InquiryEntity createInquiryEntity(InquiryRequest inquiryRequest) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
         InquiryEntity inquiry = InquiryEntity.builder()
-                                .writer(userEntity)
-                                .title(inquiryRequest.getTitle())
-                                .content(inquiryRequest.getContent())
-                                .build();
-        if(inquiryRequest.getSecret()!=null){
-           inquiry.setSecret(passwordEncoder.encode(inquiryRequest.getSecret()));
+                .writer(userEntity)
+                .title(inquiryRequest.getTitle())
+                .content(inquiryRequest.getContent())
+                .build();
+        if (inquiryRequest.getSecret() != null) {
+            inquiry.setSecret(passwordEncoder.encode(inquiryRequest.getSecret()));
         }
         return inquiry;
     }
