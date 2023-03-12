@@ -29,6 +29,7 @@ public class InquiryController {
                     message = "읽어온 Inquiry 정보",
                     response = InquiryResponse.class)
     })
+    @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value = "/inquiry/{inquiryId}")
     public ResponseEntity<InquiryResponse> get(@ApiParam("조회할 Inquiry id") @PathVariable Long inquiryId) throws Exception {
         return new ResponseEntity<>(inquiryService.getInquiry(inquiryId), HttpStatus.OK);
@@ -46,6 +47,7 @@ public class InquiryController {
                     message = "읽어온 Inquiry 정보",
                     response = InquiryResponse.class)
     })
+    @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value = "/inquiry/{inquiryId}/secret")
     public ResponseEntity<InquiryResponse> get(@ApiParam("조회할 Inquiry id") @PathVariable Long inquiryId, @RequestParam(value = "secret") String secret) throws Exception {
         return new ResponseEntity<>(inquiryService.getInquiryWithSecret(inquiryId, secret), HttpStatus.OK);
@@ -64,6 +66,7 @@ public class InquiryController {
                     message = "작성한 Inquiry 정보",
                     response = InquiryResponse.class)
     })
+    @PreAuthorize("hasRole('NORMAL')")
     @PostMapping(value = "/inquiry")
     public ResponseEntity<InquiryResponse> create(@RequestBody InquiryRequest inquiryRequest) throws Exception {
         // Validate
@@ -83,6 +86,7 @@ public class InquiryController {
                     message = "수정한 Inquiry 정보",
                     response = InquiryResponse.class)
     })
+    @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping(value = "/inquiry/{inquiryId}")
     public ResponseEntity<InquiryResponse> modify(@RequestBody InquiryRequest inquiryRequest, @ApiParam("수정할 Inquiry Id") @PathVariable Long inquiryId) throws Exception {
         return new ResponseEntity<>(inquiryService.modify(inquiryRequest, inquiryId), HttpStatus.OK);
@@ -98,6 +102,7 @@ public class InquiryController {
             @ApiResponse(code = 204,
                     message = "반환값 없음")
     })
+    @PreAuthorize("hasRole('NORMAL')")
     @DeleteMapping(value = "/inquiry/{inquiryId}")
     public ResponseEntity<Void> delete(@ApiParam("삭제할 Inquiry Id") @PathVariable Long inquiryId) throws Exception {
         inquiryService.delete(inquiryId);
