@@ -30,8 +30,8 @@ public class InquiryController {
                     response = InquiryResponse.class)
     })
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping(value = "/inquiry/{inquiryId}")
-    public ResponseEntity<InquiryResponse> get(@ApiParam("조회할 Inquiry id") @PathVariable Long inquiryId) throws Exception {
+    @GetMapping(value = "/inquiry/{inquiry-id}")
+    public ResponseEntity<InquiryResponse> get(@ApiParam("조회할 Inquiry id") @PathVariable("inquiry-id") Long inquiryId) throws Exception {
         return new ResponseEntity<>(inquiryService.getInquiry(inquiryId), HttpStatus.OK);
     }
 
@@ -48,8 +48,8 @@ public class InquiryController {
                     response = InquiryResponse.class)
     })
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping(value = "/inquiry/{inquiryId}/secret")
-    public ResponseEntity<InquiryResponse> get(@ApiParam("조회할 Inquiry id") @PathVariable Long inquiryId, @RequestParam(value = "secret") String secret) throws Exception {
+    @GetMapping(value = "/inquiry/{inquiry-id}/secret")
+    public ResponseEntity<InquiryResponse> get(@ApiParam("조회할 Inquiry id") @PathVariable("inquiry-id") Long inquiryId, @RequestParam(value = "secret") String secret) throws Exception {
         return new ResponseEntity<>(inquiryService.getInquiryWithSecret(inquiryId, secret), HttpStatus.OK);
     }
 
@@ -87,8 +87,8 @@ public class InquiryController {
                     response = InquiryResponse.class)
     })
     @PreAuthorize("hasRole('NORMAL')")
-    @PatchMapping(value = "/inquiry/{inquiryId}")
-    public ResponseEntity<InquiryResponse> modify(@RequestBody InquiryRequest inquiryRequest, @ApiParam("수정할 Inquiry Id") @PathVariable Long inquiryId) throws Exception {
+    @PatchMapping(value = "/inquiry/{inquiry-id}")
+    public ResponseEntity<InquiryResponse> modify(@RequestBody InquiryRequest inquiryRequest, @ApiParam("수정할 Inquiry Id") @PathVariable("inquiry-id") Long inquiryId) throws Exception {
         return new ResponseEntity<>(inquiryService.modify(inquiryRequest, inquiryId), HttpStatus.OK);
     }
 
@@ -103,8 +103,8 @@ public class InquiryController {
                     message = "반환값 없음")
     })
     @PreAuthorize("hasRole('NORMAL')")
-    @DeleteMapping(value = "/inquiry/{inquiryId}")
-    public ResponseEntity<Void> delete(@ApiParam("삭제할 Inquiry Id") @PathVariable Long inquiryId) throws Exception {
+    @DeleteMapping(value = "/inquiry/{inquiry-id}")
+    public ResponseEntity<Void> delete(@ApiParam("삭제할 Inquiry Id") @PathVariable("inquiry-id") Long inquiryId) throws Exception {
         inquiryService.delete(inquiryId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -121,8 +121,8 @@ public class InquiryController {
                     response = InquiryResponse.class)
     })
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping(value = "/admin/inquiry/{inquiryId}")
-    public ResponseEntity<InquiryResponse> answer(@RequestBody AnswerRequest answerRequest, @ApiParam("답변할 Inquiry Id") @PathVariable Long inquiryId){
+    @PatchMapping(value = "/admin/inquiry/{inquiry-id}")
+    public ResponseEntity<InquiryResponse> answer(@RequestBody AnswerRequest answerRequest, @ApiParam("답변할 Inquiry Id") @PathVariable("inquiry-id") Long inquiryId){
         return new ResponseEntity<>(inquiryService.addAnswer(answerRequest, inquiryId), HttpStatus.OK);
     }
 }
