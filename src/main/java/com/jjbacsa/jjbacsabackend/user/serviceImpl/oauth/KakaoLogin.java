@@ -51,8 +51,8 @@ public class KakaoLogin extends TokenSnsLogin {
                 oAuthInfoRepository.findByApiKeyAndOauthType(apiKey, this.getOAuthType());
 
         ImageEntity imageEntity = ImageEntity.builder()
-                .path((String) profile.get("profile_image_url"))
-                .url((String) profile.get("profile_image_url"))
+                .path(String.valueOf(profile.get("profile_image_url")))
+                .url(String.valueOf(profile.get("profile_image_url")))
                 .originalName("original_name")
                 .build();
 
@@ -64,7 +64,7 @@ public class KakaoLogin extends TokenSnsLogin {
                 .authEmail(true)
                 .build();
 
-        if(oauthOptional.isEmpty()) {
+        if (oauthOptional.isEmpty()) {
             OAuthInfoEntity oAuthInfoEntity = OAuthInfoEntity.builder()
                     .oauthType(this.getOAuthType())
                     .apiKey(apiKey)

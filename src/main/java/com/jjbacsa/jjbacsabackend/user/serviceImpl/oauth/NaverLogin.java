@@ -46,7 +46,7 @@ public class NaverLogin extends TokenSnsLogin {
         JSONObject obj = (JSONObject) jsonObject.get("response");
 
         String apiKey = String.valueOf(obj.get("id"));
-        String profile = (String) obj.get("profile_image");
+        String profile = String.valueOf(obj.get("profile_image"));
 
         Optional<OAuthInfoEntity> oauthOptional =
                 oAuthInfoRepository.findByApiKeyAndOauthType(apiKey, this.getOAuthType());
@@ -65,7 +65,7 @@ public class NaverLogin extends TokenSnsLogin {
                 .authEmail(true)
                 .build();
 
-        if(oauthOptional.isEmpty()) {
+        if (oauthOptional.isEmpty()) {
             OAuthInfoEntity oAuthInfoEntity = OAuthInfoEntity.builder()
                     .oauthType(this.getOAuthType())
                     .apiKey(apiKey)

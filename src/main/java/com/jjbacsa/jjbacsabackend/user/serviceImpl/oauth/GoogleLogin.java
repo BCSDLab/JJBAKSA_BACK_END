@@ -49,7 +49,7 @@ public class GoogleLogin implements SnsLogin {
                 .authEmail(true)
                 .build();
 
-        if(oauthOptional.isEmpty()) {
+        if (oauthOptional.isEmpty()) {
             OAuthInfoEntity oAuthInfoEntity = OAuthInfoEntity.builder()
                     .oauthType(this.getOAuthType())
                     .apiKey(String.valueOf(claims.getPayload().get("sub")))
@@ -68,19 +68,19 @@ public class GoogleLogin implements SnsLogin {
     }
 
     private GoogleIdToken verifyToken(String idToken) throws Exception {
-            HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-            JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+        HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
-            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(httpTransport, jsonFactory)
-                    .setAudience(Collections.singletonList(GOOGLE_CLIENT_ID))
-                    .build();
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(httpTransport, jsonFactory)
+                .setAudience(Collections.singletonList(GOOGLE_CLIENT_ID))
+                .build();
 
-            GoogleIdToken googleIdToken = verifier.verify(idToken);
+        GoogleIdToken googleIdToken = verifier.verify(idToken);
 
-            if (googleIdToken == null) {
-                throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
-            }
+        if (googleIdToken == null) {
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
+        }
 
-            return googleIdToken;
+        return googleIdToken;
     }
 }

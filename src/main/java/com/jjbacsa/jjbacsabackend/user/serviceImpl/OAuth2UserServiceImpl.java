@@ -94,7 +94,7 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
                 .build();
 
         // 회원 가입
-        if(oauthOptional.isEmpty()) {
+        if (oauthOptional.isEmpty()) {
             registerOAuth(oAuth2UserInfo, user);
         }
 
@@ -114,8 +114,8 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
 
     private SnsLogin initSnsService(OAuthType oAuthType) throws Exception {
 
-        for(SnsLogin snsLogin : snsLoginList){
-            if(snsLogin.getOAuthType().equals(oAuthType)) {
+        for (SnsLogin snsLogin : snsLoginList) {
+            if (snsLogin.getOAuthType().equals(oAuthType)) {
                 return snsLogin;
             }
         }

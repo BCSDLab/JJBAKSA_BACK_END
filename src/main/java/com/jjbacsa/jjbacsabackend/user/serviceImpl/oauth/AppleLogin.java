@@ -64,7 +64,7 @@ public class AppleLogin implements SnsLogin {
                 .authEmail(true)
                 .build();
 
-        if(oauthOptional.isEmpty()) {
+        if (oauthOptional.isEmpty()) {
             OAuthInfoEntity oAuthInfoEntity = OAuthInfoEntity.builder()
                     .oauthType(this.getOAuthType())
                     .apiKey(String.valueOf(claims.get("sub")))
@@ -99,7 +99,7 @@ public class AppleLogin implements SnsLogin {
 
             return Optional.ofNullable(this.validateIdToken(identityToken, publicKey, APPLE_CLIENT_ID));
 
-        } catch (JsonProcessingException | NoSuchAlgorithmException | InvalidKeySpecException e){
+        } catch (JsonProcessingException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
         }
     }
@@ -123,8 +123,8 @@ public class AppleLogin implements SnsLogin {
 
         String kid = header.get("kid");
 
-        for(Key key : keyList){
-            if(key.getKid().equals(kid)){
+        for (Key key : keyList) {
+            if (key.getKid().equals(kid)) {
                 return key;
             }
         }
