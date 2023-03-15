@@ -3,26 +3,44 @@ package com.jjbacsa.jjbacsabackend.user.controller;
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.OAuth2UserServiceImpl;
-import io.swagger.annotations.*;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.net.URI;
 
 @RequiredArgsConstructor
 @RestController
@@ -335,23 +353,32 @@ public class UserController {
     }
 
     @ApiOperation(
-            value = "회원가입 이메일 인증",
+            value = "회원가입 이메일 인증용 API",
             notes = "회원가입 이메일 인증\n\n" +
                     "\n\n\taccess_token : 이메일에 전송한 링크에 포함된 access_token" +
                     "\n\n\trefresh_token : 이메일에 전송한 링크에 포함된 refresh_token"
     )
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiResponses({
-            @ApiResponse(code = 204,
-                    message = "반환값 없음")
-    })
+    @ResponseStatus(HttpStatus.MOVED_PERMANENTLY)
     @GetMapping("/user/check-email")
-    public ResponseEntity<Void> authenticate(
+    public ResponseEntity<?> authenticate(
             @RequestParam(value = "access_token") String accessToken,
             @RequestParam(value = "refresh_token") String refreshToken) throws Exception {
-        userService.authEmail(accessToken, refreshToken);
 
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        try {
+            httpHeaders.setLocation(userService.authEmail(accessToken, refreshToken));
+        }
+        catch (RequestInputException exception) {
+            httpHeaders.setLocation(URI.create("../email-error"));
+        }
+
+        return new ResponseEntity<>(httpHeaders, HttpStatus.MOVED_PERMANENTLY);
+    }
+
+    @ApiIgnore
+    @GetMapping("/email-error")
+    public ModelAndView getEmailErrorPage() {
+        return new ModelAndView("authenticate-failed");
     }
 
     @ApiOperation(
@@ -374,5 +401,6 @@ public class UserController {
                                                            @RequestParam String nickname) throws Exception {
         return new ResponseEntity<>(userService.modifyNickname(nickname), HttpStatus.OK);
     }
+
 
 }

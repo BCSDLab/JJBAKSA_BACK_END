@@ -14,10 +14,11 @@ import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
-import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
+import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.util.AuthLinkUtil;
 import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
@@ -33,6 +34,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -50,6 +52,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
     private final ImageUtil imageUtil;
+    private final AuthLinkUtil authLinkUtil;
 
     @Override
     @Transactional
@@ -70,7 +73,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void authEmail(String accessToken, String refreshToken) throws Exception {
+    public URI authEmail(String accessToken, String refreshToken) throws Exception {
         jwtUtil.isValid("Bearer " + accessToken, TokenType.ACCESS);
 
         Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(accessToken).get("id")));
@@ -78,10 +81,11 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
 
-        if (!emailService.linkCertification(user.getEmail()))
-            throw new RequestInputException(ErrorMessage.EMAIL_EXPIRED_EXCEPTION);
+        emailService.linkCertification(user.getEmail());
 
         user.setAuthEmail(true);
+
+        return authLinkUtil.getAuthLink(accessToken, refreshToken);
     }
 
     @Transactional
@@ -109,7 +113,7 @@ public class UserServiceImpl implements UserService {
             throw new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION);
         }
 
-        if(!user.isAuthEmail()) {
+        if (!user.isAuthEmail()) {
             throw new RequestInputException(ErrorMessage.INVALID_AUTHENTICATE_EMAIL);
         }
 
@@ -233,13 +237,13 @@ public class UserServiceImpl implements UserService {
     //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
     @Override
     @Transactional
-    public void sendAuthEmailCode(String email) throws Exception{
+    public void sendAuthEmailCode(String email) throws Exception {
         emailService.sendAuthEmailCode(email);
     }
 
     @Override
     @Transactional
-    public void sendAuthEmailLink(String email) throws Exception{
+    public void sendAuthEmailLink(String email) throws Exception {
         emailService.sendAuthEmailLink(email);
     }
 
@@ -256,7 +260,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public String findPassword(EmailRequest request) throws Exception{
+    public String findPassword(EmailRequest request) throws Exception {
 
         UserEntity user = userService.getUserByAccount(request.getAccount());
 
