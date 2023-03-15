@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>쩝쩝박사 회원가입 인증 실패</title>
+</head>
+
+<body>
+<span id="home-url" th:data-contextPath="${@environment.getProperty('home-url')}"/>
+<script type="text/javascript" th:inline="javascript">
+    alert('이메일 인증에 실패했습니다.\n새로 인증을 시도해주세요.');
+    location.href = "//" + document.querySelector("#home-url").getAttribute("data-contextPath");
+</script>
+</body>
+</html>
