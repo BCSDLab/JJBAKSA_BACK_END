@@ -84,6 +84,9 @@ dependencies {
 
 	// ConfigurationProperties
 	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+	// https://mvnrepository.com/artifact/com.google.api-client/google-api-client
+	implementation group: 'com.google.api-client', name: 'google-api-client', version: '2.2.0'
 }
 
 def querydslDir = "$buildDir/generated/querydsl"

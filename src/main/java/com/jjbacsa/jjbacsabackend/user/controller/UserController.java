@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.user.controller;
 
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
@@ -337,14 +338,18 @@ public class UserController {
     }
 
     @ApiOperation(
-            value = "APPLE 로그인",
-            notes = "APPLE 로그인\n\n" +
+            value = "소셜 로그인",
+            notes = "소셜 로그인\n\n" +
                     "필요 헤더\n\n" +
-                    "\n\n\tAuthorization : 클라이언트 측에서 발급 받은 id token"
+                    "\n\n\tAuthorization : 클라이언트 측에서 발급 받은 token" +
+                    "\n\nKAKAO, NAVER : Access Token" +
+                    "\n\nAPPLE, GOOGLE : Id Token"
     )
-    @PostMapping(value = "/login/apple")
-    public ResponseEntity<Token> oauth2AppleLogin() throws Exception {
-        return new ResponseEntity<>(oAuth2UserService.appleLogin(), HttpStatus.OK);
+    @PostMapping(value = "/login/{sns-type}")
+    public ResponseEntity<Token> snsLogin(
+            @PathVariable(name = "sns-type") OAuthType oAuthType
+            ) throws Exception {
+        return new ResponseEntity<>(oAuth2UserService.oAuthLoginByToken(oAuthType), HttpStatus.OK);
     }
 
     @ApiOperation(
