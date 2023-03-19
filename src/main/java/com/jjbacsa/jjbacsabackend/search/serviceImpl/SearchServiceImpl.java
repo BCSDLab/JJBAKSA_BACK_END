@@ -66,9 +66,12 @@ public class SearchServiceImpl implements SearchService {
             SearchEntity searchEntity = searchRepository.findByContent(keyword).get();
             Long latestScore = searchEntity.getScore();
             searchEntity.updateScore(latestScore + 1);
-
         } else {
-            searchRepository.save(new SearchEntity(keyword));
+            SearchEntity searchEntity = SearchEntity.builder()
+                    .content(keyword)
+                    .build();
+
+            searchRepository.save(searchEntity);
         }
     }
 }

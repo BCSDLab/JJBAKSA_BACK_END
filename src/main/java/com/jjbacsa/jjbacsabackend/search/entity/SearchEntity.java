@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.search.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,8 +11,9 @@ import org.springframework.data.annotation.LastModifiedDate;
 import javax.persistence.*;
 import java.util.Date;
 
+@AllArgsConstructor
+@Builder
 @Getter
-@NoArgsConstructor
 @Entity
 @DynamicInsert
 @Table(name = "search")
@@ -39,15 +41,8 @@ public class SearchEntity {
     @LastModifiedDate
     private Date updatedAt;
 
-    @Builder
-    public SearchEntity(String content) {
-        this.content = content;
-    }
+    public SearchEntity() {
 
-    @Builder
-    public SearchEntity(String content, Long score) {
-        this.content = content;
-        this.score = score;
     }
 
     public Long updateScore(Long score) {

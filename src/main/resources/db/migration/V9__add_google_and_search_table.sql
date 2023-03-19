@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS google_shop
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP(),
     updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
     is_deleted    TINYINT      NOT NULL DEFAULT 0,
-    place_id      VARCHAR(255) NOT NULL
+    place_id      VARCHAR(255) NOT NULL UNIQUE
 ) default character set utf8mb4
     collate utf8mb4_bin;
 

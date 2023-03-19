@@ -1,6 +1,8 @@
 package com.jjbacsa.jjbacsabackend.google.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
+import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.google.response.ShopQueryResponses;
 import com.jjbacsa.jjbacsabackend.google.response.ShopResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.test.context.TestConstructor;
 @SpringBootTest
 public class GoogleServiceTest {
     private final GoogleService googleService;
+    private final GoogleShopRepository googleShopRepository;
 
     double lat = 37.570429;
     double lng = 126.992095;

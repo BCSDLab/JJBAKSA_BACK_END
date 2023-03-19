@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,7 +75,6 @@ public class SearchServiceTest {
     }
 
     @Test
-    @Transactional
     public void auto_complete() {
         saveForAutoComplete("떡볶이");
         saveForAutoComplete("떡볶이");
@@ -99,14 +99,19 @@ public class SearchServiceTest {
         assertEquals(autoCompleteResponse.getAutoCompletes().get(1), "즉석 떡볶이");
     }
 
-    private void saveForAutoComplete(String keyword) {
+    @Transactional
+    void saveForAutoComplete(String keyword) {
         if (searchRepository.existsByContent(keyword)) {
             SearchEntity searchEntity = searchRepository.findByContent(keyword).get();
             Long latestScore = searchEntity.getScore();
             searchEntity.updateScore(latestScore + 1);
+            searchRepository.save(searchEntity);
 
         } else {
-            searchRepository.save(new SearchEntity(keyword, 1L));
+            SearchEntity searchEntity = SearchEntity.builder()
+                    .content(keyword)
+                    .build();
+            searchRepository.save(searchEntity);
         }
     }
 }

@@ -157,7 +157,7 @@ public class GoogleController {
 
     @ApiOperation(
             value = "사진 token에 따른 사진 url 반환 ",
-            notes = "키워드와 반경으로 상점들을 검색하여 반환한다.\n\n"
+            notes = "사진 token으로 사진 url을 반환한다.\n\n"
     )
     @ApiImplicitParam(name = "token", value = "가져올 사진 token", required = true, dataType = "string", paramType = "path")
     @PreAuthorize("hasRole('NORMAL')")

@@ -12,25 +12,18 @@ public class ShopQueryResponse {
     private String formatted_address;
     private String x;
     private String y;
-    private String open_now;
+    private Boolean open_now;
     private Integer totalRating;
     private Integer ratingCount;
     private String photoToken;
-
     private double dist;
 
-    public boolean setShopCount(Integer totalRating, Integer ratingCount) {
-        try {
-            this.totalRating = totalRating;
-            this.ratingCount = ratingCount;
-
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    public void setShopCount(Integer totalRating, Integer ratingCount) {
+        this.totalRating = totalRating;
+        this.ratingCount = ratingCount;
     }
 
-    public void setDist(double x, double y){
+    public void setDist(double x, double y) {
         double y_double = Double.parseDouble(this.y);
         double x_double = Double.parseDouble(this.x);
 
@@ -44,12 +37,14 @@ public class ShopQueryResponse {
         this.dist = dist;
     }
 
-    public void setDist(){
-        this.dist= Double.parseDouble(null);
+    public void setDist() {
+        this.dist = Double.parseDouble(null);
     }
+
     private double deg2rad(double deg) {
         return (deg * Math.PI / 180.0);
     }
+
     private double rad2deg(double rad) {
         return (rad * 180 / Math.PI);
     }

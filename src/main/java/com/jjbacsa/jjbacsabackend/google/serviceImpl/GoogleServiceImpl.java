@@ -124,9 +124,9 @@ public class GoogleServiceImpl implements GoogleService {
             businessDay = null;
         }
 
-        String openNow;
+        Boolean openNow;
         try {
-            openNow = shopApiDto.getOpening_hours().getOpen_now();
+            openNow = (shopApiDto.getOpening_hours().getOpen_now() == "true") ? true : false;
         } catch (NullPointerException e) {
             openNow = null;
         }
@@ -189,9 +189,10 @@ public class GoogleServiceImpl implements GoogleService {
                 yTemp = null;
             }
 
-            String openNow;
+            Boolean
+                    openNow;
             try {
-                openNow = dto.getOpening_hours().getOpen_now();
+                openNow = (dto.getOpening_hours().getOpen_now().equals("true")) ? true : false;
             } catch (NullPointerException e) {
                 openNow = null;
             }
@@ -217,6 +218,16 @@ public class GoogleServiceImpl implements GoogleService {
                 shopQueryResponse.setDist(x, y);
             } else {
                 shopQueryResponse.setDist();
+            }
+
+            GoogleShopEntity googleShopEntity = googleShopRepository.findByPlaceId(dto.getPlace_id());
+
+            if (googleShopEntity != null) {
+                GoogleShopCount shopCount = googleShopEntity.getShopCount();
+                Integer totalRating = shopCount.getTotalRating();
+                Integer ratingCount = shopCount.getRatingCount();
+
+                shopQueryResponse.setShopCount(totalRating, ratingCount);
             }
 
             shopQueryResponseList.add(shopQueryResponse);
@@ -321,8 +332,6 @@ public class GoogleServiceImpl implements GoogleService {
             }
         }
 
-        System.out.println(shopStr);
-
         ShopQueryDto shopQueryDto = objectMapper.readValue(shopStr, ShopQueryDto.class);
 
         return shopQueryDto;
@@ -371,8 +380,6 @@ public class GoogleServiceImpl implements GoogleService {
                 .queryParam("maxwidth", 400)
                 .queryParam("photo_reference", token)
                 .toUriString();
-
-        System.out.println("uri: " + uri);
 
         return uri;
     }
