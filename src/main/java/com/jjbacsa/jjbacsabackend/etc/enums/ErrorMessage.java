@@ -46,6 +46,10 @@ public enum ErrorMessage {
     IMAGE_RESIZING_EXCEPTION(40, "이미지 리사이징에 실패했습니다.", HttpStatus.BAD_REQUEST),
     INVALID_AUTHORITY(41, "사용자 권한이 없습니다.", HttpStatus.UNAUTHORIZED),
     POST_NOT_EXISTS_EXCEPTION(42, "게시글이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_AUTHENTICATE_EMAIL(43, "이메일 인증이 완료되지 않았습니다.", HttpStatus.BAD_REQUEST),
+    ALREADY_EXISTS_EMAIL(44, "이미 존재하는 이메일입니다.", HttpStatus.CONFLICT),
+    INVALID_EMAIL_EXCEPTION(45, "계정이 존재하지 않거나 이메일 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    LOGIN_FAIL_EXCEPTION(46, "회원이 아니시거나, 아이디 또는 비밀번호를 잘못 입력했습니다.", HttpStatus.CONFLICT),
     ;
 
     Integer code;

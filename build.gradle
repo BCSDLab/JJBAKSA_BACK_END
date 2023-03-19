@@ -79,6 +79,14 @@ dependencies {
 	// aws-sdk
 	implementation 'com.amazonaws:aws-java-sdk:1.12.321'
 
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-thymeleaf
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-thymeleaf', version: '2.6.8'
+
+	// ConfigurationProperties
+	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+	// https://mvnrepository.com/artifact/com.google.api-client/google-api-client
+	implementation group: 'com.google.api-client', name: 'google-api-client', version: '2.2.0'
 }
 
 def querydslDir = "$buildDir/generated/querydsl"

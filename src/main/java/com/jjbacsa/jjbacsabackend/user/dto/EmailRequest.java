@@ -26,13 +26,7 @@ public class EmailRequest {
     private String email;
 
     @ApiModelProperty(example="1234")
-    @NotNull
+    @NotNull(message = "인증번호가 올바르지 않습니다.")
+    @Pattern(regexp = "^[0-9]{1,4}$", message = "인증번호가 올바르지 않습니다.")
     private String code;
-
-    @ApiModelProperty(example="test1234!")
-    @Pattern(regexp = "(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[0-9])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[a-zA-z])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[~!@#$%^&*()\\-_=+]).{8,16}",
-            groups = {ValidationGroups.Create.class, ValidationGroups.Update.class}, message = "올바른 형식의 비밀번호가 아닙니다.")
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Login.class}, message = "비밀번호를 비워둘 순 없습니다.")
-    private String password;
-
 }

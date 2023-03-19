@@ -18,7 +18,13 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, DslUser
 
     Optional<UserEntity> findByEmail(String email);
 
+    Optional<UserEntity> findById(Long id);
+
+    Optional<UserEntity> findByEmailAndPasswordIsNotNull(String email);
+
     boolean existsByAccount(String account);
+
+    boolean existsByEmailAndPasswordIsNotNull(String email);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select uc.reviewCount from UserCount uc " +

@@ -50,6 +50,9 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+          apple:
+            client-id:
+            key-uri: "https://appleid.apple.com/auth/keys"
 
   jpa:
     show-sql: true
@@ -104,6 +107,11 @@ cloud:
       profile-url-format:
     stack:
       auto: false
+    ses:
+      access-key:
+      secret-key:
+      domain: jjbaksa.com
+
 
 spring:
   config:
@@ -125,3 +133,20 @@ spring:
     password:
   flyway:
     enabled: false
+
+slack:
+  url: https://hooks.slack.com/services/~~~~
+
+context-path: "http://localhost:8080"
+
+#메인 페이지
+home-url: "stage.jjbaksa.com"
+
+auth-url:
+  # DynamicLink Prefix
+  root-url:
+  # Web URL 설정 (안드로이드, 애플이 아닌 플랫폼)
+  link:
+  # DynamicLink에 들어갈 속성 정보
+  query:
+    apn:

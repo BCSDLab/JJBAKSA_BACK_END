@@ -12,13 +12,13 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
-import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
-import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
+import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
+import com.jjbacsa.jjbacsabackend.util.AuthLinkUtil;
 import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
@@ -34,6 +34,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -51,18 +52,14 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
     private final ImageUtil imageUtil;
-    private final OAuthInfoRepository oAuthInfoRepository;
+    private final AuthLinkUtil authLinkUtil;
 
-    //TODO : OAuth별 작동
-    //TODO : 이메일 인증 추가 시 인증 코드 파라미터 추가 (변경 시 채널에 고지 )
     @Override
     @Transactional
     public UserResponse register(UserRequest request) throws Exception {
-        //TODO : 이메일 인증 확인 절차 추가
-//        emailService.codeCertification(request.getEmail(), code);
+        validateExistAccount(request.getAccount());
+        validateExistEmail(request.getEmail());
 
-        //TODO : Default Profile 등록하기
-        existAccount(request.getAccount());
         request.setNickname(UUID.randomUUID().toString());
 
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
@@ -74,19 +71,50 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
+    @Transactional
+    @Override
+    public URI authEmail(String accessToken, String refreshToken) throws Exception {
+        jwtUtil.isValid("Bearer " + accessToken, TokenType.ACCESS);
+
+        Long id = Long.parseLong(String.valueOf(jwtUtil.getPayloadsFromJwt(accessToken).get("id")));
+
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+
+        emailService.linkCertification(user.getEmail());
+
+        user.setAuthEmail(true);
+
+        return authLinkUtil.getAuthLink(accessToken, refreshToken);
+    }
+
+    @Transactional
+    @Override
+    public UserResponse modifyNickname(String nickname) throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        user.setNickname(nickname);
+
+        return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
     @Override
     public String checkDuplicateAccount(String account) throws Exception {
-        existAccount(account);
+        validateExistAccount(account);
         return "OK";
     }
 
     @Override
     public Token login(UserRequest request) throws Exception {
         UserEntity user = userRepository.findByAccount(request.getAccount())
-                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RequestInputException(ErrorMessage.INVALID_ACCESS);
+            throw new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION);
+        }
+
+        if (!user.isAuthEmail()) {
+            throw new RequestInputException(ErrorMessage.INVALID_AUTHENTICATE_EMAIL);
         }
 
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
@@ -209,18 +237,20 @@ public class UserServiceImpl implements UserService {
     //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
     @Override
     @Transactional
-    public void sendAuthEmail(String email) throws Exception{
-        emailService.sendAuthEmail(email);
+    public void sendAuthEmailCode(String email) throws Exception {
+        emailService.sendAuthEmailCode(email);
+    }
+
+    @Override
+    @Transactional
+    public void sendAuthEmailLink(String email) throws Exception {
+        emailService.sendAuthEmailLink(email);
     }
 
     @Override
     public UserResponse findAccount(String email, String code) throws Exception {
 
-        UserEntity user = userService.getUserByEmail(email);
-
-        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
-            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
-        }
+        UserEntity user = userService.getLocalUserByEmail(email);
 
         if (!emailService.codeCertification(email, code))
             throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
@@ -230,31 +260,41 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse findPassword(EmailRequest request) throws Exception{
+    public String findPassword(EmailRequest request) throws Exception {
 
-        if(!userRepository.existsByAccount(request.getAccount())) {
-            throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+        UserEntity user = userService.getUserByAccount(request.getAccount());
+
+        if (!Objects.equals(request.getEmail(), user.getEmail())) {
+            throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
         }
 
-        UserEntity user = userService.getUserByEmail(request.getEmail());
-
-        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
-            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
-        }
-
-        if (!emailService.codeCertification(request.getEmail(), request.getCode()))
+        if (!emailService.codeCertification(request.getEmail(), request.getCode())) {
             throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+        }
 
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        userRepository.save(user);
+        return jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType());
+    }
+
+    @Override
+    @Transactional
+    public UserResponse modifyPassword(String password) throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        user.setPassword(passwordEncoder.encode(password));
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
-    private boolean existAccount(String account) {
+    private void validateExistAccount(String account) {
         if (userRepository.existsByAccount(account)) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
-        return true;
     }
+
+    private void validateExistEmail(String email) {
+        if (userRepository.existsByEmailAndPasswordIsNotNull(email)) {
+            throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_EMAIL);
+        }
+    }
+
 }
