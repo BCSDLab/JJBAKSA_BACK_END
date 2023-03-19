@@ -1,5 +1,9 @@
 package com.jjbacsa.jjbacsabackend.etc.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jjbacsa.jjbacsabackend.etc.dto.slack.SlackAttachment;
+import com.jjbacsa.jjbacsabackend.etc.dto.slack.SlackParameter;
+import com.jjbacsa.jjbacsabackend.etc.dto.slack.SlackTarget;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.etc.exception.CriticalException;
@@ -72,6 +76,7 @@ public class GlobalExceptionHandler {
             if (!(e instanceof ClientAbortException))
                 slack = true;
         }
+
 
         if (slack) {
             sendSlackNoti(e, handlerMethod);
