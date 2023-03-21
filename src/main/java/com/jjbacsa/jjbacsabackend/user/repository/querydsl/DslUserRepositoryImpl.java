@@ -71,16 +71,16 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
     }
 
     private FollowedType getFollowedType(Tuple tuple) {
-        if (itemIsTure(tuple, 1)) {
+        if (itemIsTrue(tuple, 1)) {
             return FollowedType.FOLLOWED;
         }
-        if (itemIsTure(tuple, 2)) {
+        if (itemIsTrue(tuple, 2)) {
             return FollowedType.REQUESTED;
         }
         return FollowedType.NONE;
     }
 
-    private boolean itemIsTure(Tuple tuple, int index) {
+    private boolean itemIsTrue(Tuple tuple, int index) {
         return Objects.equals(Boolean.TRUE, tuple.get(index, Boolean.class));
     }
 
