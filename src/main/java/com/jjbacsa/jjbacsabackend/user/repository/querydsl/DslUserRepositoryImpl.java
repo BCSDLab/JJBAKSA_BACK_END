@@ -58,8 +58,8 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
     public Map<Long, FollowedType> getFollowedTypesByUserAndUsers(UserEntity user, List<UserEntity> users) {
         return from(qUser)
                 .select(qUser.id, qFollow.isNotNull(), qFollowRequest.isNotNull())
-                .leftJoin(qFollow).on(qUser.eq(qFollow.user), qFollow.follower.eq(user))
-                .leftJoin(qFollowRequest).on(qUser.eq(qFollowRequest.user), qFollowRequest.follower.eq(user))
+                .leftJoin(qFollow).on(qFollow.user.eq(user), qFollow.follower.eq(qUser))
+                .leftJoin(qFollowRequest).on(qFollowRequest.user.eq(user), qFollowRequest.follower.eq(qUser))
                 .where(qUser.in(users))
                 .fetch()
                 .stream()
