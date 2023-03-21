@@ -10,9 +10,11 @@ import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPQLQuery;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
@@ -68,11 +70,11 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
         return tuple.get(0, Long.class);
     }
 
-    private FollowedType getFollowedType(Tuple tuple){
-        if(itemIsTure(tuple, 1)){
+    private FollowedType getFollowedType(Tuple tuple) {
+        if (itemIsTure(tuple, 1)) {
             return FollowedType.FOLLOWED;
         }
-        if(itemIsTure(tuple, 2)) {
+        if (itemIsTure(tuple, 2)) {
             return FollowedType.REQUESTED;
         }
         return FollowedType.NONE;
