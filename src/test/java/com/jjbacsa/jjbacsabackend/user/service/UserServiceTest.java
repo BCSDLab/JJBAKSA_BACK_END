@@ -6,6 +6,7 @@ import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserCount;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -123,7 +124,7 @@ public class UserServiceTest {
     @DisplayName("유저 리스트 검색")
     @Test
     void searchUsers() throws Exception {
-        Page<UserResponse> result = userService
+        Page<UserResponseWithFollowedType> result = userService
                 .searchUsers("NoSearchName", 10, 0L);
         assertTrue(result.isEmpty());
 

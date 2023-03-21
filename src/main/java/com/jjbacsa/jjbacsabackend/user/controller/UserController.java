@@ -7,6 +7,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.OAuth2UserServiceImpl;
@@ -153,7 +154,7 @@ public class UserController {
                     responseContainer = "Page")
     })
     @GetMapping("/users")
-    public ResponseEntity<Page<UserResponse>> searchUsers(
+    public ResponseEntity<Page<UserResponseWithFollowedType>> searchUsers(
             @Size(min = 1, max = 20, message = "닉네임은 1~20글자까지 검색할 수 있습니다.") @RequestParam String keyword,
             @ApiParam("가져올 데이터 수(1~100)") @Range(min = 0, max = 100, message = "올바르지 않은 값입니다.")
             @RequestParam(required = false, defaultValue = "20") Integer pageSize,

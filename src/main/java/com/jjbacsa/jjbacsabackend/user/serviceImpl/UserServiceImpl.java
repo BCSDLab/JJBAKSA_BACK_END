@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.enums.FollowedType;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
@@ -10,6 +11,7 @@ import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
@@ -22,6 +24,8 @@ import com.jjbacsa.jjbacsabackend.util.AuthLinkUtil;
 import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
+import java.util.Map;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -165,13 +169,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponse> searchUsers(String keyword, Integer pageSize, Long cursor) throws Exception {
+    public Page<UserResponseWithFollowedType> searchUsers(String keyword, Integer pageSize, Long cursor) throws Exception {
         Pageable pageable = PageRequest.of(0, pageSize);
 
-        Page<UserResponse> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor)
-                .map(UserMapper.INSTANCE::toUserResponse);
+        Page<UserEntity> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor);
 
-        return result;
+        try {
+            UserEntity loginUser = userService.getLoginUser();
+            Map<Long, FollowedType> followedTypes = userRepository.getFollowedTypesByUserAndUsers(loginUser, result.getContent());
+            return result.map(user -> UserMapper.INSTANCE.toUserResponse(user, followedTypes.get(user.getId())));
+        } catch (Exception ignore) {
+        }
+
+        return result.map(user -> UserMapper.INSTANCE.toUserResponse(user, FollowedType.NONE));
     }
 
     @Override

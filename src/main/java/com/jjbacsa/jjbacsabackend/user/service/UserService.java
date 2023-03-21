@@ -4,6 +4,7 @@ import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,7 +27,7 @@ public interface UserService {
 
     UserResponse getLoginUser() throws Exception;
 
-    Page<UserResponse> searchUsers(String keyword, Integer pageSize, Long cursor) throws Exception;
+    Page<UserResponseWithFollowedType> searchUsers(String keyword, Integer pageSize, Long cursor) throws Exception;
 
     UserResponse getAccountInfo(Long id) throws Exception;
 
