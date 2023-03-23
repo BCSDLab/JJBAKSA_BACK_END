@@ -1,7 +1,9 @@
 package com.jjbacsa.jjbacsabackend.user.mapper;
 
+import com.jjbacsa.jjbacsabackend.etc.enums.FollowedType;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,4 +17,7 @@ public interface UserMapper {
 
     @Mapping(target = "userCountResponse", source = "userCount")
     UserResponse toUserResponse(UserEntity userEntity);
+
+    @Mapping(target = "userCountResponse", source = "userEntity.userCount")
+    UserResponseWithFollowedType toUserResponse(UserEntity userEntity, FollowedType followedType);
 }
