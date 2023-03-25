@@ -21,8 +21,6 @@ public interface UserService {
 
     Token login(UserRequest request) throws Exception;
 
-    void logout() throws Exception;
-
     Token refresh() throws Exception;
 
     UserResponse getLoginUser() throws Exception;

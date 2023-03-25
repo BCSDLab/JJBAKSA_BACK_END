@@ -137,11 +137,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void logout() throws Exception {
-        //TODO : 로그아웃 로직 추가
-    }
-
-    @Override
     public Token refresh() throws Exception {
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
