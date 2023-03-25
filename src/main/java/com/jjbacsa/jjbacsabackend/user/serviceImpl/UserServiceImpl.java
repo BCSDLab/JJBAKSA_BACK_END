@@ -24,9 +24,6 @@ import com.jjbacsa.jjbacsabackend.util.AuthLinkUtil;
 import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
-
-import java.util.Map;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -199,8 +197,10 @@ public class UserServiceImpl implements UserService {
 //            emailService.codeCertification(request.getEmail(), code);
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        if (request.getNickname() != null)
+
+        if (request.getNickname() != null) {
             user.setNickname(request.getNickname());
+        }
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
@@ -258,8 +258,7 @@ public class UserServiceImpl implements UserService {
 
         UserEntity user = userService.getLocalUserByEmail(email);
 
-        if (!emailService.codeCertification(email, code))
-            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+        codeCertification(email, code);
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
@@ -274,9 +273,7 @@ public class UserServiceImpl implements UserService {
             throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
         }
 
-        if (!emailService.codeCertification(request.getEmail(), request.getCode())) {
-            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
-        }
+        codeCertification(request.getEmail(), request.getCode());
 
         return jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType());
     }
@@ -300,6 +297,12 @@ public class UserServiceImpl implements UserService {
     private void validateExistEmail(String email) {
         if (userRepository.existsByEmailAndPasswordIsNotNull(email)) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_EMAIL);
+        }
+    }
+
+    private void codeCertification(String email, String code) throws Exception {
+        if (!emailService.codeCertification(email, code)) {
+            throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
         }
     }
 
