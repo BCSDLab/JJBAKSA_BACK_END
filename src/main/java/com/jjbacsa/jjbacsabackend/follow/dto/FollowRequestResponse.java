@@ -1,7 +1,7 @@
 package com.jjbacsa.jjbacsabackend.follow.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

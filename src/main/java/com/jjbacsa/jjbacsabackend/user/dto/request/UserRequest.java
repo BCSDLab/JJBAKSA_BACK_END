@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.user.dto;
+package com.jjbacsa.jjbacsabackend.user.dto.request;
 
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import io.swagger.annotations.ApiModelProperty;

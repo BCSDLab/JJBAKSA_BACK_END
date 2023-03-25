@@ -3,9 +3,8 @@ package com.jjbacsa.jjbacsabackend.follow.service;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequest;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowRequestResponse;
 import com.jjbacsa.jjbacsabackend.follow.dto.FollowResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserResponse;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface FollowService {
 

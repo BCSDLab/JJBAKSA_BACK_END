@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.user.dto;
+package com.jjbacsa.jjbacsabackend.user.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.jjbacsa.jjbacsabackend.etc.enums.FollowedType;

@@ -1,7 +1,6 @@
 package com.jjbacsa.jjbacsabackend.scrap.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

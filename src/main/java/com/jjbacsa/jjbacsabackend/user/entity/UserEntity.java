@@ -3,7 +3,7 @@ package com.jjbacsa.jjbacsabackend.user.entity;
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.request.UserRequest;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,6 +1,6 @@
 package com.jjbacsa.jjbacsabackend.user.controller;
 
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.service.RootUserService;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;

@@ -1,10 +1,10 @@
 package com.jjbacsa.jjbacsabackend.user.service;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
-import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.request.EmailRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.request.UserRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserResponseWithFollowedType;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 

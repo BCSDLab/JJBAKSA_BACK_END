@@ -1,9 +1,9 @@
 package com.jjbacsa.jjbacsabackend.user.mapper;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.FollowedType;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.request.UserRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserResponseWithFollowedType;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -1,9 +1,6 @@
 package com.jjbacsa.jjbacsabackend.image.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
-import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
-import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;

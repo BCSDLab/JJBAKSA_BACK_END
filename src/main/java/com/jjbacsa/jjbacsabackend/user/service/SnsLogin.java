@@ -1,7 +1,7 @@
 package com.jjbacsa.jjbacsabackend.user.service;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.response.UserResponse;
 
 public interface SnsLogin {
     UserResponse snsLoginByToken(String accessToken) throws Exception;
