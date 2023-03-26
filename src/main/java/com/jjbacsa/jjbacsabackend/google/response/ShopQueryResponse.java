@@ -3,6 +3,9 @@ package com.jjbacsa.jjbacsabackend.google.response;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * 상점 검색 결과(다중 상점) 반환
+ * */
 @Getter
 @Builder
 public class ShopQueryResponse {
@@ -17,6 +20,7 @@ public class ShopQueryResponse {
     private Integer ratingCount;
     private String photoToken;
     private double dist;
+    private String category;
 
     public void setShopCount(Integer totalRating, Integer ratingCount) {
         this.totalRating = totalRating;

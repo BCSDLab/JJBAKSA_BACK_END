@@ -70,12 +70,10 @@ public class GoogleServiceImpl implements GoogleService {
     }
 
     @Override
-    public ShopQueryResponses searchShopQuery(String query, String type, double x, double y) throws JsonProcessingException {
+    public ShopQueryResponses searchShopQuery(String query, double x, double y) throws JsonProcessingException {
         String shopStr = null;
 
-        if (type.equals("cafe") || type.equals("restaurant")) {
-            shopStr = this.callApiByQuery(query, type, x, y);
-        }
+        shopStr = this.callApiByQuery(query, x, y);
 
         ShopQueryDto shopQueryDto = this.jsonToShopQueryDto(shopStr);
         ShopQueryResponses shopQueryResponses = this.queryDtoToQueryResponses(shopQueryDto, x, y);
@@ -138,6 +136,7 @@ public class GoogleServiceImpl implements GoogleService {
             token = null;
         }
 
+        Category category=getCategory(shopApiDto.getTypes());
 
         ShopResponse shopResponse = ShopResponse.builder()
                 .place_id(shopApiDto.getPlace_id())
@@ -149,6 +148,7 @@ public class GoogleServiceImpl implements GoogleService {
                 .open_now(openNow)
                 .photoToken(token)
                 .businessDay(businessDay)
+                .category(category.name())
                 .build();
 
         if (shopResponse.getX() != null && shopResponse.getY() != null) {
@@ -189,8 +189,7 @@ public class GoogleServiceImpl implements GoogleService {
                 yTemp = null;
             }
 
-            Boolean
-                    openNow;
+            Boolean openNow;
             try {
                 openNow = (dto.getOpening_hours().getOpen_now().equals("true")) ? true : false;
             } catch (NullPointerException e) {
@@ -204,6 +203,8 @@ public class GoogleServiceImpl implements GoogleService {
                 token = null;
             }
 
+            Category category=getCategory(dto.getTypes());
+
             ShopQueryResponse shopQueryResponse = ShopQueryResponse.builder()
                     .place_id(dto.getPlace_id())
                     .name(dto.getName())
@@ -212,6 +213,7 @@ public class GoogleServiceImpl implements GoogleService {
                     .y(yTemp)
                     .open_now(openNow)
                     .photoToken(token)
+                    .category(category.name())
                     .build();
 
             if (shopQueryResponse.getX() != null && shopQueryResponse.getY() != null) {
@@ -250,7 +252,7 @@ public class GoogleServiceImpl implements GoogleService {
         return shopStr;
     }
 
-    private String callApiByQuery(String query, String type, double x, double y) {
+    private String callApiByQuery(String query, double x, double y) {
         String locationQuery = String.valueOf(x) + ", " + String.valueOf(y);
 
         String shopStr = webClient.get().uri(uriBuilder ->
@@ -258,7 +260,7 @@ public class GoogleServiceImpl implements GoogleService {
                         .queryParam("query", query)
                         .queryParam("key", API_KEY)
                         .queryParam("language", "ko")
-                        .queryParam("type", type)
+                        .queryParam("type", "food")
                         .queryParam("location", locationQuery)
                         .build()
         ).retrieve().bodyToMono(String.class).block();
@@ -347,32 +349,6 @@ public class GoogleServiceImpl implements GoogleService {
     }
 
     @Override
-    public ShopQueryResponses searchShopQueryWithRadius(String query, String type, double x, double y, double radius) throws JsonProcessingException {
-        String shopStr = callApiByQueryWithRadius(query, type, x, y, radius);
-
-        ShopQueryDto shopQueryDto = this.jsonToShopQueryDto(shopStr);
-        ShopQueryResponses shopQueryResponses = this.queryDtoToQueryResponses(shopQueryDto, x, y);
-
-        return shopQueryResponses;
-    }
-
-    private String callApiByQueryWithRadius(String query, String type, double x, double y, double radius) {
-        String locationQuery = String.valueOf(x) + ", " + String.valueOf(y);
-        String shopStr = webClient.get().uri(uriBuilder ->
-                uriBuilder.path("/textsearch/json")
-                        .queryParam("query", query)
-                        .queryParam("key", API_KEY)
-                        .queryParam("language", "ko")
-                        .queryParam("type", type)
-                        .queryParam("location", locationQuery)
-                        .queryParam("radius", radius)
-                        .build()
-        ).retrieve().bodyToMono(String.class).block();
-
-        return shopStr;
-    }
-
-    @Override
     public String getPhotoUrl(String token) {
         String uri = UriComponentsBuilder
                 .fromHttpUrl("https://maps.googleapis.com/maps/api/place/photo")
@@ -383,4 +359,17 @@ public class GoogleServiceImpl implements GoogleService {
 
         return uri;
     }
+
+    private Category getCategory(List<String> types) {
+        for (String type : types) {
+            if (type.equals("cafe")) {
+                return Category.cafe;
+            }
+        }
+        return Category.restaurant;
+    }
+}
+
+enum Category {
+    cafe, restaurant;
 }

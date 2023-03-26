@@ -20,4 +20,5 @@ public class ShopApiDto {
     private String formatted_phone_number;
     private Opening_hours opening_hours;
     private List<Photos> photos;
+    private List<String> types;
 }

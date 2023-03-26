@@ -17,8 +17,8 @@ public class ShopQueryApiDto {
     private String place_id;
     private String name;
     private String formatted_address;
-
     private Geometry geometry;
     private Opening_hours opening_hours;
     private List<Photos> photos;
+    private List<String> types;
 }

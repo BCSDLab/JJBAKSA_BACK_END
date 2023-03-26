@@ -22,6 +22,7 @@ public class ShopResponse {
     private Integer ratingCount;
     private double dist;
     private String photoToken;
+    private String category;
 
     public void setShopCount(Integer totalRating, Integer ratingCount) {
         this.totalRating = totalRating;

@@ -26,7 +26,7 @@ public class GoogleServiceTest {
     public void 쿼리_다중검색() throws JsonProcessingException {
         String test = "할리스";
 
-        ShopQueryResponses shopQueryResponses = googleService.searchShopQuery(test, "cafe", lat, lng);
+        ShopQueryResponses shopQueryResponses = googleService.searchShopQuery(test, lat, lng);
         Assertions.assertNotEquals(shopQueryResponses.getShopQueryResponseList().size(), 0);
     }
 

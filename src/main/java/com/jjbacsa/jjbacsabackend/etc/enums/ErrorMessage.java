@@ -19,7 +19,7 @@ public enum ErrorMessage {
     INVALID_ACCESS(13, "유효하지 않은 접근입니다.", HttpStatus.CONFLICT),
     EXPIRED_TOKEN(14, "만료된 토큰입니다.", HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN_TYPE(15,  "잘못된 토큰 타입입니다.", HttpStatus.BAD_REQUEST),
-    ZERO_RESULTS_EXCEPTION(16,"해당 가게에 대해 요청할 수 없습니다.",HttpStatus.FORBIDDEN),
+    ZERO_RESULTS_EXCEPTION(16,"구글 API 검색 결과가 없습니다.",HttpStatus.FORBIDDEN),
     NOT_FOUND_EXCEPTION(17,"정보를 가져올 수 없습니다.",HttpStatus.NOT_FOUND),
     INVALID_REQUEST_EXCEPTION(18,"API 요쳥 형식이 올바르지 않습니다.",HttpStatus.BAD_REQUEST),
     OVER_QUERY_LIMIT_EXCEPTION(19,"API 요청을 수행할 수 없습니다.",HttpStatus.FORBIDDEN),

@@ -45,23 +45,17 @@ public class GoogleController {
                     response = ShopQueryResponses.class
             )
     })
-    @ApiImplicitParams({
-            @ApiImplicitParam(
-                    name = "type", value = "상점 카테고리(cafe, restaurant)", required = true, dataType = "string", paramType = "path"
-            ),
-            @ApiImplicitParam(
-                    name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "path"
-            )
-
-    })
+    @ApiImplicitParam(
+            name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "path"
+    )
     @PreAuthorize("hasRole('NORMAL')")
-    @PostMapping("/google/shops/{type}/{keyword}")
-    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("type") String type, @PathVariable("keyword") String keyword) throws JsonProcessingException {
+    @PostMapping("/google/shops/{keyword}")
+    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("keyword") String keyword) throws JsonProcessingException {
         searchService.saveForAutoComplete(keyword);
         searchService.saveRedis(keyword, KEY);
 
         return ResponseEntity.ok()
-                .body(googleService.searchShopQuery(keyword, type, shopRequest.getX(), shopRequest.getY()));
+                .body(googleService.searchShopQuery(keyword, shopRequest.getX(), shopRequest.getY()));
     }
 
     @ApiOperation(
@@ -116,44 +110,6 @@ public class GoogleController {
         return ResponseEntity.ok()
                 .body(googleService.getShopDetails(placeId, shopRequest.getX(), shopRequest.getY()));
     }
-
-    @ApiOperation(
-            value = "반경에 따른 키워드 상점 검색",
-            notes = "키워드와 반경으로 상점들을 검색하여 반환한다.\n\n" +
-                    "Request Body(ShopRequest)\n\n" +
-                    "{\n\n     " +
-                    "x : 현재 요청자의 경도(x),\n     " +
-                    "y : 현재 요청자의 위도(y)\n     " +
-                    "\n}"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    code = 200,
-                    message = "반경 키워드 상점 조회 결과",
-                    response = ShopQueryResponses.class
-            )
-    })
-    @ApiImplicitParams({
-            @ApiImplicitParam(
-                    name = "type", value = "상점 카테고리(cafe, restaurant)", required = true, dataType = "string", paramType = "path"
-            ),
-            @ApiImplicitParam(
-                    name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "path"
-            ),
-            @ApiImplicitParam(
-                    name = "radius", value = "반경 radius", required = true, dataType = "double", paramType = "path"
-            )
-    })
-    @PreAuthorize("hasRole('NORMAL')")
-    @PostMapping("/google/shops/{type}/{keyword}/{radius}}")
-    public ResponseEntity<ShopQueryResponses> getGoogleShopsByQueryWithRadius(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("type") String type, @PathVariable("keyword") String keyword, @PathVariable("radius") double radius) throws JsonProcessingException {
-        searchService.saveForAutoComplete(keyword);
-        searchService.saveRedis(keyword, KEY);
-
-        return ResponseEntity.ok()
-                .body(googleService.searchShopQueryWithRadius(keyword, type, shopRequest.getX(), shopRequest.getY(), radius));
-    }
-
 
     @ApiOperation(
             value = "사진 token에 따른 사진 url 반환 ",
