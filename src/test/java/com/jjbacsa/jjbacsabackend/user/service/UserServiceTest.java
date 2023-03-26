@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,13 +30,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
-@RequiredArgsConstructor
 @Transactional
 public class UserServiceTest {
-    private final UserService userService;
-    private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
-    private final RedisUtil redisUtil;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private JwtUtil jwtUtil;
+    @Autowired
+    private RedisUtil redisUtil;
 
     private UserEntity user;
     private UserRequest loginRequest;
