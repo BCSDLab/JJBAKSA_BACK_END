@@ -6,7 +6,7 @@ import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.user.entity.OAuthInfoEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.oauth.OAuth2UserInfo;
 import com.jjbacsa.jjbacsabackend.user.entity.oauth.OAuth2UserInfoFactory;
-import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
+import com.jjbacsa.jjbacsabackend.user.serviceImpl.OAuth2UserServiceImpl;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
-    private final OAuthInfoRepository oAuthInfoRepository;
+    private final OAuth2UserServiceImpl oAuth2UserService;
     private final RedisUtil redisUtil;
 
 
@@ -41,7 +41,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         OAuthInfoEntity oAuthInfoEntity;
 
         oAuth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(oauthType, user.getAttributes());
-        oAuthInfoEntity = oAuthInfoRepository.findByApiKey(oAuth2UserInfo.getApiKey());
+        oAuthInfoEntity = oAuth2UserService.getOAuthInfoByApiKey(oAuth2UserInfo.getApiKey());
 
         String accessToken = jwtUtil.generateToken(oAuthInfoEntity.getUser().getId(),
                 TokenType.ACCESS, String.valueOf(oAuthInfoEntity.getUser().getUserType().getUserType()));

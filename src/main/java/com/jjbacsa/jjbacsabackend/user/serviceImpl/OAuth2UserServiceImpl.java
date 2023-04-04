@@ -69,6 +69,11 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
         return new Token(jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()), existToken);
     }
 
+    public OAuthInfoEntity getOAuthInfoByApiKey(String apiKey) throws RequestInputException {
+        return oAuthInfoRepository.findByApiKey(apiKey)
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));
+    }
+
 
     private OAuth2User processOAuth2User(OAuth2UserRequest userRequest, OAuth2User oAuth2User) {
 

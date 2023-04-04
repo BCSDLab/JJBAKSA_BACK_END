@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Timestamp;
+import java.util.Optional;
 
 @Repository
 public interface AuthEmailRepository extends JpaRepository<AuthEmailEntity, Long>, DslUserRepository {
@@ -21,6 +22,6 @@ public interface AuthEmailRepository extends JpaRepository<AuthEmailEntity, Long
     @Query("UPDATE AuthEmailEntity a SET a.isDeleted = 1 WHERE a.user.id = :userId")
     void deletePastEmail(@Param("userId") Long userId);
 
-    AuthEmailEntity findAuthEmailEntityByUserIdAndIsDeleted(Long userId, int isDeleted);
+    Optional<AuthEmailEntity> findAuthEmailEntityByUserIdAndIsDeleted(Long userId, int isDeleted);
 
 }

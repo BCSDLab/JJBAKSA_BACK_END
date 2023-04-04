@@ -1,6 +1,5 @@
 package com.jjbacsa.jjbacsabackend.user.serviceImpl;
 
-import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
@@ -46,11 +45,11 @@ public class InternalEmailServiceImpl implements InternalEmailService {
 
         UserEntity user = userService.getLocalUserByEmail(email);
 
-        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
         }
 
-        if(isEmailSentNumExceed(user.getId())) {
+        if (isEmailSentNumExceed(user.getId())) {
             throw new RequestInputException(ErrorMessage.EMAIL_SEND_EXCEED_EXCEPTION);
         }
 
@@ -60,7 +59,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
 
         String secret = getRandomNumber();
 
-        if(userRepository.findByEmailAndPasswordIsNotNull(email).isPresent()) {
+        if (userRepository.findByEmailAndPasswordIsNotNull(email).isPresent()) {
             AuthEmailEntity authEmail = AuthEmailEntity.builder()
                     .secret(secret)
                     .expiredAt(new Timestamp(calendar.getTimeInMillis()))
@@ -80,11 +79,11 @@ public class InternalEmailServiceImpl implements InternalEmailService {
 
         UserEntity user = userService.getLocalUserByEmail(email);
 
-        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
         }
 
-        if(isEmailSentNumExceed(user.getId())) {
+        if (isEmailSentNumExceed(user.getId())) {
             throw new RequestInputException(ErrorMessage.EMAIL_SEND_EXCEED_EXCEPTION);
         }
 
@@ -109,7 +108,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
         Context context = new Context(Locale.KOREA, model);
         String text = templateEngine.process("register_authenticate", context);
 
-        if(userRepository.findByEmailAndPasswordIsNotNull(email).isPresent()) {
+        if (userRepository.findByEmailAndPasswordIsNotNull(email).isPresent()) {
             AuthEmailEntity authEmail = AuthEmailEntity.builder()
                     .secret("secret")
                     .expiredAt(new Timestamp(calendar.getTimeInMillis()))
@@ -129,13 +128,13 @@ public class InternalEmailServiceImpl implements InternalEmailService {
 
         UserEntity user = userService.getLocalUserByEmail(email);
 
-        AuthEmailEntity authEmail = authEmailRepository.findAuthEmailEntityByUserIdAndIsDeleted(user.getId(), 0);
+        AuthEmailEntity authEmail = getEmailByUserIdAndIsDeleted(user.getId(), 0);
 
-        if(authEmail.getExpiredAt().before(new Timestamp(System.currentTimeMillis()))) {
+        if (authEmail.getExpiredAt().before(new Timestamp(System.currentTimeMillis()))) {
             throw new RequestInputException(ErrorMessage.EMAIL_EXPIRED_EXCEPTION);
         }
 
-        if(!authEmail.getSecret().equals(code)) {
+        if (!authEmail.getSecret().equals(code)) {
             throw new RequestInputException(ErrorMessage.EMAIL_CODE_FAIL_EXCEPTION);
         }
 
@@ -147,13 +146,19 @@ public class InternalEmailServiceImpl implements InternalEmailService {
 
         UserEntity user = userService.getLocalUserByEmail(email);
 
-        AuthEmailEntity authEmail = authEmailRepository.findAuthEmailEntityByUserIdAndIsDeleted(user.getId(), 0);
+        AuthEmailEntity authEmail = getEmailByUserIdAndIsDeleted(user.getId(), 0);
 
-        if(authEmail.getExpiredAt().before(new Timestamp(System.currentTimeMillis()))) {
+        if (authEmail.getExpiredAt().before(new Timestamp(System.currentTimeMillis()))) {
             throw new RequestInputException(ErrorMessage.EMAIL_EXPIRED_EXCEPTION);
         }
 
         return true;
+    }
+
+    @Override
+    public AuthEmailEntity getEmailByUserIdAndIsDeleted(Long userId, int isDeleted) throws RequestInputException {
+        return authEmailRepository.findAuthEmailEntityByUserIdAndIsDeleted(userId, isDeleted)
+                .orElseThrow(() -> new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE));
     }
 
     // 4글자 난수 생성

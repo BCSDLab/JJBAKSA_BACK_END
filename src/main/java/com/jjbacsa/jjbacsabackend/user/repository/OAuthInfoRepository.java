@@ -19,5 +19,5 @@ public interface OAuthInfoRepository extends JpaRepository<OAuthInfoEntity, Long
     @Query("SELECT ou FROM OAuthInfoEntity ou WHERE ou.user.id = :userId")
     Optional<OAuthInfoEntity> findByUserId(@Param("userId") Long userId);
 
-    OAuthInfoEntity findByApiKey(String apiKey);
+    Optional<OAuthInfoEntity> findByApiKey(String apiKey);
 }
