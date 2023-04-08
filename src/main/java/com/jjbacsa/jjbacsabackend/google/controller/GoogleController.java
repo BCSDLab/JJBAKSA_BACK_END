@@ -78,7 +78,7 @@ public class GoogleController {
             name = "page_token", value = "키워드 검색어의 다음 페이지", required = true, dataType = "string", paramType = "path"
     )
     @PreAuthorize("hasRole('NORMAL')")
-    @PostMapping("/google/shops/{page_token}")
+    @PostMapping("/google/shops/page/{page_token}")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsNextPage(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("page_token") String pageToken) throws JsonProcessingException {
         return ResponseEntity.ok()
                 .body(googleService.searchShopQueryNext(pageToken, shopRequest.getX(), shopRequest.getY()));
