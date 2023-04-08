@@ -30,10 +30,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -136,7 +133,7 @@ public class GoogleServiceImpl implements GoogleService {
             token = null;
         }
 
-        Category category=getCategory(shopApiDto.getTypes());
+        Category category = getCategory(shopApiDto.getTypes());
 
         ShopResponse shopResponse = ShopResponse.builder()
                 .place_id(shopApiDto.getPlace_id())
@@ -157,14 +154,11 @@ public class GoogleServiceImpl implements GoogleService {
             shopResponse.setDist();
         }
 
-        GoogleShopEntity shopEntity = googleShopRepository.findByPlaceId(shopResponse.getPlace_id());
+        Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopResponse.getPlace_id());
 
-        if (shopEntity != null) {
-            GoogleShopCount shopCount = shopEntity.getShopCount();
-            Integer totalRating = shopCount.getTotalRating();
-            Integer ratingCount = shopCount.getRatingCount();
-
-            shopResponse.setShopCount(totalRating, ratingCount);
+        if (shop.isPresent()) {
+            GoogleShopCount shopCount = shop.get().getShopCount();
+            shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
         }
 
         return shopResponse;
@@ -203,7 +197,7 @@ public class GoogleServiceImpl implements GoogleService {
                 token = null;
             }
 
-            Category category=getCategory(dto.getTypes());
+            Category category = getCategory(dto.getTypes());
 
             ShopQueryResponse shopQueryResponse = ShopQueryResponse.builder()
                     .place_id(dto.getPlace_id())
@@ -222,14 +216,11 @@ public class GoogleServiceImpl implements GoogleService {
                 shopQueryResponse.setDist();
             }
 
-            GoogleShopEntity googleShopEntity = googleShopRepository.findByPlaceId(dto.getPlace_id());
+            Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(dto.getPlace_id());
 
-            if (googleShopEntity != null) {
-                GoogleShopCount shopCount = googleShopEntity.getShopCount();
-                Integer totalRating = shopCount.getTotalRating();
-                Integer ratingCount = shopCount.getRatingCount();
-
-                shopQueryResponse.setShopCount(totalRating, ratingCount);
+            if (shop.isPresent()) {
+                GoogleShopCount shopCount = shop.get().getShopCount();
+                shopQueryResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
             }
 
             shopQueryResponseList.add(shopQueryResponse);
