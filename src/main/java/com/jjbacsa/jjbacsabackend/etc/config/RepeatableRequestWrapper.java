@@ -37,21 +37,33 @@ public class RepeatableRequestWrapper extends HttpServletRequestWrapper {
             if (super.getHeader(HttpHeaders.CONTENT_TYPE).startsWith(MediaType.MULTIPART_FORM_DATA_VALUE)) {
                 this.parts = request.getParts();
             }
-        } catch (IllegalStateException e) { // multipart/form-data가 아닌 경우
+        } catch (Exception e) { // multipart/form-data가 아닌 경우
             this.parts = Collections.emptyList();
         }
 
         // Convert InputStream data to byte array and store it to this wrapper instance.
+        InputStream inputStream = null;
         try {
-            InputStream inputStream = request.getInputStream();
-            this.rawData = IOUtils.toByteArray(inputStream);
+            inputStream = request.getInputStream();
+            if (inputStream != null) {
+                this.rawData = IOUtils.toByteArray(inputStream);
+            } else {
+                this.rawData = new byte[0];
+            }
         } catch (IOException e) {
             throw e;
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
         }
-
         // Store request body to the request attribute.
-        String requestBody = new String(this.rawData, this.encoding);
-        request.setAttribute("requestBody", requestBody);
+        try {
+            String requestBody = new String(this.rawData, this.encoding);
+            request.setAttribute("requestBody", requestBody);
+        } catch (Exception e) {
+            request.setAttribute("requestBody", "");
+        }
     }
 
     @Override
