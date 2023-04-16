@@ -24,9 +24,6 @@ import com.jjbacsa.jjbacsabackend.util.AuthLinkUtil;
 import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
-
-import java.util.Map;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -175,14 +173,9 @@ public class UserServiceImpl implements UserService {
 
         Page<UserEntity> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor);
 
-        try {
-            UserEntity loginUser = userService.getLoginUser();
-            Map<Long, FollowedType> followedTypes = userRepository.getFollowedTypesByUserAndUsers(loginUser, result.getContent());
-            return result.map(user -> UserMapper.INSTANCE.toUserResponse(user, followedTypes.get(user.getId())));
-        } catch (Exception ignore) {
-        }
-
-        return result.map(user -> UserMapper.INSTANCE.toUserResponse(user, FollowedType.NONE));
+        UserEntity loginUser = userService.getLoginUser();
+        Map<Long, FollowedType> followedTypes = userRepository.getFollowedTypesByUserAndUsers(loginUser, result.getContent());
+        return result.map(user -> UserMapper.INSTANCE.toUserResponse(user, followedTypes.getOrDefault(user.getId(), FollowedType.NONE)));
     }
 
     @Override

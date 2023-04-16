@@ -74,7 +74,7 @@ public class UserController {
     @ApiOperation(
             value = "아이디 중복 확인",
             notes = "아이디 중복을 확인합니다." +
-            "\n\n\taccount : 유저 계정(1~20글자의 영문자 및 숫자)")
+                    "\n\n\taccount : 유저 계정(1~20글자의 영문자 및 숫자)")
     @ApiResponses({
             @ApiResponse(code = 200,
                     message = "OK",
@@ -153,6 +153,7 @@ public class UserController {
                     response = UserResponse.class,
                     responseContainer = "Page")
     })
+    @PreAuthorize("hasRole('NORMAL')")
     @GetMapping("/users")
     public ResponseEntity<Page<UserResponseWithFollowedType>> searchUsers(
             @Size(min = 1, max = 20, message = "닉네임은 1~20글자까지 검색할 수 있습니다.") @RequestParam String keyword,
@@ -230,8 +231,8 @@ public class UserController {
                     message = "OK")
     })
     @PostMapping("/user/email")
-    public ResponseEntity<String> sendAuthEmailCode (@Email(message = "이메일은 형식을 지켜야 합니다.")
-                                                     @RequestParam String email) throws Exception {
+    public ResponseEntity<String> sendAuthEmailCode(@Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                    @RequestParam String email) throws Exception {
         userService.sendAuthEmailCode(email);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
@@ -247,8 +248,8 @@ public class UserController {
                     message = "OK")
     })
     @PostMapping("/user/authenticate")
-    public ResponseEntity<String> sendAuthEmailLink (@Email(message = "이메일은 형식을 지켜야 합니다.")
-                                                 @RequestParam String email) throws Exception {
+    public ResponseEntity<String> sendAuthEmailLink(@Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                    @RequestParam String email) throws Exception {
         userService.sendAuthEmailLink(email);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
@@ -268,8 +269,8 @@ public class UserController {
     })
     @GetMapping("user/account")
     public ResponseEntity<UserResponse> findAccount(@Email(message = "이메일은 형식을 지켜야 합니다.")
-                                                  @RequestParam String email,
-                                              @RequestParam String code) throws Exception {
+                                                    @RequestParam String email,
+                                                    @RequestParam String code) throws Exception {
 
         return new ResponseEntity<>(userService.findAccount(email, code), HttpStatus.OK);
     }
@@ -292,7 +293,7 @@ public class UserController {
     })
     @PostMapping("user/password")
     public ResponseEntity<String> findPassword(@Validated(ValidationGroups.Update.class)
-                                                         @RequestBody EmailRequest request) throws Exception {
+                                               @RequestBody EmailRequest request) throws Exception {
         return new ResponseEntity<>(userService.findPassword(request), HttpStatus.OK);
     }
 
@@ -349,7 +350,7 @@ public class UserController {
     @PostMapping(value = "/login/{sns-type}")
     public ResponseEntity<Token> snsLogin(
             @PathVariable(name = "sns-type") OAuthType oAuthType
-            ) throws Exception {
+    ) throws Exception {
         return new ResponseEntity<>(oAuth2UserService.oAuthLoginByToken(oAuthType), HttpStatus.OK);
     }
 
@@ -368,8 +369,7 @@ public class UserController {
         HttpHeaders httpHeaders = new HttpHeaders();
         try {
             httpHeaders.setLocation(userService.authEmail(accessToken, refreshToken));
-        }
-        catch (RequestInputException exception) {
+        } catch (RequestInputException exception) {
             httpHeaders.setLocation(URI.create("../email-error"));
         }
 
@@ -399,7 +399,7 @@ public class UserController {
     @PatchMapping("/user/nickname")
     public ResponseEntity<UserResponse> modifyNickname(@Pattern(regexp = "^[a-zA-z가-힣0-9]{1,20}$",
             groups = {ValidationGroups.Update.class}, message = "닉네임에 특수문자와 초성은 불가능합니다.")
-                                                           @RequestParam String nickname) throws Exception {
+                                                       @RequestParam String nickname) throws Exception {
         return new ResponseEntity<>(userService.modifyNickname(nickname), HttpStatus.OK);
     }
 
