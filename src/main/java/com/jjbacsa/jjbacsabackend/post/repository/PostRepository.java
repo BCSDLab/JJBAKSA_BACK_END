@@ -11,6 +11,4 @@ import java.util.List;
 @Repository
 public interface PostRepository extends JpaRepository<PostEntity, Long>, DslPostRepository {
 
-    // Todo: 페이지네이션
-    List<PostEntity> findAllByBoardType(BoardType boardType);
 }

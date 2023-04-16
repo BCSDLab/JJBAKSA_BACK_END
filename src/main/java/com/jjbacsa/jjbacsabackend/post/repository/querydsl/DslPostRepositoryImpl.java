@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.data.support.PageableExecutionUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -22,46 +23,28 @@ public class DslPostRepositoryImpl extends QuerydslRepositorySupport implements 
     private final JPAQueryFactory queryFactory;
     private static QPostEntity post = QPostEntity.postEntity;
 
-    public DslPostRepositoryImpl(JPAQueryFactory queryFactory){
+    public DslPostRepositoryImpl(JPAQueryFactory queryFactory) {
         super(PostEntity.class);
         this.queryFactory = queryFactory;
     }
 
     @Override
-    public Page<PostEntity> findAllNotices(Pageable pageable) {
-        OrderSpecifier<?>[] order = new OrderSpecifier[] {
-                orderByEnum(BoardType.POWER_NOTICE),
-                post.createdAt.desc(),
-                post.id.desc()
-        };
+    public Page<PostEntity> findAllNotices(String cursor, String boardType, Pageable pageable) {
+
         List<PostEntity> postEntities = queryFactory
                 .selectFrom(post)
-                .where(post.boardType.in(BoardType.POWER_NOTICE, BoardType.NOTICE))
-                .offset(pageable.getOffset())
+                .where(post.createdAt.stringValue().lt(cursor == null ? LocalDateTime.now().toString() : cursor),
+                        post.boardType.stringValue().eq(boardType))
                 .limit(pageable.getPageSize())
-                .orderBy(order)
+                .orderBy(post.createdAt.desc(), post.id.desc())
                 .fetch();
 
         JPAQuery<Long> countQuery = queryFactory
                 .select(post.count())
                 .from(post)
-                .where(post.boardType.in(BoardType.POWER_NOTICE, BoardType.NOTICE));
+                .where(post.boardType.stringValue().eq(boardType));
 
         return PageableExecutionUtils.getPage(postEntities, pageable, countQuery::fetchOne);
-    }
-
-    // Todo: INQUIRY 기능 구현 후 구현
-    @Override
-    public Page<PostEntity> findAllInquiries(Pageable pageable) {
-        return Page.empty();
-    }
-
-    private OrderSpecifier<Integer> orderByEnum(BoardType boardType) {
-        NumberExpression<Integer> cases = new CaseBuilder()
-                .when(post.boardType.eq(boardType))
-                        .then(1)
-                .otherwise(2);
-        return new OrderSpecifier<>(Order.ASC, cases);
     }
 
 }
