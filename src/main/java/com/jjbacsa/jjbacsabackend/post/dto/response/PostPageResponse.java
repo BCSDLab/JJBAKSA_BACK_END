@@ -10,15 +10,15 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostResponse {
+public class PostPageResponse {
     private Long id;
     private String title;
-    private String content;
     private String boardType;
     private String createdAt;
 
     public void setCreatedAt(Date createAt){
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         this.createdAt = format.format(createAt);
     }
+
 }
