@@ -35,11 +35,16 @@ public class InternalUserServiceImpl implements InternalUserService {
     @Override
     public UserEntity getLoginUser() throws Exception {
 
-        Long userId = ((CustomUserDetails) SecurityContextHolder
+        Object principal = SecurityContextHolder
                 .getContext()
                 .getAuthentication()
-                .getPrincipal())
-                .getId();
+                .getPrincipal();
+
+        if (principal == null || principal.toString().equals("anonymousUser")) {
+            throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
+        }
+
+        Long userId = ((CustomUserDetails) principal).getId();
 
         return getUserById(userId);
     }

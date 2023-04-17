@@ -153,6 +153,7 @@ public class UserController {
                     response = UserResponse.class,
                     responseContainer = "Page")
     })
+    @PreAuthorize("hasRole('NORMAL')")
     @GetMapping("/users")
     public ResponseEntity<Page<UserResponseWithFollowedType>> searchUsers(
             @Size(min = 1, max = 20, message = "닉네임은 1~20글자까지 검색할 수 있습니다.") @RequestParam String keyword,
@@ -266,8 +267,8 @@ public class UserController {
                     message = "OK")
     })
     @PostMapping("/user/authenticate")
-    public ResponseEntity<String> sendAuthEmailLink(@Email(message = "이메일은 형식을 지켜야 합니다.")
-                                                    @RequestParam String email) throws Exception {
+    public ResponseEntity<String> sendAuthEmailLink (@Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                 @RequestParam String email) throws Exception {
         userService.sendAuthEmailLink(email);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
