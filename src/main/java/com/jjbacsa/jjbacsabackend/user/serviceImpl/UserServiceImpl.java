@@ -238,10 +238,16 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
-    //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
     @Override
     @Transactional
     public void sendAuthEmailCode(String email) throws Exception {
+        emailService.sendAuthEmailCode(email);
+    }
+
+    @Override
+    @Transactional
+    public void sendAuthEmailCode(String account, String email) throws Exception {
+        validateUserInfo(account, email);
         emailService.sendAuthEmailCode(email);
     }
 
@@ -298,6 +304,14 @@ public class UserServiceImpl implements UserService {
     private void validateExistEmail(String email) {
         if (userRepository.existsByEmailAndPasswordIsNotNull(email)) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_EMAIL);
+        }
+    }
+
+    private void validateUserInfo(String account, String email) {
+        UserEntity user = userService.getUserByAccount(account);
+
+        if (!Objects.equals(user.getEmail(), email)) {
+            throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
         }
     }
 

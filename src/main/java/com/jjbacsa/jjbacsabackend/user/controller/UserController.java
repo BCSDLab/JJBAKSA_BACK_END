@@ -221,8 +221,8 @@ public class UserController {
     }
 
     @ApiOperation(
-            value = "아이디 찾기, 비밀번호 찾기용 인증 이메일 발송",
-            notes = "아이디 찾기, 비밀번호 찾기용 인증 이메일 발송\n\n" +
+            value = "아이디 찾기 인증 이메일 발송",
+            notes = "아이디 찾기 인증 이메일 발송\n\n" +
                     "\n\n\temail : 인증 받을 이메일"
     )
     @ResponseStatus(HttpStatus.OK)
@@ -230,10 +230,29 @@ public class UserController {
             @ApiResponse(code = 200,
                     message = "OK")
     })
-    @PostMapping("/user/email")
-    public ResponseEntity<String> sendAuthEmailCode(@Email(message = "이메일은 형식을 지켜야 합니다.")
-                                                    @RequestParam String email) throws Exception {
+    @PostMapping("/user/email/account")
+    public ResponseEntity<String> sendAuthEmailAccount(@Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                       @RequestParam String email) throws Exception {
         userService.sendAuthEmailCode(email);
+        return new ResponseEntity<>("OK", HttpStatus.OK);
+    }
+
+    @ApiOperation(
+            value = "비밀번호 찾기 인증 이메일 발송",
+            notes = "비밀번호 찾기 인증 이메일 발송\n\n" +
+                    "\n\n\taccount : 인증 받을 아이디" +
+                    "\n\n\temail : 인증 받을 이메일"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "OK")
+    })
+    @PostMapping("/user/email/password")
+    public ResponseEntity<String> sendAuthEmailPassword(@RequestParam String account,
+                                                        @Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                        @RequestParam String email) throws Exception {
+        userService.sendAuthEmailCode(account, email);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 
@@ -335,7 +354,7 @@ public class UserController {
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping(value = "/user/profile")
     public ResponseEntity<UserResponse> modifyProfile(@RequestPart(value = "profile", required = false)
-                                                              MultipartFile profile) throws Exception {
+                                                      MultipartFile profile) throws Exception {
         return new ResponseEntity<>(userService.modifyProfile(profile), HttpStatus.OK);
     }
 
