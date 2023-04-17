@@ -1,6 +1,5 @@
 package com.jjbacsa.jjbacsabackend.etc.enums;
 
-import com.amazonaws.services.xray.model.Http;
 import org.springframework.http.HttpStatus;
 
 public enum ErrorMessage {
