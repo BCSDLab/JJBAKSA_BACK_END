@@ -310,8 +310,8 @@ public class UserServiceImpl implements UserService {
     private void validateUserInfo(String account, String email) {
         UserEntity user = userService.getUserByAccount(account);
 
-        if (!Objects.equals(user.getAccount(), account) || !Objects.equals(user.getEmail(), email)) {
-            throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+        if (!Objects.equals(user.getEmail(), email)) {
+            throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
         }
     }
 
