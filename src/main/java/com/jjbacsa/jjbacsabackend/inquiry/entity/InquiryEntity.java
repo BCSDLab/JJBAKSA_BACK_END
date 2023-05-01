@@ -35,10 +35,6 @@ public class InquiryEntity extends BaseEntity {
     private String content;
 
     @Basic
-    @Column(name = "secret")
-    private String secret;
-
-    @Basic
     @Column(name = "answer")
     private String answer;
 
@@ -47,17 +43,13 @@ public class InquiryEntity extends BaseEntity {
     @Column(name = "is_secreted")
     private int isSecreted = 0;
 
-    public void setSecret(String secret){
-        this.secret = secret;
-        this.isSecreted = 1;
-    }
-
     public void setAnswer(String answer) {
         this.answer = answer;
     }
 
     public void update(InquiryRequest inquiryRequest) {
-        if(inquiryRequest.getContent() != null) this.content = inquiryRequest.getContent();
-        if(inquiryRequest.getTitle() != null) this.title = inquiryRequest.getTitle();
+        if (inquiryRequest.getContent() != null) this.content = inquiryRequest.getContent();
+        if (inquiryRequest.getTitle() != null) this.title = inquiryRequest.getTitle();
+        if (inquiryRequest.getIsSecret() != null) this.isSecreted = inquiryRequest.getIsSecret() ? 1 : 0;
     }
 }
