@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class InquiryServiceImpl implements InquiryService {
     private final InternalUserService userService;
-    private final PasswordEncoder passwordEncoder;
 
     private final InquiryRepository inquiryRepository;
 
@@ -33,18 +32,10 @@ public class InquiryServiceImpl implements InquiryService {
     public InquiryResponse getInquiry(Long inquiryId) throws Exception {
         InquiryEntity inquiry = getInquiryEntity(inquiryId);
         InquiryResponse response = InquiryMapper.INSTANCE.toInquiryResponse(inquiry);
-        if (inquiry.getIsSecreted() == 1 && checkNormalUser()) response.setSecret();
-        return response;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public InquiryResponse getInquiryWithSecret(Long inquiryId, String secret) {
-        InquiryEntity inquiry = getInquiryEntity(inquiryId);
-        if (inquiry.getSecret() == null || !passwordEncoder.matches(secret, inquiry.getSecret())) {
-            throw new RequestInputException(ErrorMessage.INQUIRY_FAIL_EXCEPTION);
+        if (inquiry.getIsSecreted() == 1 && !checkUser(inquiry)) {
+            throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_INQUIRY);
         }
-        return InquiryMapper.INSTANCE.toInquiryResponse(inquiry);
+        return response;
     }
 
     @Override
@@ -58,6 +49,7 @@ public class InquiryServiceImpl implements InquiryService {
         UserEntity userEntity = userService.getLoginUser();
         InquiryEntity inquiry = getInquiryEntity(inquiryId);
         if (inquiry.getWriter().equals(userEntity)) inquiry.update(inquiryRequest);
+        else throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_INQUIRY);
         return InquiryMapper.INSTANCE.toInquiryResponse(inquiry);
     }
 
@@ -87,15 +79,15 @@ public class InquiryServiceImpl implements InquiryService {
                 .writer(userEntity)
                 .title(inquiryRequest.getTitle())
                 .content(inquiryRequest.getContent())
+                .isSecreted(inquiryRequest.getIsSecret() ? 1 : 0)
                 .build();
-        if (inquiryRequest.getSecret() != null) {
-            inquiry.setSecret(passwordEncoder.encode(inquiryRequest.getSecret()));
-        }
         return inquiry;
     }
 
-    private boolean checkNormalUser() throws Exception {
+    private boolean checkUser(InquiryEntity inquiryEntity) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
-        return userEntity.getUserType().equals(UserType.NORMAL);
+        return userEntity.getUserType().equals(UserType.ROOT) ||
+                userEntity.getUserType().equals(UserType.ADMIN) ||
+                inquiryEntity.getWriter().equals(userEntity) ? true : false;
     }
 }
