@@ -1,16 +1,16 @@
 package com.jjbacsa.jjbacsabackend.inquiry.dto.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
+import lombok.*;
 
-@Data
+import javax.validation.constraints.NotNull;
+
+@Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class AnswerRequest {
-    // Todo: Validation
+    @NotNull(groups = {ValidationGroups.Create.class}, message = "답변을 입력해주세요")
     private String answer;
 
 }
