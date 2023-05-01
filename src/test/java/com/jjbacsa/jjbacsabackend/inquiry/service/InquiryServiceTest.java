@@ -14,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Date;
 import java.util.Optional;
@@ -33,15 +32,12 @@ public class InquiryServiceTest {
     private InquiryRepository inquiryRepository;
     @Mock
     private InternalUserService userService;
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
-
-    @DisplayName("Inquiry를 비밀번호 없이 작성한다.")
+    @DisplayName("Inquiry를 일반 글로 작성한다.")
     @Test
     void givenInquiryInfo_whenWriteInquiryWithoutSecret_ThenCreateInquiry() throws Exception {
         // Given
-        InquiryRequest inquiryRequest = createInquiryRequest(null);
+        InquiryRequest inquiryRequest = createInquiryRequest(false);
         given(inquiryRepository.save(any(InquiryEntity.class))).willReturn(createInquiryEntity(inquiryRequest));
         given(userService.getLoginUser()).willReturn(createUserEntity());
 
@@ -57,10 +53,9 @@ public class InquiryServiceTest {
     @Test
     void givenInquiryInfo_whenWriteInquiry_ThenCreateInquiry() throws Exception {
         // Given
-        InquiryRequest inquiryRequest = createInquiryRequest("secret");
+        InquiryRequest inquiryRequest = createInquiryRequest(true);
         given(inquiryRepository.save(any(InquiryEntity.class))).willReturn(createInquiryEntity(inquiryRequest));
         given(userService.getLoginUser()).willReturn(createUserEntity());
-        given(passwordEncoder.encode(inquiryRequest.getSecret())).willReturn("");
         // When
         inquiryService.create(inquiryRequest);
 
@@ -73,10 +68,10 @@ public class InquiryServiceTest {
     @Test
     void givenInquiryInfo_whenModifyInquiry_ThenModifiesInquiry() throws Exception {
         // Given
-        InquiryEntity inquiryEntity = createInquiryEntity(createInquiryRequest(null));
+        InquiryEntity inquiryEntity = createInquiryEntity(createInquiryRequest(false));
         String title = "new title";
         String content = "new content";
-        InquiryRequest inquiryRequest = createInquiryRequest(title, content, null);
+        InquiryRequest inquiryRequest = createInquiryRequest(title, content, false);
 
         given(inquiryRepository.findById(inquiryEntity.getId())).willReturn(Optional.of(inquiryEntity));
         given(userService.getLoginUser()).willReturn(createUserEntity());
@@ -95,7 +90,7 @@ public class InquiryServiceTest {
         // Given
         Long inquiryId = 1L;
 
-        given(inquiryRepository.findById(inquiryId)).willReturn(Optional.of(createInquiryEntity(createInquiryRequest(null))));
+        given(inquiryRepository.findById(inquiryId)).willReturn(Optional.of(createInquiryEntity(createInquiryRequest(false))));
         given(userService.getLoginUser()).willReturn(createUserEntity());
         willDoNothing().given(inquiryRepository).deleteById(inquiryId);
 
@@ -110,11 +105,11 @@ public class InquiryServiceTest {
 
     @DisplayName("Inquiry에 답변한다.")
     @Test
-    void givenAnswerAndInquiryId_whenAnswerInquiry_ThenAnswersInquiry() throws Exception {
+    void givenAnswerAndInquiryId_whenAnswerInquiry_ThenAnswersInquiry() {
         // Given
         AnswerRequest answer = createAnswerRequest();
         Long inquiryId = 1L;
-        given(inquiryRepository.findById(inquiryId)).willReturn(Optional.of(createInquiryEntity(createInquiryRequest(null))));
+        given(inquiryRepository.findById(inquiryId)).willReturn(Optional.of(createInquiryEntity(createInquiryRequest(false))));
 
         // When
         inquiryService.addAnswer(answer, inquiryId);
@@ -123,34 +118,34 @@ public class InquiryServiceTest {
         then(inquiryRepository).should().findById(inquiryId);
     }
 
-    private InquiryRequest createInquiryRequest(String secret){
-        return createInquiryRequest("title", "content", secret);
+    private InquiryRequest createInquiryRequest(Boolean isSecret) {
+        return createInquiryRequest("title", "content", isSecret);
     }
 
-    private InquiryRequest createInquiryRequest(String title, String content, String secret){
+    private InquiryRequest createInquiryRequest(String title, String content, Boolean isSecret) {
         return InquiryRequest.builder()
                 .title(title)
                 .content(content)
-                .secret(secret)
+                .isSecret(isSecret)
                 .build();
     }
-    private InquiryEntity createInquiryEntity(InquiryRequest inquiryRequest){
+
+    private InquiryEntity createInquiryEntity(InquiryRequest inquiryRequest) {
         return InquiryEntity.builder()
                 .id(1L)
                 .writer(createUserEntity())
                 .title(inquiryRequest.getTitle())
                 .content(inquiryRequest.getContent())
-                .secret(inquiryRequest.getSecret())
-                .isSecreted(inquiryRequest.getSecret() == null ? 0 : 1)
+                .isSecreted(inquiryRequest.getIsSecret() ? 0 : 1)
                 .createdAt(new Date())
                 .build();
     }
 
-    private UserEntity createUserEntity(){
+    private UserEntity createUserEntity() {
         return createUserEntity(1L);
     }
 
-    private UserEntity createUserEntity(Long userId){
+    private UserEntity createUserEntity(Long userId) {
         return UserEntity.builder()
                 .id(userId)
                 .account("dpwns")
@@ -161,7 +156,7 @@ public class InquiryServiceTest {
                 .build();
     }
 
-    private AnswerRequest createAnswerRequest(){
+    private AnswerRequest createAnswerRequest() {
         return AnswerRequest.builder()
                 .answer("answer")
                 .build();
