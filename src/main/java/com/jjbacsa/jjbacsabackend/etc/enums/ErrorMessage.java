@@ -50,6 +50,8 @@ public enum ErrorMessage {
     ALREADY_EXISTS_EMAIL(44, "이미 존재하는 이메일입니다.", HttpStatus.CONFLICT),
     INVALID_EMAIL_EXCEPTION(45, "이메일이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     LOGIN_FAIL_EXCEPTION(46, "회원이 아니시거나, 아이디 또는 비밀번호를 잘못 입력했습니다.", HttpStatus.CONFLICT),
+    INQUIRY_NOT_EXISTS_EXCEPTION(47, "문의글이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_PERMISSION_INQUIRY(48, "문의글 작성자가 아닙니다.", HttpStatus.BAD_REQUEST),
     ;
 
     Integer code;
