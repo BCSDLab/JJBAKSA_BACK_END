@@ -8,6 +8,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.OAuth2UserServiceImpl;
@@ -215,8 +216,8 @@ public class UserController {
     })
     @PreAuthorize(("hasRole('NORMAL')"))
     @DeleteMapping("/user/me")
-    public ResponseEntity<Void> withdraw() throws Exception {
-        userService.withdraw();
+    public ResponseEntity<Void> withdraw(@RequestBody WithdrawRequest request) throws Exception {
+        userService.withdraw(request);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
