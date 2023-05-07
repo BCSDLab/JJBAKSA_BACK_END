@@ -7,6 +7,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserCount;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -151,7 +152,11 @@ public class UserServiceTest {
     @DisplayName("회원 탈퇴")
     @Test
     void withdraw() throws Exception {
-        userService.withdraw();
+        WithdrawRequest request = new WithdrawRequest();
+        request.setReason("테스트 이유");
+        request.setDiscomfort("테스트 개선사항");
+
+        userService.withdraw(request);
         assertThrows(RequestInputException.class,
                 () -> userService.getAccountInfo(userService.getLoginUser().getId()));
 
