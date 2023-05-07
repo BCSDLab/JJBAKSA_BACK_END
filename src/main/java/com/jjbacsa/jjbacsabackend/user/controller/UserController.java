@@ -207,8 +207,13 @@ public class UserController {
             value = "회원 탈퇴",
             notes = "회원 탈퇴\n\n" +
                     "필요 헤더\n\n" +
-                    "\tAuthorization : Bearer + access token"
-    )
+                    "\tAuthorization : Bearer + access token" +
+                    "필요한 필드\n\n" +
+                    "\t{\n\n     " +
+                    "reason : 변경 사유,\n\n     " +
+                    "discomfort : 개선 사항\n\n    " +
+                    "}\t",
+            authorizations = @Authorization(value = "Bearer + refreshToken"))
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiResponses({
             @ApiResponse(code = 204,
