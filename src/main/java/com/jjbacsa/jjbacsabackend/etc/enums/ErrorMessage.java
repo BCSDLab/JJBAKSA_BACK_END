@@ -50,6 +50,7 @@ public enum ErrorMessage {
     ALREADY_EXISTS_EMAIL(44, "이미 존재하는 이메일입니다.", HttpStatus.CONFLICT),
     INVALID_EMAIL_EXCEPTION(45, "계정이 존재하지 않거나 이메일 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     LOGIN_FAIL_EXCEPTION(46, "회원이 아니시거나, 아이디 또는 비밀번호를 잘못 입력했습니다.", HttpStatus.CONFLICT),
+    CONTINUAL_API_EXCEPTION(47, "연속적으로 외부 API 요청에 실패합니다.", HttpStatus.BAD_REQUEST)
     ;
 
     Integer code;

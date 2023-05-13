@@ -25,10 +25,12 @@ public class GoogleController {
     /**
      * 각 상점마다 검색시 상세조회 수행 (각각에 대해 상세조회 가격이 들어감<- 1000회 17달러)
      * ex) 한 쿼리에 대해 검색 결과가 100개 나왔으면 1.7달러
+     * + place detail 같은 경우 상세 조회에 따라 가격 다르게 나옴
      * 거리순 정렬은 불가, 반경 radius 받아서 해당 반경에 있는 상점 반환 기능은 추후 추가 예정
      * google API 상점 조회 (리뷰 작성, 상점 조회시 사용)
      */
 
+    //Google API에서 검색하는 컨트롤러
     @ApiOperation(
             value = "키워드에 따른 상점 검색",
             notes = "키워드로 상점 검색하여 상점들을 반환한다.\n\n" +
@@ -111,16 +113,10 @@ public class GoogleController {
                 .body(googleService.getShopDetails(placeId, shopRequest.getX(), shopRequest.getY()));
     }
 
-    @ApiOperation(
-            value = "사진 token에 따른 사진 url 반환 ",
-            notes = "사진 token으로 사진 url을 반환한다.\n\n"
-    )
-    @ApiImplicitParam(name = "token", value = "가져올 사진 token", required = true, dataType = "string", paramType = "path")
-    @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping("/google/photo/{token}")
-    public ResponseEntity<String> getPhotoUrl(@PathVariable("token") String token) {
-        return ResponseEntity.ok()
-                .body(googleService.getPhotoUrl(token));
-    }
+    //todo: 가까운 음식점
+
+    //todo: 친구 음식점
+
+    //todo: 북마크 음식점
 
 }

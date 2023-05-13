@@ -6,14 +6,21 @@ import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.google.response.ShopQueryResponses;
 import com.jjbacsa.jjbacsabackend.google.response.ShopResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestConstructor;
+import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @RequiredArgsConstructor
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @SpringBootTest
+@Slf4j
 public class GoogleServiceTest {
     private final GoogleService googleService;
     private final GoogleShopRepository googleShopRepository;
@@ -36,4 +43,26 @@ public class GoogleServiceTest {
         Assertions.assertNotEquals(shopResponse.getDist(), null);
     }
 
+
+//    @Test
+//    public void 비동기처리() throws JsonProcessingException {
+//
+//        long sTime = System.currentTimeMillis();
+//
+//        List<String> placeIds = Arrays.asList("ChIJRx0N_SiffDUR5pLX-kM4Mko", "ChIJx44qfNaYfDURtM0hCeeC7N4");
+//        List<String> results = googleService.callApiByPlaceIdsNonBlocking(placeIds);
+//
+//        for (String s : results) {
+//            Assertions.assertNotNull(s);
+//        }
+//
+//        long nonBlockTime = System.currentTimeMillis() - sTime;
+//
+//
+//        List<ShopResponse> responseList=new ArrayList<>();
+//        for (String id : placeIds) {
+//            responseList.add(googleService.getShopDetails(id,0,0));
+//        }
+//
+//    }
 }
