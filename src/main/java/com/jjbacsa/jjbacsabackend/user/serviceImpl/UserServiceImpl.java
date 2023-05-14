@@ -217,8 +217,7 @@ public class UserServiceImpl implements UserService {
         userCountRepository.updateAllFriendsCountByUser(user);
         followService.deleteFollowWithUser(user);
 
-        userRepository.delete(user);
-//        user.setIsDeleted(1);
+        user.setIsDeleted(1);
 
         //회원 탈퇴에 따른 리프레시 토큰 삭제
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
