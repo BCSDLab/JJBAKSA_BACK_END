@@ -152,11 +152,7 @@ public class UserServiceTest {
     @DisplayName("회원 탈퇴")
     @Test
     void withdraw() throws Exception {
-        WithdrawRequest request = new WithdrawRequest();
-        request.setReason("테스트 이유");
-        request.setDiscomfort("테스트 개선사항");
-
-        userService.withdraw(request);
+        userService.withdraw();
         assertThrows(RequestInputException.class,
                 () -> userService.getAccountInfo(userService.getLoginUser().getId()));
 
