@@ -8,6 +8,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
@@ -207,12 +208,7 @@ public class UserController {
             value = "회원 탈퇴",
             notes = "회원 탈퇴\n\n" +
                     "필요 헤더\n\n" +
-                    "\tAuthorization : Bearer + access token" +
-                    "필요한 필드\n\n" +
-                    "\t{\n\n     " +
-                    "reason : 변경 사유,\n\n     " +
-                    "discomfort : 개선 사항\n\n    " +
-                    "}\t",
+                    "\tAuthorization : Bearer + access token",
             authorizations = @Authorization(value = "Bearer + refreshToken"))
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiResponses({
@@ -221,9 +217,33 @@ public class UserController {
     })
     @PreAuthorize(("hasRole('NORMAL')"))
     @DeleteMapping("/user/me")
-    public ResponseEntity<Void> withdraw(@RequestBody WithdrawRequest request) throws Exception {
-        userService.withdraw(request);
+    public ResponseEntity<Void> withdraw() throws Exception {
+        userService.withdraw();
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @ApiOperation(
+            value = "탈퇴 사유 저장",
+            notes = "탈퇴 사유 저장\n\n" +
+                    "필요 헤더\n\n" +
+                    "\tAuthorization : Bearer + access token" +
+                    "\n\n필요한 필드\n\n" +
+                    "\t{\n\n     " +
+                    "reason : 변경 사유,\n\n     " +
+                    "discomfort : 개선 사항\n\n    " +
+                    "}\t\n\n" +
+                    "탈퇴가 먼저 이뤄지면 탈퇴 사유를 저장할 유저를 찾지 못합니다.\n\n" +
+                    "탈퇴 이전에 먼저 탈퇴 사유를 저장해주시길 바랍니다.",
+            authorizations = @Authorization(value = "Bearer + refreshToken"))
+    @ResponseStatus(HttpStatus.CREATED)
+    @ApiResponses({
+            @ApiResponse(code = 201,
+                    message = "생성된 탈퇴 사유")
+    })
+    @PreAuthorize(("hasRole('NORMAL')"))
+    @PostMapping("/user/withdraw-reason")
+    public ResponseEntity<WithdrawReasonResponse> createWithdrawReason(@RequestBody WithdrawRequest request) throws Exception {
+        return new ResponseEntity<WithdrawReasonResponse>(userService.createWithdrawReason(request), HttpStatus.CREATED);
     }
 
     @ApiOperation(
@@ -360,7 +380,7 @@ public class UserController {
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping(value = "/user/profile")
     public ResponseEntity<UserResponse> modifyProfile(@RequestPart(value = "profile", required = false)
-                                                      MultipartFile profile) throws Exception {
+                                                              MultipartFile profile) throws Exception {
         return new ResponseEntity<>(userService.modifyProfile(profile), HttpStatus.OK);
     }
 

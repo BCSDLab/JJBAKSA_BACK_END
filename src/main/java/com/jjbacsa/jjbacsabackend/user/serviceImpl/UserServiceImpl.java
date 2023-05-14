@@ -12,6 +12,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.WithdrawReasonEntity;
@@ -210,28 +211,33 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void withdraw(WithdrawRequest request) throws Exception {
+    public void withdraw() throws Exception {
         UserEntity user = userService.getLoginUser();
 
         userCountRepository.updateAllFriendsCountByUser(user);
         followService.deleteFollowWithUser(user);
 
-        user.setIsDeleted(1);
-        createWithdrawReason(user, request);
+        userRepository.delete(user);
+//        user.setIsDeleted(1);
 
         //회원 탈퇴에 따른 리프레시 토큰 삭제
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
         if (existToken != null) redisUtil.deleteValue(String.valueOf(user.getId()));
     }
 
-    private void createWithdrawReason(UserEntity user, WithdrawRequest request) {
-        WithdrawReasonEntity entity = WithdrawReasonEntity.builder()
+    @Override
+    @Transactional
+    public WithdrawReasonResponse createWithdrawReason(WithdrawRequest request) throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        WithdrawReasonEntity reason = WithdrawReasonEntity.builder()
                 .user(user)
                 .reason(request.getReason())
                 .discomfort(request.getDiscomfort())
                 .build();
 
-        withdrawReasonRepository.save(entity);
+        withdrawReasonRepository.save(reason);
+        return new WithdrawReasonResponse(user.getId(), request);
     }
 
     @Override

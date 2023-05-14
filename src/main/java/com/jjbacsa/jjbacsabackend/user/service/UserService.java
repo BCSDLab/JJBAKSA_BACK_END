@@ -5,7 +5,9 @@ import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
+import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,7 +36,9 @@ public interface UserService {
 
     UserResponse modifyUser(UserRequest request) throws Exception;
 
-    void withdraw(WithdrawRequest request) throws Exception;
+    void withdraw() throws Exception;
+
+    WithdrawReasonResponse createWithdrawReason(WithdrawRequest request) throws Exception;
 
     UserResponse modifyProfile(MultipartFile profile) throws Exception;
 
