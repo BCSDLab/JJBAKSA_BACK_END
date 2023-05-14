@@ -31,4 +31,35 @@ public class GoogleRepositoryTest {
 
         Assertions.assertNotNull(googleShopRepository.findByPlaceId(place_id));
     }
+
+    @Test
+    public void place_id로_상점_가져오기(){
+        GoogleShopEntity shopEntity=GoogleShopEntity.builder()
+                .placeId("test")
+                .build();
+
+        shopEntity=googleShopRepository.save(shopEntity);
+
+        GoogleShopEntity googleShopEntityByPlaceId=googleShopRepository.findByPlaceId(shopEntity.getPlaceId())
+                .orElse(null);
+
+        Assertions.assertNotNull(googleShopEntityByPlaceId);
+    }
+
+    @Test
+    public void google_shop_id로_상점_가져오기(){
+        GoogleShopEntity shopEntity=GoogleShopEntity.builder()
+                .placeId("test2")
+                .build();
+
+        shopEntity=googleShopRepository.save(shopEntity);
+
+        GoogleShopEntity googleShopEntityById = googleShopRepository.findById(shopEntity.getId())
+                .orElse(null);
+
+        Assertions.assertNotNull(googleShopEntityById);
+        Assertions.assertEquals(googleShopEntityById.getPlaceId(),"test2");
+    }
+
+
 }

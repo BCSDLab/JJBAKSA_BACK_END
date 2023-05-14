@@ -1,6 +1,8 @@
 package com.jjbacsa.jjbacsabackend.scrap.service;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
+import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryRequest;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryResponse;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapRequest;
@@ -44,7 +46,7 @@ class ScrapServiceTest {
     private final InternalScrapService internalScrapService;
 
     private final UserRepository userRepository;
-    private final ShopRepository shopRepository;
+    private final GoogleShopRepository googleShopRepository;
     private final ScrapRepository scrapRepository;
     private final ScrapDirectoryRepository scrapDirectoryRepository;
 
@@ -53,16 +55,16 @@ class ScrapServiceTest {
 
     private UserEntity user1;
     private UserEntity user2;
-    private ShopEntity shop1;
-    private ShopEntity shop2;
+    private GoogleShopEntity googleShop1;
+    private GoogleShopEntity googleShop2;
 
     @BeforeEach
     void setup() {
 
         user1 = userRepository.save(getTestUser("testUser1"));
         user2 = userRepository.save(getTestUser("testUser2"));
-        shop1 = shopRepository.save(getTestShop("testShop1"));
-        shop2 = shopRepository.save(getTestShop("testShop2"));
+        googleShop1 = googleShopRepository.save(getTestShop("testShop1"));
+        googleShop2 = googleShopRepository.save(getTestShop("testShop2"));
     }
 
     @DisplayName("스크랩 디렉토리 생성")
@@ -144,7 +146,7 @@ class ScrapServiceTest {
         //테스트 데이터 생성
         ScrapDirectoryEntity dir1 = scrapDirectoryRepository.save(getTestDirectory(user1, "dir1"));
         ScrapDirectoryEntity dir2 = scrapDirectoryRepository.save(getTestDirectory(user2, "dir2"));
-        ScrapEntity scrap = scrapRepository.save(getTestScrap(user1, shop1, dir1));
+        ScrapEntity scrap = scrapRepository.save(getTestScrap(user1, googleShop1, dir1));
         userService.increaseScrapCount(user1.getId());
         entityManager.flush();
         user1 = userService.getUserById(user1.getId());
@@ -187,27 +189,27 @@ class ScrapServiceTest {
 
         //디렉토리가 없는 경우
         assertThrows(RuntimeException.class, () ->
-                scrapService.create(getScrapRequest(null, shop1.getId()))
+                scrapService.create(getScrapRequest(null, googleShop1.getId()))
         );
 
         //내가 만든 디렉토리가 아닌 경우
         assertThrows(RuntimeException.class, () ->
-                scrapService.create(getScrapRequest(dir2.getId(), shop1.getId()))
+                scrapService.create(getScrapRequest(dir2.getId(), googleShop1.getId()))
         );
 
         //스크랩 추가
-        ScrapResponse scrapRes1 = scrapService.create(getScrapRequest(0L, shop1.getId()));
-        ScrapResponse scrapRes2 = scrapService.create(getScrapRequest(dir1.getId(), shop2.getId()));
+        ScrapResponse scrapRes1 = scrapService.create(getScrapRequest(0L, googleShop1.getId()));
+        ScrapResponse scrapRes2 = scrapService.create(getScrapRequest(dir1.getId(), googleShop2.getId()));
         ScrapEntity scrap1 = scrapRepository.getById(scrapRes1.getId());
         ScrapEntity scrap2 = scrapRepository.getById(scrapRes2.getId());
 
         //같은 상점을 중복 추가할 경우
         assertThrows(RuntimeException.class, () ->
-                scrapService.create(getScrapRequest(0L, shop1.getId()))
+                scrapService.create(getScrapRequest(0L, googleShop1.getId()))
         );
 
         //then
-        assertEquals(shop1, scrap1.getShop());
+        assertEquals(googleShop1, scrap1.getShop());
         assertEquals(dir1, scrap2.getDirectory());
         assertEquals(1, dir1.getScrapDirectoryCount().getScrapCount());
         assertNull(scrapRes1.getDirectory());
@@ -224,8 +226,8 @@ class ScrapServiceTest {
         ScrapDirectoryEntity directory2 = scrapDirectoryRepository.save(getTestDirectory(user2, "dir2"));
         for (int i = 0; i < 10; ++i) {
 
-            ShopEntity shop1 = shopRepository.save(getTestShop("shop0" + i));
-            ShopEntity shop2 = shopRepository.save(getTestShop("shop1" + i));
+            GoogleShopEntity shop1 = googleShopRepository.save(getTestShop("shop0" + i));
+            GoogleShopEntity shop2 = googleShopRepository.save(getTestShop("shop1" + i));
             scrapRepository.save(getTestScrap(user1, shop1, null));
             scrapRepository.save(getTestScrap(user1, shop2, directory1));
         }
@@ -262,8 +264,8 @@ class ScrapServiceTest {
         //테스트 데이터 생성
         ScrapDirectoryEntity directory1 = scrapDirectoryRepository.save(getTestDirectory(user1, "dir1"));
         ScrapDirectoryEntity directory2 = scrapDirectoryRepository.save(getTestDirectory(user2, "dir2"));
-        ScrapEntity scrap1 = scrapRepository.save(getTestScrap(user1, shop1, null));
-        ScrapEntity scrap2 = scrapRepository.save(getTestScrap(user2, shop1, null));
+        ScrapEntity scrap1 = scrapRepository.save(getTestScrap(user1, googleShop1, null));
+        ScrapEntity scrap2 = scrapRepository.save(getTestScrap(user2, googleShop1, null));
 
 
         //스크랩이 없는 경우
@@ -302,8 +304,8 @@ class ScrapServiceTest {
 
         //테스트 데이터 생성
         ScrapDirectoryEntity directory = scrapDirectoryRepository.save(getTestDirectory(user1, "dir1"));
-        ScrapEntity scrap1 = scrapRepository.save(getTestScrap(user1, shop1, directory));
-        ScrapEntity scrap2 = scrapRepository.save(getTestScrap(user2, shop1, null));
+        ScrapEntity scrap1 = scrapRepository.save(getTestScrap(user1, googleShop1, directory));
+        ScrapEntity scrap2 = scrapRepository.save(getTestScrap(user2, googleShop1, null));
         userService.increaseScrapCount(user1.getId());
         internalScrapService.addScrapCount(directory.getId(), 1);
 
@@ -338,15 +340,10 @@ class ScrapServiceTest {
                 .build();
     }
 
-    private ShopEntity getTestShop(String name) {
+    private GoogleShopEntity getTestShop(String placeId) {
 
-        return ShopEntity.builder()
-                .placeId(name)
-                .placeName(name)
-                .x("0")
-                .y("0")
-                .categoryName("category")
-                .build();
+        return GoogleShopEntity.builder()
+                .placeId(placeId).build();
     }
 
     private ScrapDirectoryEntity getTestDirectory(UserEntity user, String name) {
@@ -357,7 +354,7 @@ class ScrapServiceTest {
                 .build();
     }
 
-    private ScrapEntity getTestScrap(UserEntity user, ShopEntity shop, ScrapDirectoryEntity directory) {
+    private ScrapEntity getTestScrap(UserEntity user, GoogleShopEntity shop, ScrapDirectoryEntity directory) {
 
         return ScrapEntity.builder()
                 .directory(directory)

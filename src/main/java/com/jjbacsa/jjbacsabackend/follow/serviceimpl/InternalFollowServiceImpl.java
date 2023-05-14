@@ -2,14 +2,19 @@ package com.jjbacsa.jjbacsabackend.follow.serviceimpl;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowRequestEntity;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRequestRepository;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
+import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +23,7 @@ public class InternalFollowServiceImpl implements InternalFollowService {
 
     private final FollowRepository followRepository;
     private final FollowRequestRepository followRequestRepository;
+    private final InternalUserService userService;
 
     @Override
     public FollowRequestEntity getFollowRequestById(Long id) throws RequestInputException {
@@ -35,5 +41,17 @@ public class InternalFollowServiceImpl implements InternalFollowService {
     @Override
     public Long deleteFollowWithUser(UserEntity user){
         return followRepository.deleteFollowWithUser(user);
+    }
+
+    @Override
+    public List<Long> getFollowers() throws Exception{
+
+        UserEntity user=userService.getLoginUser();
+
+        return followRepository.findAllByFollower(user)
+                .stream()
+                .map(FollowEntity::getUser)
+                .map(UserEntity::getId)
+                .collect(Collectors.toList());
     }
 }

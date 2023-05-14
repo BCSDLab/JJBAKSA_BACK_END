@@ -1,0 +1,30 @@
+package com.jjbacsa.jjbacsabackend.google.dto.response;
+
+import lombok.Builder;
+import lombok.Getter;
+
+/**
+ * shopDto(단일 상점 자세한 정보) 반환되는 클래스
+ */
+
+@Builder
+@Getter
+public class ShopResponse {
+    private String place_id;
+    private String name;
+    private String formatted_address;
+    private Double x;
+    private Double y;
+    private String formatted_phone_number;
+    private Boolean open_now;
+    private String businessDay;
+    private Integer totalRating;
+    private Integer ratingCount;
+    private String photoToken;
+    private String category;
+
+    public void setShopCount(Integer totalRating, Integer ratingCount) {
+        this.totalRating = totalRating;
+        this.ratingCount = ratingCount;
+    }
+}

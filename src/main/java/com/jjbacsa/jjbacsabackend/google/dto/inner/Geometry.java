@@ -7,7 +7,7 @@ public class Geometry {
     private Location location;
     @Data
     public static class Location{
-        String lng; //경도(x)
-        String lat; //위도(y)
+        Double lng; //경도(x)
+        Double lat; //위도(y)
     }
 }

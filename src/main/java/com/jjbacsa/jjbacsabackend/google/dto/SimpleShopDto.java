@@ -9,7 +9,7 @@ import lombok.Data;
  * - 좌표, 사진, 이름 반환
  */
 
-//todo: 사진 전송 (사진 하나만 보내면 됨)
+//todo: s3에서 리뷰 사진 가져오기
 @Data
 public class SimpleShopDto {
     private String place_id;
