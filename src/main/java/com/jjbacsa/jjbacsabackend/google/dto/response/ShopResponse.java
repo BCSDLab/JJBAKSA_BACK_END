@@ -22,9 +22,15 @@ public class ShopResponse {
     private Integer ratingCount;
     private String photoToken;
     private String category;
+    private String todayBusinessHour; //오늘 영업시간
+    private boolean isScrap;
 
     public void setShopCount(Integer totalRating, Integer ratingCount) {
         this.totalRating = totalRating;
         this.ratingCount = ratingCount;
+    }
+
+    public void setIsScrap(boolean isScrap) {
+        this.isScrap = isScrap;
     }
 }

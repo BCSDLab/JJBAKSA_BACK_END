@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.google.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -104,7 +106,7 @@ public class GoogleShopServiceTest {
     }
 
     @Test
-    public void 상점_상세정보() throws JsonProcessingException {
+    public void 상점_상세정보() throws Exception {
         ShopResponse shopResponse = googleShopService.getShopDetails(place_id);
         Assertions.assertNotEquals(shopResponse.getX(), null);
         Assertions.assertNotEquals(shopResponse.getY(), null);
@@ -173,6 +175,52 @@ public class GoogleShopServiceTest {
     @Test
     public void 상점_메인페이지_친구북마크필터() {
         //todo: 리뷰 상점 변경되면 작성
+    }
+
+    @Transactional
+    @Test
+    public void 상점_세부정보_북마크여부_반환() throws Exception {
+        //user 회원 가입
+        userRepository.save(user);
+
+        //임시 로그인
+        tempLoginForTest(user);
+
+        //상점 저장
+        saveAllShops();
+
+        //북마크 추가
+        ScrapEntity scrap1=ScrapEntity.builder().shop(googleShop1).user(user).build();
+        scrapRepository.save(scrap1);
+
+        ShopResponse shopResponse=googleShopService.getShopDetails(googleShop1.getPlaceId());
+        Assertions.assertEquals(shopResponse.isScrap(),true);
+
+        ShopResponse shopResponse2=googleShopService.getShopDetails(googleShop2.getPlaceId());
+        Assertions.assertEquals(shopResponse2.isScrap(),false);
+    }
+
+    @Transactional
+    @Test
+    public void DB_내_상점_세부정보_북마크여부() throws Exception {
+        //user 회원 가입
+        userRepository.save(user);
+
+        //임시 로그인
+        tempLoginForTest(user);
+
+        //상점 저장
+        GoogleShopEntity googleShopEntity=googleShopRepository.save(googleShop1);
+
+        //북마크 추가
+        ScrapEntity scrap1=ScrapEntity.builder().shop(googleShop1).user(user).build();
+        scrapRepository.save(scrap1);
+
+        ShopResponse shopResponse1=googleShopService.getShop(googleShopEntity.getPlaceId());
+        Assertions.assertEquals(shopResponse1.isScrap(), true);
+        Assertions.assertThrows(RequestInputException.class, ()->
+                googleShopService.getShop(googleShop2.getPlaceId())
+                );
     }
 
     private void saveAllShops() {

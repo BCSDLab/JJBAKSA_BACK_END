@@ -105,7 +105,7 @@ public class GoogleShopController {
     )
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping("/google/shop/{place_id}")
-    public ResponseEntity<ShopResponse> getGoogleShopDetails(@PathVariable("place_id") String placeId) throws JsonProcessingException {
+    public ResponseEntity<ShopResponse> getGoogleShopDetails(@PathVariable("place_id") String placeId) throws Exception {
         return ResponseEntity.ok()
                 .body(googleShopService.getShopDetails(placeId));
     }
@@ -151,7 +151,7 @@ public class GoogleShopController {
             name = "place_id", value = "상점 검색 place id", required = true, dataType = "string", paramType = "path"
     )
     @GetMapping("/shop/{place_id}")
-    public ResponseEntity<ShopResponse> getShopDetails(@PathVariable("place_id") String placeId) throws JsonProcessingException {
+    public ResponseEntity<ShopResponse> getShopDetails(@PathVariable("place_id") String placeId) throws Exception {
         return ResponseEntity.ok()
                 .body(googleShopService.getShop(placeId));
     }

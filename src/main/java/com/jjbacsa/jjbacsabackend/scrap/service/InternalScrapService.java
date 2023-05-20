@@ -15,4 +15,8 @@ public interface InternalScrapService {
     void addScrapCount(Long scrapDirectoryId, int delta);
 
     List<Long> getShopIdsForUserScrap() throws Exception;
+
+    boolean isUserScrapShop(Long shopId) throws Exception;
 }
+
+

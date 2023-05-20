@@ -38,7 +38,9 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
+import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -111,23 +113,31 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return shopQueryResponses;
     }
 
+    //todo: 오늘 영업시간, 총 영업시간 두개 다 보내주기
     @Override
-    public ShopResponse getShopDetails(String placeId) throws JsonProcessingException {
-        ShopApiDto shopApiDto;
-
+    public ShopResponse getShopDetails(String placeId) throws Exception {
         String shopStr = this.callGoogleApi(placeId);
-        shopApiDto = this.jsonToShopApiDto(shopStr);
+        ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
 
         String businessDay;
+        String todayBusinessHour;
         try {
+            //오늘 날짜 가져오기
+            LocalDate today = LocalDate.now();
+            int dayOfWeek = today.getDayOfWeek().getValue() - 1;
+
             JSONArray jsonArray = new JSONArray();
             for (String weekday : shopApiDto.getOpening_hours().getWeekday_text()) {
                 jsonArray.add(weekday);
             }
-
             businessDay = jsonArray.toJSONString();
+
+            todayBusinessHour = shopApiDto.getOpening_hours().getWeekday_text().get(dayOfWeek);
+            todayBusinessHour = todayBusinessHour.substring(5);
+
         } catch (NullPointerException e) {
             businessDay = null;
+            todayBusinessHour = null;
         }
 
         Boolean openNow;
@@ -157,14 +167,19 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 .photoToken(token)
                 .businessDay(businessDay)
                 .category(category.name())
+                .todayBusinessHour(todayBusinessHour)
                 .build();
 
         Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopResponse.getPlace_id());
-
+        boolean isScrap=false;
         if (shop.isPresent()) {
             GoogleShopCount shopCount = shop.get().getShopCount();
             shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
+
+            isScrap=scrapService.isUserScrapShop(shop.get().getId());
         }
+
+        shopResponse.setIsScrap(isScrap);
 
         return shopResponse;
     }
@@ -176,22 +191,31 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         List<String> placeIDs = getPlaceIds(shopIds);
 
         // 2000m(2km) 이내
-        List<SimpleShopDto> simpleShopDtos = this.callApiByPlaceIdsNonBlocking(placeIDs).stream()
-                .filter(dto -> {
-                    try {
-                        return getMeter(dto.getGeometry(), shopRequest) <= 2000 ? true : false;
-                    } catch (Exception e) {
-                        //throw new ApiException(ErrorMessage.REQUIRED_ATTRIBUTE_MISSING_EXCEPTION);
-                        return false;
-                    }
-                })
-                .collect(Collectors.toList());
+        List<SimpleShopDto> simpleShopDtos = this.callApiByPlaceIdsNonBlocking(placeIDs);
 
-        return simpleShopDtos;
+        int failCnt = 0;
+        List<SimpleShopDto> resultSimpleShopDtos = new ArrayList<>();
+        for (SimpleShopDto dto : simpleShopDtos) {
+            try {
+                Double dist = getMeter(dto.getGeometry(), shopRequest);
+
+                if (dist <= 2000) {
+                    resultSimpleShopDtos.add(dto);
+                }
+            } catch (Exception e) {
+                failCnt++;
+            }
+
+            if (failCnt >= simpleShopDtos.size() / 2) {
+                throw new ApiException(ErrorMessage.OVER_QUERY_LIMIT_EXCEPTION);
+            }
+        }
+
+        return resultSimpleShopDtos;
     }
 
     @Override
-    public ShopResponse getShop(String placeId) throws JsonProcessingException {
+    public ShopResponse getShop(String placeId) throws Exception {
         GoogleShopEntity googleShopEntity = googleShopRepository.findByPlaceId(placeId)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.SHOP_NOT_EXISTS_EXCEPTION));
 
@@ -217,7 +241,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         dist = rad2deg(dist);
         dist *= 60 * 1.1515 * 1609.344; //meter
 
-        log.info("Dist(m): "+String.valueOf(dist));
+        log.info("Dist(m): " + String.valueOf(dist));
 
         return dist;
     }
