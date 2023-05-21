@@ -124,7 +124,7 @@ public class GlobalExceptionHandler {
         int errorLine = e.getStackTrace()[0].getLineNumber();
 
         String requestParam = new ObjectMapper().writeValueAsString(ParserUtil.splitQueryString(request.getQueryString()));
-        String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        String requestBody = (String) request.getAttribute("requestBody");
         String message = String.format("```%s %s Line %d```\n```===== [Message] ===== \n%s\n\n===== [Controller] =====\n%s\n\n===== [RequestParameter] =====\n%s\n\n===== [RequestBody] =====\n%s```",
                 errorName, errorFile, errorLine, errorMessage, handlerMethod, requestParam, requestBody);
 
