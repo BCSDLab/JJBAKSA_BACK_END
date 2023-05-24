@@ -17,7 +17,7 @@ public class InternalShopServiceImpl implements InternalShopService {
     private final ShopRepository shopRepository;
 
     @Override
-    public ShopEntity getShopById(Long shopId) throws RequestInputException{
+    public ShopEntity getShopById(Long shopId) throws RequestInputException {
 
         return shopRepository.findById(shopId)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.SHOP_NOT_EXISTS_EXCEPTION));

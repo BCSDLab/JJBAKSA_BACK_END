@@ -1,6 +1,8 @@
 package com.jjbacsa.jjbacsabackend.scrap.repository;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
+import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapDirectoryEntity;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapEntity;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
@@ -20,14 +22,14 @@ class ScrapRepositoryTest {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private ShopRepository shopRepository;
+    private GoogleShopRepository googleShopRepository;
     @Autowired
     private ScrapRepository scrapRepository;
     @Autowired
     private ScrapDirectoryRepository scrapDirectoryRepository;
 
     private static UserEntity user;
-    private static ShopEntity shop;
+    private static GoogleShopEntity shop;
     private static ScrapDirectoryEntity directory;
     private static ScrapEntity scrap1;
     private static ScrapEntity scrap2;
@@ -43,12 +45,8 @@ class ScrapRepositoryTest {
                 .userType(UserType.NORMAL)
                 .build();
 
-        shop = ShopEntity.builder()
-                .placeId("abc")
-                .placeName("testshop")
-                .categoryName("test")
-                .x("0")
-                .y("0")
+        shop = GoogleShopEntity.builder()
+                .placeId("test")
                 .build();
 
         directory = ScrapDirectoryEntity.builder()
@@ -60,7 +58,7 @@ class ScrapRepositoryTest {
     void eachInit() {
 
         UserEntity dbUser = userRepository.save(user);
-        ShopEntity dbShop = shopRepository.save(shop);
+        GoogleShopEntity dbShop = googleShopRepository.save(shop);
         ScrapDirectoryEntity dbDir = scrapDirectoryRepository.save(directory);
 
         scrap1 = ScrapEntity.builder()
