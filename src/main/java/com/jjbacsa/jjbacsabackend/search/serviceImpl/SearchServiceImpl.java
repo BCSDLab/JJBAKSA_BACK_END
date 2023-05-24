@@ -8,6 +8,7 @@ import com.jjbacsa.jjbacsabackend.search.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ public class SearchServiceImpl implements SearchService {
     private final SearchRepository searchRepository;
     private final String KEY = "RANKING";
 
+    @Transactional(readOnly = true)
     @Override
     public AutoCompleteResponse getAutoCompletes(String word) {
         List<SearchEntity> autoCompletes = searchRepository.findTop5ByContentContainingOrderByScoreDesc(word);
@@ -32,6 +34,7 @@ public class SearchServiceImpl implements SearchService {
 
         return AutoCompleteResponse.builder().autoCompletes(autoCompletesStrs).build();
     }
+
 
     @Override
     public TrendingResponse getTrending(String key) {
@@ -60,6 +63,7 @@ public class SearchServiceImpl implements SearchService {
 
     }
 
+    @Transactional
     @Override
     public void saveForAutoComplete(String keyword) {
         if (searchRepository.existsByContent(keyword)) {

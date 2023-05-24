@@ -1,5 +1,6 @@
 package com.jjbacsa.jjbacsabackend.google.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
 import lombok.Data;
 
@@ -11,7 +12,9 @@ import lombok.Data;
 
 @Data
 public class SimpleShopDto {
-    private String place_id;
+    @JsonProperty("place_id")
+    private String placeId;
+
     private String name;
     private Geometry geometry;
     //todo: 사진 반환 협의 필요

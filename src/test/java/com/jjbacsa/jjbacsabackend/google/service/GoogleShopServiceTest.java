@@ -57,8 +57,8 @@ public class GoogleShopServiceTest {
     private static ShopRequest shopRequest;
     String place_id = "ChIJx44qfNaYfDURtM0hCeeC7N4";
 
-    @BeforeAll
-    public static void init() {
+    @BeforeEach
+    public void init() {
         user = UserEntity.builder()
                 .account("testuser")
                 .password("password")
@@ -93,8 +93,8 @@ public class GoogleShopServiceTest {
                 .placeId("ChIJ05XTtjGffDURllyJE5KLa90").build();
 
         shopRequest = ShopRequest.builder()
-                .x(37.5340278)
-                .y(126.9019901)
+                .lat(37.5340278)
+                .lng(126.9019901)
                 .build();
     }
 
@@ -108,8 +108,8 @@ public class GoogleShopServiceTest {
     @Test
     public void 상점_상세정보() throws Exception {
         ShopResponse shopResponse = googleShopService.getShopDetails(place_id);
-        Assertions.assertNotEquals(shopResponse.getX(), null);
-        Assertions.assertNotEquals(shopResponse.getY(), null);
+        Assertions.assertNotEquals(shopResponse.getLat(), null);
+        Assertions.assertNotEquals(shopResponse.getLng(), null);
     }
 
     @Transactional
@@ -121,7 +121,7 @@ public class GoogleShopServiceTest {
         Assertions.assertEquals(4, shops.size());
 
         shops.stream().forEach(s -> {
-            Assertions.assertEquals(s.getPlace_id(), googleShopRepository.findByPlaceId(s.getPlace_id()).get().getPlaceId());
+            Assertions.assertEquals(s.getPlaceId(), googleShopRepository.findByPlaceId(s.getPlaceId()).get().getPlaceId());
         });
 
     }

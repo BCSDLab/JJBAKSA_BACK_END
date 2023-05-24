@@ -10,13 +10,13 @@ import lombok.Getter;
 @Builder
 @Getter
 public class ShopResponse {
-    private String place_id;
+    private String placeId;
     private String name;
-    private String formatted_address;
-    private Double x;
-    private Double y;
-    private String formatted_phone_number;
-    private Boolean open_now;
+    private String formattedAddress;
+    private Double lat;
+    private Double lng;
+    private String formattedPhoneNumber;
+    private Boolean openNow;
     private String businessDay;
     private Integer totalRating;
     private Integer ratingCount;

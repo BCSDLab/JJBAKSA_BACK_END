@@ -11,8 +11,8 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 public class ShopRequest {
     @NotNull(message = "경도를 비워둘 수 없습니다.")
-    private double x;
+    private double lng;
 
     @NotNull(message = "위도를 비워둘 수 없습니다. ")
-    private double y;
+    private double lat;
 }

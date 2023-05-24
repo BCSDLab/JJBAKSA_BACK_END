@@ -7,6 +7,8 @@ import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @RequiredArgsConstructor
 @Service
@@ -14,12 +16,14 @@ public class InternalGoogleServiceImpl implements InternalGoogleService {
 
     private final GoogleShopRepository googleShopRepository;
 
+    @Transactional(readOnly = true)
     @Override
     public GoogleShopEntity getGoogleShopById(Long id) {
         return googleShopRepository.findById(id)
                 .orElseThrow(()-> new RequestInputException((ErrorMessage.SHOP_NOT_EXISTS_EXCEPTION)));
     }
 
+    @Transactional
     @Override
     public GoogleShopEntity saveGoogleShop(String placeId) {
         GoogleShopEntity googleShopEntity = GoogleShopEntity.builder()

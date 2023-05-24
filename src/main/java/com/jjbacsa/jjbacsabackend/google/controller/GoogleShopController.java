@@ -32,14 +32,13 @@ public class GoogleShopController {
      * google API 상점 조회 (리뷰 작성, 상점 조회시 사용)
      */
 
-    //Google API에서 검색하는 컨트롤러
     @ApiOperation(
             value = "키워드에 따른 상점 검색",
             notes = "키워드로 상점 검색하여 상점들을 반환한다.\n\n" +
                     "Request Body(ShopRequest)\n\n" +
                     "{\n\n     " +
-                    "x : 현재 요청자의 경도(x),\n     " +
-                    "y : 현재 요청자의 위도(y)\n     " +
+                    "lng : 현재 요청자의 경도,\n     " +
+                    "lat : 현재 요청자의 위도\n     " +
                     "\n}"
     )
     @ApiResponses({
@@ -50,11 +49,11 @@ public class GoogleShopController {
             )
     })
     @ApiImplicitParam(
-            name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "path"
+            name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "query"
     )
     @PreAuthorize("hasRole('NORMAL')")
-    @PostMapping("/google/shops/{keyword}")
-    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @PathVariable("keyword") String keyword) throws JsonProcessingException {
+    @PostMapping("/shops")
+    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name="keyword") String keyword) throws JsonProcessingException {
         searchService.saveForAutoComplete(keyword);
         searchService.saveRedis(keyword, KEY);
 
@@ -64,11 +63,11 @@ public class GoogleShopController {
 
     @ApiOperation(
             value = "키워드 검색 페이지 토큰 조회",
-            notes = "키워드 검색으로 얻어진 페이지 토근으로 상점들을 반환한다.\n\n" +
+            notes = "키워드 검색으로 얻어진 페이지 토큰으로 상점들을 반환한다.\n\n" +
                     "Request Body(ShopRequest)\n\n" +
                     "{\n\n     " +
-                    "x : 현재 요청자의 경도(x),\n     " +
-                    "y : 현재 요청자의 위도(y)\n     " +
+                    "lng : 현재 요청자의 경도,\n     " +
+                    "lat : 현재 요청자의 위도\n     " +
                     "\n}"
     )
     @ApiResponses({
@@ -82,7 +81,7 @@ public class GoogleShopController {
             name = "page_token", value = "키워드 검색어의 다음 페이지", required = true, dataType = "string", paramType = "path"
     )
     @PreAuthorize("hasRole('NORMAL')")
-    @PostMapping("/google/shops/page/{page_token}")
+    @PostMapping("/shops/page/{page_token}")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsNextPage(@PathVariable("page_token") String pageToken,
                                                                      @RequestBody @Valid ShopRequest shopRequest) throws JsonProcessingException {
         return ResponseEntity.ok()
@@ -104,7 +103,7 @@ public class GoogleShopController {
             name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path"
     )
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping("/google/shop/{place_id}")
+    @GetMapping("/shops/{place_id}")
     public ResponseEntity<ShopResponse> getGoogleShopDetails(@PathVariable("place_id") String placeId) throws Exception {
         return ResponseEntity.ok()
                 .body(googleShopService.getShopDetails(placeId));
@@ -112,7 +111,12 @@ public class GoogleShopController {
 
     @ApiOperation(
             value = "필터를 통하여 저장된 상점 검색",
-            notes = "메인 페이지 지도에 나타내기 위하여 간단하게 상점 정보를 반환한다.\n\n"
+            notes = "메인 페이지 지도에 나타내기 위하여 간단하게 상점 정보를 반환한다.\n\n" +
+                    "Request Body(ShopRequest)\n\n" +
+                    "{\n\n     " +
+                    "lng : 현재 요청자의 경도,\n     " +
+                    "lat : 현재 요청자의 위도\n     " +
+                    "\n}"
     )
     @ApiResponses({
             @ApiResponse(
@@ -127,32 +131,12 @@ public class GoogleShopController {
             @ApiImplicitParam(name = "options_friend", required = true, dataType = "Integer", value = "친구 음식점 필터 여부"),
             @ApiImplicitParam(name = "options_scrap", required = true, dataType = "Integer", value = "스크랩 음식점 필터 여부")
     })
-    @PostMapping("/shops")
+    @PostMapping("/shops/maps")
     public ResponseEntity<List<SimpleShopDto>> getGoogleShops(@RequestParam(name = "options_nearby", required = true, defaultValue = "0") Integer nearBy,
                                                               @RequestParam(name = "options_friend", required = false, defaultValue = "0") Integer friend,
                                                               @RequestParam(name = "options_scrap", required = false, defaultValue = "0") Integer scrap,
                                                               @RequestBody @Valid ShopRequest shopRequest) throws Exception {
         return ResponseEntity.ok()
                 .body(googleShopService.getShops(nearBy, friend, scrap, shopRequest));
-    }
-
-    @ApiOperation(
-            value = "DB에 저장된 상점 검색",
-            notes = "place_id를 통하여 DB에 저장된 상점 검색\n\n"
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    code = 200,
-                    message = "DB에 저장된 place_id에 대한 상점 데이터 반환",
-                    response = ShopResponse.class
-            )
-    })
-    @ApiImplicitParam(
-            name = "place_id", value = "상점 검색 place id", required = true, dataType = "string", paramType = "path"
-    )
-    @GetMapping("/shop/{place_id}")
-    public ResponseEntity<ShopResponse> getShopDetails(@PathVariable("place_id") String placeId) throws Exception {
-        return ResponseEntity.ok()
-                .body(googleShopService.getShop(placeId));
     }
 }

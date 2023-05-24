@@ -27,18 +27,19 @@ import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.scrap.service.InternalScrapService;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
-import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
@@ -46,12 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * review에 있는 shop_id가 google shop의 id라고 가정하고 함
- * <p>
- * review는 이전 상점으로 되어있음. 구글 상점으로 변경 안 됨
- */
-
+@Transactional
 @Slf4j
 @Service
 public class GoogleShopServiceImpl implements GoogleShopService {
@@ -113,7 +109,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return shopQueryResponses;
     }
 
-    //todo: 오늘 영업시간, 총 영업시간 두개 다 보내주기
+    @Transactional(readOnly = true)
     @Override
     public ShopResponse getShopDetails(String placeId) throws Exception {
         String shopStr = this.callGoogleApi(placeId);
@@ -127,12 +123,12 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             int dayOfWeek = today.getDayOfWeek().getValue() - 1;
 
             JSONArray jsonArray = new JSONArray();
-            for (String weekday : shopApiDto.getOpening_hours().getWeekday_text()) {
+            for (String weekday : shopApiDto.getOpeningHours().getWeekdayText()) {
                 jsonArray.add(weekday);
             }
             businessDay = jsonArray.toJSONString();
 
-            todayBusinessHour = shopApiDto.getOpening_hours().getWeekday_text().get(dayOfWeek);
+            todayBusinessHour = shopApiDto.getOpeningHours().getWeekdayText().get(dayOfWeek);
             todayBusinessHour = todayBusinessHour.substring(5);
 
         } catch (NullPointerException e) {
@@ -142,7 +138,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
         Boolean openNow;
         try {
-            openNow = (shopApiDto.getOpening_hours().getOpen_now() == "true") ? true : false;
+            openNow = (shopApiDto.getOpeningHours().getOpenNow() == "true") ? true : false;
         } catch (NullPointerException e) {
             openNow = null;
         }
@@ -157,26 +153,26 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         Category category = getCategory(shopApiDto.getTypes());
 
         ShopResponse shopResponse = ShopResponse.builder()
-                .place_id(shopApiDto.getPlace_id())
+                .placeId(shopApiDto.getPlaceId())
                 .name(shopApiDto.getName())
-                .formatted_address(shopApiDto.getFormatted_address())
-                .formatted_phone_number(shopApiDto.getFormatted_phone_number())
-                .x(shopApiDto.getGeometry().getLocation().getLat())
-                .y(shopApiDto.getGeometry().getLocation().getLng())
-                .open_now(openNow)
+                .formattedAddress(shopApiDto.getFormattedAddress())
+                .formattedPhoneNumber(shopApiDto.getFormattedPhoneNumber())
+                .lat(shopApiDto.getGeometry().getLocation().getLat())
+                .lng(shopApiDto.getGeometry().getLocation().getLng())
+                .openNow(openNow)
                 .photoToken(token)
                 .businessDay(businessDay)
                 .category(category.name())
                 .todayBusinessHour(todayBusinessHour)
                 .build();
 
-        Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopResponse.getPlace_id());
-        boolean isScrap=false;
+        Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopResponse.getPlaceId());
+        boolean isScrap = false;
         if (shop.isPresent()) {
             GoogleShopCount shopCount = shop.get().getShopCount();
             shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
 
-            isScrap=scrapService.isUserScrapShop(shop.get().getId());
+            isScrap = scrapService.isUserScrapShop(shop.get().getId());
         }
 
         shopResponse.setIsScrap(isScrap);
@@ -184,6 +180,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return shopResponse;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<SimpleShopDto> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception {
 
@@ -214,6 +211,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return resultSimpleShopDtos;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ShopResponse getShop(String placeId) throws Exception {
         GoogleShopEntity googleShopEntity = googleShopRepository.findByPlaceId(placeId)
@@ -227,21 +225,19 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         if (geometry.getLocation().getLat() == null || geometry.getLocation().getLng() == null)
             return null;
 
-        double shopX = geometry.getLocation().getLat();
-        double shopY = geometry.getLocation().getLng();
+        double userLat = shopRequest.getLat();
+        double userLng = shopRequest.getLng();
 
-        double userX = shopRequest.getX();
-        double userY = shopRequest.getY();
+        double shopLat = geometry.getLocation().getLat();
+        double shopLng = geometry.getLocation().getLng();
 
-        double theta = userY - shopY;
-        double dist = Math.sin(deg2rad((userX))) * Math.sin(deg2rad(shopX))
-                + Math.cos(deg2rad(userX)) * Math.cos(deg2rad(shopX)) * Math.cos(deg2rad(theta));
+        double theta = userLng - shopLng;
+        double dist = Math.sin(deg2rad((userLat))) * Math.sin(deg2rad(shopLat))
+                + Math.cos(deg2rad(userLat)) * Math.cos(deg2rad(shopLat)) * Math.cos(deg2rad(theta));
 
         dist = Math.acos(dist);
         dist = rad2deg(dist);
         dist *= 60 * 1.1515 * 1609.344; //meter
-
-        log.info("Dist(m): " + String.valueOf(dist));
 
         return dist;
     }
@@ -309,7 +305,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         for (ShopQueryApiDto dto : shopQueryDto.getResults()) {
             Boolean openNow;
             try {
-                openNow = (dto.getOpening_hours().getOpen_now().equals("true")) ? true : false;
+                openNow = (dto.getOpeningHours().getOpenNow().equals("true")) ? true : false;
             } catch (NullPointerException e) {
                 openNow = null;
             }
@@ -326,18 +322,18 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             Double distFromUser = this.getMeter(dto.getGeometry(), shopRequest);
 
             ShopQueryResponse shopQueryResponse = ShopQueryResponse.builder()
-                    .place_id(dto.getPlace_id())
+                    .placeId(dto.getPlaceId())
                     .name(dto.getName())
-                    .formatted_address(dto.getFormatted_address())
-                    .x(dto.getGeometry().getLocation().getLat())
-                    .y(dto.getGeometry().getLocation().getLng())
-                    .open_now(openNow)
+                    .formattedAddress(dto.getFormattedAddress())
+                    .lat(dto.getGeometry().getLocation().getLat())
+                    .lng(dto.getGeometry().getLocation().getLng())
+                    .openNow(openNow)
                     .photoToken(token)
                     .category(category.name())
                     .dist(distFromUser)
                     .build();
 
-            Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(dto.getPlace_id());
+            Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(dto.getPlaceId());
 
             if (shop.isPresent()) {
                 GoogleShopCount shopCount = shop.get().getShopCount();
@@ -347,7 +343,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             shopQueryResponseList.add(shopQueryResponse);
         }
 
-        ShopQueryResponses shopQueryResponses = new ShopQueryResponses(shopQueryDto.getNext_page_token(), shopQueryResponseList);
+        ShopQueryResponses shopQueryResponses = new ShopQueryResponses(shopQueryDto.getNextPageToken(), shopQueryResponseList);
         return shopQueryResponses;
     }
 
@@ -405,7 +401,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
      */
     private String callApiByQuery(String query, ShopRequest shopRequest) {
 
-        String locationQuery = String.valueOf(shopRequest.getX()) + ", " + String.valueOf(shopRequest.getY());
+        String locationQuery = String.valueOf(shopRequest.getLat()) + ", " + String.valueOf(shopRequest.getLng());
 
         String shopStr = webClient.get().uri(uriBuilder ->
                 uriBuilder.path("/textsearch/json")
@@ -472,7 +468,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
      * 단일 상점 DTO 파싱 메소드
      */
     private ShopApiDto jsonToShopApiDto(String shopStr) throws JsonProcessingException {
-
         Map<String, Object> map = this.checkApiReturn(shopStr);
 
         String resultStr = objectMapper.writeValueAsString(map.get("result"));
@@ -486,7 +481,19 @@ public class GoogleShopServiceImpl implements GoogleShopService {
      */
     private ShopQueryDto jsonToShopQueryDto(String shopStr) throws JsonProcessingException {
 
-        this.checkApiReturn(shopStr);
+        try {
+            this.checkApiReturn(shopStr);
+        } catch (ApiException e) {
+            if (e.getErrorMessage().equals(ErrorMessage.ZERO_RESULTS_EXCEPTION.getErrorMessage())) {
+                ArrayList<ShopQueryApiDto> shopQueryApiDtos = new ArrayList<>();
+
+                return ShopQueryDto.builder()
+                        .nextPageToken(null)
+                        .results(shopQueryApiDtos)
+                        .build();
+            }
+        }
+
         ShopQueryDto shopQueryDto = objectMapper.readValue(shopStr, ShopQueryDto.class);
 
         return shopQueryDto;

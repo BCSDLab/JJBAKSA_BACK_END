@@ -10,12 +10,12 @@ import lombok.Getter;
 @Builder
 public class ShopQueryResponse {
 
-    private String place_id;
+    private String placeId;
     private String name;
-    private String formatted_address;
-    private Double x;
-    private Double y;
-    private Boolean open_now;
+    private String formattedAddress;
+    private Double lat;
+    private Double lng;
+    private Boolean openNow;
     private Integer totalRating;
     private Integer ratingCount;
     private String photoToken;

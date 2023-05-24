@@ -1,6 +1,10 @@
 package com.jjbacsa.jjbacsabackend.google.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -9,7 +13,13 @@ import java.util.List;
  * */
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ShopQueryDto {
-    String next_page_token;
+
+    @JsonProperty("next_page_token")
+    String nextPageToken;
+
     List<ShopQueryApiDto> results;
 }
