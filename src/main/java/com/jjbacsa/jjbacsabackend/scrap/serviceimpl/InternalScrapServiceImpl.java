@@ -26,7 +26,6 @@ public class InternalScrapServiceImpl implements InternalScrapService {
     private final ScrapRepository scrapRepository;
     private final ScrapDirectoryRepository scrapDirectoryRepository;
     private final InternalUserService internalUserService;
-//    private final InternalGoogleService internalGoogleService;
 
     @Override
     public ScrapEntity getScrapById(Long scrapId) throws RequestInputException {
