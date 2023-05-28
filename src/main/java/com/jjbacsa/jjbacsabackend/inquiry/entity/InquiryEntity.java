@@ -42,10 +42,6 @@ public class InquiryEntity extends BaseEntity {
 
     }
 
-    @Basic(optional = false)
-    @Column(name = "created_by", nullable = false)
-    private String createdBy;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id")
     private UserEntity writer;
@@ -85,7 +81,6 @@ public class InquiryEntity extends BaseEntity {
     }
 
     public void update(InquiryRequest inquiryRequest) {
-        this.createdBy = inquiryRequest.getCreatedBy() == null ? this.writer.getNickname() : inquiryRequest.getCreatedBy();
         this.content = inquiryRequest.getContent();
         this.title = inquiryRequest.getTitle();
         this.isSecreted = inquiryRequest.getIsSecret() ? 1 : 0;

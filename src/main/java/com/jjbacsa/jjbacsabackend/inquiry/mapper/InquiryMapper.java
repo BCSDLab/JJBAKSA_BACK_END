@@ -23,5 +23,6 @@ public interface InquiryMapper {
     })
     InquiryImageResponse toInquiryImageResponse(InquiryImageEntity inquiryImageEntity);
 
+    @Mapping(source = "writer.nickname", target = "createdBy")
     InquiryResponse toInquiryResponse(InquiryEntity inquiryEntity);
 }

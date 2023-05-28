@@ -15,8 +15,6 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 public class InquiryRequest {
-    @Pattern(regexp = "^[a-zA-z가-힣0-9]{1,20}$", message = "작성자에 특수문자와 초성은 불가능합니다.")
-    private String createdBy;
     @NotNull(message = "제목을 입력해주세요")
     private String title;
     @NotNull(message = "문의 내용을 입력해주세요")

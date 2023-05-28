@@ -85,7 +85,6 @@ public class InquiryServiceImpl implements InquiryService {
     private InquiryEntity createInquiryEntity(InquiryRequest inquiryRequest) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
         InquiryEntity inquiry = InquiryEntity.builder()
-                .createdBy(inquiryRequest.getCreatedBy() == null ? userEntity.getNickname() : inquiryRequest.getCreatedBy())
                 .writer(userEntity)
                 .title(inquiryRequest.getTitle())
                 .content(inquiryRequest.getContent())
