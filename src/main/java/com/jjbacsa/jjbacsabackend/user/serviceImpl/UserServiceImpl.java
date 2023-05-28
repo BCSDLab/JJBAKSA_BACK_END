@@ -12,10 +12,14 @@ import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
+import com.jjbacsa.jjbacsabackend.user.entity.WithdrawReasonEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.user.repository.WithdrawReasonRepository;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
@@ -51,6 +55,7 @@ public class UserServiceImpl implements UserService {
     private final InternalEmailService emailService;
     private final UserRepository userRepository;
     private final UserCountRepository userCountRepository;
+    private final WithdrawReasonRepository withdrawReasonRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
@@ -217,6 +222,21 @@ public class UserServiceImpl implements UserService {
         //회원 탈퇴에 따른 리프레시 토큰 삭제
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
         if (existToken != null) redisUtil.deleteValue(String.valueOf(user.getId()));
+    }
+
+    @Override
+    @Transactional
+    public WithdrawReasonResponse createWithdrawReason(WithdrawRequest request) throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        WithdrawReasonEntity reason = WithdrawReasonEntity.builder()
+                .user(user)
+                .reason(request.getReason())
+                .discomfort(request.getDiscomfort())
+                .build();
+
+        withdrawReasonRepository.save(reason);
+        return new WithdrawReasonResponse(user.getId(), request);
     }
 
     @Override

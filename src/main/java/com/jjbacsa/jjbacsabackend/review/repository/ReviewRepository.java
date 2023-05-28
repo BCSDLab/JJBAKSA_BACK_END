@@ -21,4 +21,6 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Long>, Dsl
 
     // Todo: 페이지네이션
     List<ReviewEntity> findAllByWriterAndShop(UserEntity writer, ShopEntity shop);
+
+    List<ReviewEntity> findAllByWriter(Long writer);
 }
