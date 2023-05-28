@@ -278,7 +278,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .collect(Collectors.toList());
         }
 
-        List<Long> shopIds = new ArrayList<>();
+        List<Long> shopIds = new LinkedList<>();
 
         if (friend == 1) {
             List<Long> friends = followService.getFollowers();
