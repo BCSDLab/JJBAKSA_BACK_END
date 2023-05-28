@@ -1,12 +1,13 @@
 package com.jjbacsa.jjbacsabackend.google.dto.inner;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
+@NoArgsConstructor
 @Data
 public class Photos {
-    int height;
-    String[] html_attributions;
-    String photo_reference; //token
-    int width;
+    @JsonProperty("photo_reference")
+    String photoReference;
 }
