@@ -24,8 +24,6 @@ public class ShopQueryResponse {
     private Double dist;
     private String category;
 
-    private List<String> photos;
-
     public void setShopCount(Integer totalRating, Integer ratingCount) {
         this.totalRating = totalRating;
         this.ratingCount = ratingCount;

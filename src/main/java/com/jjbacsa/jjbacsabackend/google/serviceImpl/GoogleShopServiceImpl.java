@@ -148,7 +148,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         List<String> photoTokens = new ArrayList<>();
         try {
 
-            int maxRange = shopApiDto.getPhotos().size() >= 5 ? 5 : shopApiDto.getPhotos().size();
+            int maxRange = shopApiDto.getPhotos().size() >= 10 ? 10 : shopApiDto.getPhotos().size();
 
             for (int p = 0; p < maxRange; p++) {
                 photoTokens.add(getPhotoUrl(shopApiDto.getPhotos().get(p).getPhotoReference()));
