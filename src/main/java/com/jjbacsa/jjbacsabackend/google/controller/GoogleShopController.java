@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.google.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
@@ -37,8 +38,8 @@ public class GoogleShopController {
             notes = "키워드로 상점 검색하여 상점들을 반환한다.\n\n" +
                     "Request Body(ShopRequest)\n\n" +
                     "{\n\n     " +
-                    "lng : 현재 요청자의 경도,\n     " +
-                    "lat : 현재 요청자의 위도\n     " +
+                    "lat : 현재 요청자의 위도,\n     " +
+                    "lng : 현재 요청자의 경도\n     " +
                     "\n}"
     )
     @ApiResponses({
@@ -66,8 +67,8 @@ public class GoogleShopController {
             notes = "키워드 검색으로 얻어진 페이지 토큰으로 상점들을 반환한다.\n\n" +
                     "Request Body(ShopRequest)\n\n" +
                     "{\n\n     " +
-                    "lng : 현재 요청자의 경도,\n     " +
-                    "lat : 현재 요청자의 위도\n     " +
+                    "lat : 현재 요청자의 위도,\n     " +
+                    "lng : 현재 요청자의 경도\n     " +
                     "\n}"
     )
     @ApiResponses({
@@ -114,8 +115,8 @@ public class GoogleShopController {
             notes = "메인 페이지 지도에 나타내기 위하여 간단하게 상점 정보를 반환한다.\n\n" +
                     "Request Body(ShopRequest)\n\n" +
                     "{\n\n     " +
-                    "lng : 현재 요청자의 경도,\n     " +
-                    "lat : 현재 요청자의 위도\n     " +
+                    "lat : 현재 요청자의 위도,\n     " +
+                    "lng : 현재 요청자의 경도\n     " +
                     "\n}"
     )
     @ApiResponses({
@@ -138,5 +139,33 @@ public class GoogleShopController {
                                                               @RequestBody @Valid ShopRequest shopRequest) throws Exception {
         return ResponseEntity.ok()
                 .body(googleShopService.getShops(nearBy, friend, scrap, shopRequest));
+    }
+
+
+    @ApiOperation(
+            value = "검색어 자동완성 ",
+            notes = "음식점 검색 시에 자동완성으로 음식점 이름을 반환한다.\n\n" +
+                    "Request Body(AutoCompleteRequest)\n\n" +
+                    "{\n\n     " +
+                    "lat : 현재 요청자의 위도,\n     " +
+                    "lng : 현재 요청자의 경도\n     " +
+                    "\n}"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "자동완성 결과 (최대 5건)",
+                    response = String.class,
+                    responseContainer = "List"
+            )
+    })
+    @ApiImplicitParam(
+            name = "query", value = "자동완성 검색어", required = true, dataType = "string", paramType = "query"
+    )
+    @PostMapping ("/shops/auto-complete")
+    public ResponseEntity<List<String>> getAutoComplete(@RequestParam(name = "query") String query,
+                                                        @RequestBody @Valid AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException {
+        return ResponseEntity.ok()
+                .body(googleShopService.getAutoComplete(query, autoCompleteRequest));
     }
 }

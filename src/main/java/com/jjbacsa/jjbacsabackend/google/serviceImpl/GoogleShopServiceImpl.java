@@ -10,11 +10,9 @@ import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
-import com.jjbacsa.jjbacsabackend.google.dto.ShopApiDto;
-import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryApiDto;
-import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryDto;
-import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.*;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopCount;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
@@ -27,7 +25,6 @@ import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.scrap.service.InternalScrapService;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.springframework.beans.factory.annotation.Value;
@@ -112,7 +109,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     @Transactional(readOnly = true)
     @Override
     public ShopResponse getShopDetails(String placeId) throws Exception {
-        String shopStr = this.callGoogleApi(placeId);
+        String shopStr = this.callGoogleApiByPlaceId(placeId);
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
 
         String businessDay;
@@ -218,6 +215,35 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.SHOP_NOT_EXISTS_EXCEPTION));
 
         return this.getShopDetails(googleShopEntity.getPlaceId());
+    }
+
+    @Override
+    public List<String> getAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException {
+        List<String> autoCompleteResult = new ArrayList<>();
+
+        String autoCompleteStr = this.callGoogleAutoComplete(query, autoCompleteRequest);
+
+        Map<String, Object> map = null;
+        try {
+            map = this.checkApiReturn(autoCompleteStr);
+        } catch (ApiException e) {
+            if (e.getErrorMessage().equals(ErrorMessage.ZERO_RESULTS_EXCEPTION.getErrorMessage())) {
+                return autoCompleteResult;
+            }
+        }
+
+        String reusltStr = objectMapper.writeValueAsString(map.get("predictions"));
+        Prediction[] autoCompleteApiDto = objectMapper.readValue(reusltStr, Prediction[].class);
+
+        for (Prediction p : autoCompleteApiDto) {
+            String pStr = p.getStructuredFormatting().getMainText();
+
+            if (!autoCompleteResult.contains(pStr)) {
+                autoCompleteResult.add(pStr);
+            }
+        }
+
+        return autoCompleteResult;
     }
 
     private Double getMeter(Geometry geometry, ShopRequest shopRequest) {
@@ -370,7 +396,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             monos.add(shopStr);
         }
 
-        //todo: 로직 변경
         Function<Object[], List> combinator = monoList -> Arrays.stream(monoList).collect(Collectors.toList());
         List<String> results = Mono.zip(monos, combinator).block();
 
@@ -439,7 +464,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
      * @param placeId 구글에서 발행한 상점 아이디
      * @return block으로 받아온 단일 상점 결과
      */
-    private String callGoogleApi(String placeId) {
+    private String callGoogleApiByPlaceId(String placeId) {
         String shopStr = webClient.get().uri(uriBuilder ->
                 uriBuilder.path("/details/json")
                         .queryParam("place_id", placeId)
@@ -450,6 +475,28 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         ).retrieve().bodyToMono(String.class).block();
 
         return shopStr;
+    }
+
+
+    /**
+     * 자동완성 요청을 위한 내부 메소드
+     */
+    private String callGoogleAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) {
+        String locationQuery = String.valueOf(autoCompleteRequest.getLat()) + ", " + String.valueOf(autoCompleteRequest.getLng());
+
+        String autoCompleteStr = webClient.get().uri(uriBuilder ->
+                uriBuilder.path("/autocomplete/json")
+                        .queryParam("input", query)
+                        .queryParam("components", "country:kr")
+                        .queryParam("language", "ko")
+                        .queryParam("location", locationQuery)
+                        .queryParam("radius", 500)
+                        .queryParam("types", "restaurant|cafe")
+                        .queryParam("key", API_KEY)
+                        .build()
+        ).retrieve().bodyToMono(String.class).block();
+
+        return autoCompleteStr;
     }
 
     /**

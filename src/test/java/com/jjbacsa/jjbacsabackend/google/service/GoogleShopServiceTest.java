@@ -6,6 +6,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
@@ -132,10 +133,10 @@ public class GoogleShopServiceTest {
     public void 상점_메인페이지_친구필터() {
 
         //팔로우
-        FollowEntity follow1=FollowEntity.builder()
-                        .user(user).follower(following1).build();
-        FollowEntity follow2=FollowEntity.builder()
-                        .user(user).follower(following2).build();
+        FollowEntity follow1 = FollowEntity.builder()
+                .user(user).follower(following1).build();
+        FollowEntity follow2 = FollowEntity.builder()
+                .user(user).follower(following2).build();
 
         followRepository.save(follow1);
         followRepository.save(follow2);
@@ -158,17 +159,17 @@ public class GoogleShopServiceTest {
         saveAllShops();
 
         //북마크 추가
-        ScrapEntity scrap1=ScrapEntity.builder().shop(googleShop1).user(user).build();
-        ScrapEntity scrap2=ScrapEntity.builder().shop(googleShop2).user(user).build();
-        ScrapEntity scrap3=ScrapEntity.builder().shop(googleShop3).user(user).build();
+        ScrapEntity scrap1 = ScrapEntity.builder().shop(googleShop1).user(user).build();
+        ScrapEntity scrap2 = ScrapEntity.builder().shop(googleShop2).user(user).build();
+        ScrapEntity scrap3 = ScrapEntity.builder().shop(googleShop3).user(user).build();
 
         scrapRepository.save(scrap1);
         scrapRepository.save(scrap2);
         scrapRepository.save(scrap3);
 
-        List<SimpleShopDto> dtos=googleShopService.getShops(0,0,1,shopRequest);
+        List<SimpleShopDto> dtos = googleShopService.getShops(0, 0, 1, shopRequest);
 
-        Assertions.assertEquals(dtos.size(),3);
+        Assertions.assertEquals(dtos.size(), 3);
     }
 
     @Transactional
@@ -190,14 +191,14 @@ public class GoogleShopServiceTest {
         saveAllShops();
 
         //북마크 추가
-        ScrapEntity scrap1=ScrapEntity.builder().shop(googleShop1).user(user).build();
+        ScrapEntity scrap1 = ScrapEntity.builder().shop(googleShop1).user(user).build();
         scrapRepository.save(scrap1);
 
-        ShopResponse shopResponse=googleShopService.getShopDetails(googleShop1.getPlaceId());
-        Assertions.assertEquals(shopResponse.isScrap(),true);
+        ShopResponse shopResponse = googleShopService.getShopDetails(googleShop1.getPlaceId());
+        Assertions.assertEquals(shopResponse.isScrap(), true);
 
-        ShopResponse shopResponse2=googleShopService.getShopDetails(googleShop2.getPlaceId());
-        Assertions.assertEquals(shopResponse2.isScrap(),false);
+        ShopResponse shopResponse2 = googleShopService.getShopDetails(googleShop2.getPlaceId());
+        Assertions.assertEquals(shopResponse2.isScrap(), false);
     }
 
     @Transactional
@@ -210,18 +211,31 @@ public class GoogleShopServiceTest {
         tempLoginForTest(user);
 
         //상점 저장
-        GoogleShopEntity googleShopEntity=googleShopRepository.save(googleShop1);
+        GoogleShopEntity googleShopEntity = googleShopRepository.save(googleShop1);
 
         //북마크 추가
-        ScrapEntity scrap1=ScrapEntity.builder().shop(googleShop1).user(user).build();
+        ScrapEntity scrap1 = ScrapEntity.builder().shop(googleShop1).user(user).build();
         scrapRepository.save(scrap1);
 
-        ShopResponse shopResponse1=googleShopService.getShop(googleShopEntity.getPlaceId());
+        ShopResponse shopResponse1 = googleShopService.getShop(googleShopEntity.getPlaceId());
         Assertions.assertEquals(shopResponse1.isScrap(), true);
-        Assertions.assertThrows(RequestInputException.class, ()->
+        Assertions.assertThrows(RequestInputException.class, () ->
                 googleShopService.getShop(googleShop2.getPlaceId())
-                );
+        );
     }
+
+    @Test
+    public void 자동완성() throws JsonProcessingException {
+        AutoCompleteRequest autoCompleteRequest = AutoCompleteRequest.builder()
+                .lat(36.3504119)
+                .lng(127.3845475).build();
+
+        String query = "순";
+
+        List<String> result = googleShopService.getAutoComplete("순대", autoCompleteRequest);
+        Assertions.assertNotEquals(result.size(),0);
+    }
+
 
     private void saveAllShops() {
         googleShopRepository.save(googleShop1);
@@ -230,10 +244,10 @@ public class GoogleShopServiceTest {
         googleShopRepository.save(googleShop4);
     }
 
-    private void tempLoginForTest(UserEntity user){
+    private void tempLoginForTest(UserEntity user) {
         UserDetails userDetails = new CustomUserDetails(user.getId());
 
-        UsernamePasswordAuthenticationToken token=
+        UsernamePasswordAuthenticationToken token =
                 new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
 
         SecurityContextHolder.getContext().setAuthentication(token);
