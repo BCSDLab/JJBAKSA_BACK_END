@@ -2,7 +2,10 @@ package com.jjbacsa.jjbacsabackend.google.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.inner.Photos;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 가까운 음식점, 친구 음식점, 북마크 음식점 DTO
@@ -17,5 +20,5 @@ public class SimpleShopDto {
 
     private String name;
     private Geometry geometry;
-    //todo: 사진 반환 협의 필요
+    private List<Photos> photo;
 }

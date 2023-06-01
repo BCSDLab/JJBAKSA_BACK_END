@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.search.service.SearchService;
 import io.swagger.annotations.*;
@@ -53,7 +54,7 @@ public class GoogleShopController {
     )
     @PreAuthorize("hasRole('NORMAL')")
     @PostMapping("/shops")
-    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name="keyword") String keyword) throws JsonProcessingException {
+    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name = "keyword") String keyword) throws JsonProcessingException {
         searchService.saveForAutoComplete(keyword);
         searchService.saveRedis(keyword, KEY);
 
@@ -132,10 +133,10 @@ public class GoogleShopController {
             @ApiImplicitParam(name = "options_scrap", required = true, dataType = "Integer", value = "스크랩 음식점 필터 여부")
     })
     @PostMapping("/shops/maps")
-    public ResponseEntity<List<SimpleShopDto>> getGoogleShops(@RequestParam(name = "options_nearby", required = true, defaultValue = "0") Integer nearBy,
-                                                              @RequestParam(name = "options_friend", required = false, defaultValue = "0") Integer friend,
-                                                              @RequestParam(name = "options_scrap", required = false, defaultValue = "0") Integer scrap,
-                                                              @RequestBody @Valid ShopRequest shopRequest) throws Exception {
+    public ResponseEntity<List<ShopSimpleResponse>> getGoogleShops(@RequestParam(name = "options_nearby", required = true, defaultValue = "0") Integer nearBy,
+                                                                   @RequestParam(name = "options_friend", required = false, defaultValue = "0") Integer friend,
+                                                                   @RequestParam(name = "options_scrap", required = false, defaultValue = "0") Integer scrap,
+                                                                   @RequestBody @Valid ShopRequest shopRequest) throws Exception {
         return ResponseEntity.ok()
                 .body(googleShopService.getShops(nearBy, friend, scrap, shopRequest));
     }

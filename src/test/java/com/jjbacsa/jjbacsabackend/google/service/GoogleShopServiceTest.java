@@ -6,6 +6,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
@@ -20,10 +21,8 @@ import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -117,7 +116,7 @@ public class GoogleShopServiceTest {
     public void 상점_메인페이지_가까운필터() throws Exception {
         saveAllShops();
 
-        List<SimpleShopDto> shops = googleShopService.getShops(1, 0, 0, shopRequest);
+        List<ShopSimpleResponse> shops = googleShopService.getShops(1, 0, 0, shopRequest);
         Assertions.assertEquals(4, shops.size());
 
         shops.stream().forEach(s -> {
@@ -166,7 +165,7 @@ public class GoogleShopServiceTest {
         scrapRepository.save(scrap2);
         scrapRepository.save(scrap3);
 
-        List<SimpleShopDto> dtos=googleShopService.getShops(0,0,1,shopRequest);
+        List<ShopSimpleResponse> dtos=googleShopService.getShops(0,0,1,shopRequest);
 
         Assertions.assertEquals(dtos.size(),3);
     }

@@ -35,7 +35,6 @@ import java.util.Objects;
 public class ScrapServiceImpl implements ScrapService {
 
     private final InternalUserService userService;
-    //private final InternalShopService shopService;
     private final InternalGoogleService shopService;
 
     private final InternalScrapService scrapService;
