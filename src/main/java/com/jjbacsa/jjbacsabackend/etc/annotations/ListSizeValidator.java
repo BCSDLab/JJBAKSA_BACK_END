@@ -11,11 +11,13 @@ public class ListSizeValidator implements ConstraintValidator<IsValidListSize, L
 
     private int maxSize;
     private int minSize;
+    private String message;
 
     @Override
     public void initialize(IsValidListSize constraintAnnotation) {
         this.maxSize = constraintAnnotation.max();
         this.minSize = constraintAnnotation.min();
+        this.message = constraintAnnotation.message();
     }
 
     @Override
@@ -25,8 +27,7 @@ public class ListSizeValidator implements ConstraintValidator<IsValidListSize, L
             return true;
         } else {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate(
-                            String.format("리스트 원소의 갯수는 최소 %s, 최대 %s 개 입니다.", minSize, maxSize))
+            context.buildConstraintViolationWithTemplate(message)
                     .addConstraintViolation();
             return false;
         }
