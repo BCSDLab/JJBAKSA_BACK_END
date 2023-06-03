@@ -1,14 +1,10 @@
 package com.jjbacsa.jjbacsabackend.inquiry.dto.request;
 
 import com.jjbacsa.jjbacsabackend.etc.annotations.IsValidListSize;
-import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
