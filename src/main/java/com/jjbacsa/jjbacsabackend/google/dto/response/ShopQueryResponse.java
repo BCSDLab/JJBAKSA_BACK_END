@@ -3,6 +3,8 @@ package com.jjbacsa.jjbacsabackend.google.dto.response;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 /**
  * 상점 검색 결과(다중 상점) 반환
  * */
