@@ -3,6 +3,7 @@ package com.jjbacsa.jjbacsabackend.google.dto.response;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -25,8 +26,8 @@ public class ShopResponse {
     private String category;
     private String todayBusinessHour; //오늘 영업시간
     private boolean isScrap;
-
     private List<String> photos;
+    private LocalDateTime lastReviewDate;
 
     public void setShopCount(Integer totalRating, Integer ratingCount) {
         this.totalRating = totalRating;

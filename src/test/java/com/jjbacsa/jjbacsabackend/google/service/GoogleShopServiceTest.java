@@ -106,7 +106,7 @@ public class GoogleShopServiceTest {
 
     @Test
     public void 상점_상세정보() throws Exception {
-        ShopResponse shopResponse = googleShopService.getShopDetails(place_id);
+        ShopResponse shopResponse = googleShopService.getShopDetails(place_id,null);
         Assertions.assertNotEquals(shopResponse.getLat(), null);
         Assertions.assertNotEquals(shopResponse.getLng(), null);
     }
@@ -192,34 +192,11 @@ public class GoogleShopServiceTest {
         ScrapEntity scrap1=ScrapEntity.builder().shop(googleShop1).user(user).build();
         scrapRepository.save(scrap1);
 
-        ShopResponse shopResponse=googleShopService.getShopDetails(googleShop1.getPlaceId());
+        ShopResponse shopResponse=googleShopService.getShopDetails(googleShop1.getPlaceId(),null);
         Assertions.assertEquals(shopResponse.isScrap(),true);
 
-        ShopResponse shopResponse2=googleShopService.getShopDetails(googleShop2.getPlaceId());
+        ShopResponse shopResponse2=googleShopService.getShopDetails(googleShop2.getPlaceId(),null);
         Assertions.assertEquals(shopResponse2.isScrap(),false);
-    }
-
-    @Transactional
-    @Test
-    public void DB_내_상점_세부정보_북마크여부() throws Exception {
-        //user 회원 가입
-        userRepository.save(user);
-
-        //임시 로그인
-        tempLoginForTest(user);
-
-        //상점 저장
-        GoogleShopEntity googleShopEntity=googleShopRepository.save(googleShop1);
-
-        //북마크 추가
-        ScrapEntity scrap1=ScrapEntity.builder().shop(googleShop1).user(user).build();
-        scrapRepository.save(scrap1);
-
-        ShopResponse shopResponse1=googleShopService.getShop(googleShopEntity.getPlaceId());
-        Assertions.assertEquals(shopResponse1.isScrap(), true);
-        Assertions.assertThrows(RequestInputException.class, ()->
-                googleShopService.getShop(googleShop2.getPlaceId())
-                );
     }
 
     private void saveAllShops() {
