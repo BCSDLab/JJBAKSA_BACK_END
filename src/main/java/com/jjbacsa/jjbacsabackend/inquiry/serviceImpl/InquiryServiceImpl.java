@@ -53,7 +53,7 @@ public class InquiryServiceImpl implements InquiryService {
         if (inquiry.getWriter().equals(userEntity)) {
             inquiry.update(inquiryRequest);
             if (inquiryRequest.getInquiryImages() == null) {
-                for (int i = 0; i < inquiry.getInquiryImages().size(); i++) {
+                for (int i = inquiry.getInquiryImages().size() -1; i >= 0; i--) {
                     inquiryImageService.delete(inquiry.getInquiryImages().get(i));
                     inquiry.getInquiryImages().remove(i);
                 }
