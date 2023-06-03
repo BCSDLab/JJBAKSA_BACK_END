@@ -10,11 +10,12 @@ import com.jjbacsa.jjbacsabackend.inquiry.entity.InquiryEntity;
 import com.jjbacsa.jjbacsabackend.inquiry.mapper.InquiryMapper;
 import com.jjbacsa.jjbacsabackend.inquiry.repository.InquiryRepository;
 import com.jjbacsa.jjbacsabackend.inquiry.service.InquiryService;
+import com.jjbacsa.jjbacsabackend.inquiry_image.entity.InquiryImageEntity;
+import com.jjbacsa.jjbacsabackend.inquiry_image.service.InternalInquiryImageService;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class InquiryServiceImpl implements InquiryService {
     private final InternalUserService userService;
+    private final InternalInquiryImageService inquiryImageService;
 
     private final InquiryRepository inquiryRepository;
 
@@ -48,8 +50,15 @@ public class InquiryServiceImpl implements InquiryService {
     public InquiryResponse modify(InquiryRequest inquiryRequest, Long inquiryId) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
         InquiryEntity inquiry = getInquiryEntity(inquiryId);
-        if (inquiry.getWriter().equals(userEntity)) inquiry.update(inquiryRequest);
-        else throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_INQUIRY);
+        if (inquiry.getWriter().equals(userEntity)) {
+            inquiry.update(inquiryRequest);
+            if (inquiryRequest.getInquiryImages() == null) {
+                for (int i = inquiry.getInquiryImages().size() -1; i >= 0; i--) {
+                    inquiryImageService.delete(inquiry.getInquiryImages().get(i));
+                    inquiry.getInquiryImages().remove(i);
+                }
+            } else inquiryImageService.modify(inquiryRequest.getInquiryImages(), inquiry);
+        } else throw new RequestInputException(ErrorMessage.INVALID_PERMISSION_INQUIRY);
         return InquiryMapper.INSTANCE.toInquiryResponse(inquiry);
     }
 
@@ -81,6 +90,11 @@ public class InquiryServiceImpl implements InquiryService {
                 .content(inquiryRequest.getContent())
                 .isSecreted(inquiryRequest.getIsSecret() ? 1 : 0)
                 .build();
+        if (inquiryRequest.getInquiryImages() != null) {
+            for (InquiryImageEntity image : inquiryImageService.create(inquiryRequest.getInquiryImages())) {
+                inquiry.addInquiryImageEntity(image);
+            }
+        }
         return inquiry;
     }
 
