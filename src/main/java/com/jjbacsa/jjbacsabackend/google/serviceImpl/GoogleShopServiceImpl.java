@@ -15,6 +15,7 @@ import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryApiDto;
 import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryDto;
 import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopCount;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
@@ -27,7 +28,6 @@ import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.scrap.service.InternalScrapService;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +37,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
@@ -143,11 +145,17 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             openNow = null;
         }
 
-        String token;
+        List<String> photoTokens = new ArrayList<>();
         try {
-            token = shopApiDto.getPhotos().get(0).getPhoto_reference();
+
+            int maxRange = shopApiDto.getPhotos().size() >= 10 ? 10 : shopApiDto.getPhotos().size();
+
+            for (int p = 0; p < maxRange; p++) {
+                photoTokens.add(getPhotoUrl(shopApiDto.getPhotos().get(p).getPhotoReference()));
+            }
+
         } catch (NullPointerException e) {
-            token = null;
+            photoTokens = null;
         }
 
         Category category = getCategory(shopApiDto.getTypes());
@@ -160,7 +168,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 .lat(shopApiDto.getGeometry().getLocation().getLat())
                 .lng(shopApiDto.getGeometry().getLocation().getLng())
                 .openNow(openNow)
-                .photoToken(token)
+                .photos(photoTokens)
                 .businessDay(businessDay)
                 .category(category.name())
                 .todayBusinessHour(todayBusinessHour)
@@ -182,17 +190,17 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<SimpleShopDto> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception {
+    public List<ShopSimpleResponse> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception {
 
         List<Long> shopIds = getShopId(nearBy, friend, scrap);
         List<String> placeIDs = getPlaceIds(shopIds);
 
         // 2000m(2km) 이내
-        List<SimpleShopDto> simpleShopDtos = this.callApiByPlaceIdsNonBlocking(placeIDs);
+        List<ShopSimpleResponse> simpleShopDtos = this.callApiByPlaceIdsNonBlocking(placeIDs);
 
         int failCnt = 0;
-        List<SimpleShopDto> resultSimpleShopDtos = new ArrayList<>();
-        for (SimpleShopDto dto : simpleShopDtos) {
+        List<ShopSimpleResponse> resultSimpleShopDtos = new ArrayList<>();
+        for (ShopSimpleResponse dto : simpleShopDtos) {
             try {
                 Double dist = getMeter(dto.getGeometry(), shopRequest);
 
@@ -270,7 +278,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .collect(Collectors.toList());
         }
 
-        List<Long> shopIds = new ArrayList<>();
+        List<Long> shopIds = new LinkedList<>();
 
         if (friend == 1) {
             List<Long> friends = followService.getFollowers();
@@ -312,7 +320,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
             String token;
             try {
-                token = dto.getPhotos().get(0).getPhoto_reference();
+                token = getPhotoUrl(dto.getPhotos().get(0).getPhotoReference());
             } catch (NullPointerException e) {
                 token = null;
             }
@@ -350,19 +358,18 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     /**
      * 여러 place_ids에서 간단하게 상점 정보를 받아오는 메소드
      */
-    private List<SimpleShopDto> callApiByPlaceIdsNonBlocking(List<String> placeIds) throws JsonProcessingException {
+    private List<ShopSimpleResponse> callApiByPlaceIdsNonBlocking(List<String> placeIds) throws JsonProcessingException {
         List<Mono<String>> monos = new ArrayList<>();
 
         for (String id : placeIds) {
             Mono<String> shopStr;
 
-            //todo: queryParam 설명에는 fields list 된다고 되어있는데 실제로 안됨 확인좀(string으로 넣어주면 됨)
             shopStr = webClient.get().uri(uriBuilder ->
                             uriBuilder.path("/details/json")
                                     .queryParam("place_id", id)
                                     .queryParam("language", "ko")
                                     .queryParam("key", API_KEY)
-                                    .queryParam("fields", "geometry/location/lng,geometry/location/lat,place_id,name")
+                                    .queryParam("fields", "geometry/location/lng,geometry/location/lat,place_id,name,photos/photo_reference")
                                     .build()
                     )
                     .retrieve().bodyToMono(String.class);
@@ -370,11 +377,13 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             monos.add(shopStr);
         }
 
-        //todo: 로직 변경
         Function<Object[], List> combinator = monoList -> Arrays.stream(monoList).collect(Collectors.toList());
         List<String> results = Mono.zip(monos, combinator).block();
 
-        List<SimpleShopDto> simpleShopDtos = new ArrayList<>();
+        if (results==null)
+            results=new ArrayList<>();
+
+        List<ShopSimpleResponse> simpleShopDtos = new ArrayList<>();
         int continualException = 0;
         for (String result : results) {
             if (continualException > 5) {
@@ -383,7 +392,22 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             try {
                 continualException = 0;
                 SimpleShopDto simpleShopDto = this.jsonToSimpleShopDto(result);
-                simpleShopDtos.add(simpleShopDto);
+
+                String photoToken;
+                try {
+                    photoToken = getPhotoUrl(simpleShopDto.getPhoto().get(0).getPhotoReference());
+                } catch (NullPointerException e) {
+                    photoToken = null;
+                }
+
+                ShopSimpleResponse shopSimpleResponse = ShopSimpleResponse.builder()
+                        .placeId(simpleShopDto.getPlaceId())
+                        .name(simpleShopDto.getName())
+                        .geometry(simpleShopDto.getGeometry())
+                        .photo(photoToken)
+                        .build();
+
+                simpleShopDtos.add(shopSimpleResponse);
             } catch (ApiException e) {
                 continualException++;
             }
@@ -445,7 +469,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                         .queryParam("place_id", placeId)
                         .queryParam("language", "ko")
                         .queryParam("key", API_KEY)
-                        .queryParam("fields", "formatted_address,formatted_phone_number,name,geometry/location/lat,geometry/location/lng,types,place_id,opening_hours/open_now,opening_hours/weekday_text")
+                        .queryParam("fields", "formatted_address,formatted_phone_number,name,geometry/location/lat,geometry/location/lng,types,place_id,opening_hours/open_now,opening_hours/weekday_text,photos/photo_reference")
                         .build()
         ).retrieve().bodyToMono(String.class).block();
 
@@ -533,6 +557,20 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             }
         }
         return Category.restaurant;
+    }
+
+    private String getPhotoUrl(String photoToken) {
+        UriComponents uri = UriComponentsBuilder.newInstance()
+                .scheme("https")
+                .host("maps.googleapis.com")
+                .path("/maps/api/place/photo")
+                .queryParam("photo_reference", photoToken)
+                .queryParam("key", API_KEY)
+                .queryParam("maxwidth", 400)
+                .queryParam("maxheight", 400)
+                .build();
+
+        return uri.toUriString();
     }
 }
 

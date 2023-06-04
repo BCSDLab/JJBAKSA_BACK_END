@@ -102,9 +102,11 @@ cloud:
     s3:
       review:
       profile:
+      inquiry:
     cloudfront:
       review-url-format:
       profile-url-format:
+      inquiry-url-format
     stack:
       auto: false
     ses:
