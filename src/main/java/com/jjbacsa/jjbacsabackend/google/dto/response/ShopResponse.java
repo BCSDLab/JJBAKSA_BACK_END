@@ -1,15 +1,17 @@
 package com.jjbacsa.jjbacsabackend.google.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
 
 /**
  * shopDto(단일 상점 자세한 정보) 반환되는 클래스
  */
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 @Getter
 public class ShopResponse {
+    private Long shopId;
     private String placeId;
     private String name;
     private String formattedAddress;
@@ -32,5 +34,9 @@ public class ShopResponse {
 
     public void setIsScrap(boolean isScrap) {
         this.isScrap = isScrap;
+    }
+
+    public void setShopId(Long shopId) {
+        this.shopId = shopId;
     }
 }
