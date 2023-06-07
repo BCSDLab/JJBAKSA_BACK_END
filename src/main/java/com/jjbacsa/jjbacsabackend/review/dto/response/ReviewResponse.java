@@ -1,44 +1,26 @@
 package com.jjbacsa.jjbacsabackend.review.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
-import com.jjbacsa.jjbacsabackend.review.mapper.ReviewMapper;
 import com.jjbacsa.jjbacsabackend.review_image.dto.response.ReviewImageResponse;
-import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
-import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopReviewResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.response.UserReviewResponse;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Data
+@Getter
+@Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class ReviewResponse {
     private Long id;
     private String content;
     private Integer rate;
-    private LocalDateTime createdAt;
+    @JsonFormat(pattern = "yy-MM-dd", timezone = "Asia/Seoul")
+    private Date createdAt;
     private List<ReviewImageResponse> reviewImages;
     private UserReviewResponse userReviewResponse;
-    private ShopReviewResponse shopReviewResponse;
+    private String shopPlaceId;
 
-
-    // 생성 메서드 //
-    public static ReviewResponse from(ReviewEntity reviewEntity){
-        ReviewResponse response = ReviewMapper.INSTANCE.fromReviewEntity(reviewEntity);
-        if(reviewEntity.getReviewImages() != null) {
-            response.reviewImages = new ArrayList<>();
-            for (ReviewImageEntity image : reviewEntity.getReviewImages()) {
-                ReviewImageResponse reviewImageResponse = new ReviewImageResponse(image.getImage().getId(), image.getImage().getOriginalName(), image.getImage().getPath(), image.getImage().getUrl());
-                response.getReviewImages().add(reviewImageResponse);
-            }
-        }
-        return response;
-    }
 }
