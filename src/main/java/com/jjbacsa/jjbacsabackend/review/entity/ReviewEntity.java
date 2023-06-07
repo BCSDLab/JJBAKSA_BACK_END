@@ -1,8 +1,8 @@
 package com.jjbacsa.jjbacsabackend.review.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
+import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
-import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -43,8 +43,8 @@ public class ReviewEntity extends BaseEntity {
     private UserEntity writer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id")
-    private ShopEntity shop;
+    @JoinColumn(name = "google_place_id", referencedColumnName = "place_id")
+    private GoogleShopEntity shop;
 
     @Setter
     @Basic(optional = false)
