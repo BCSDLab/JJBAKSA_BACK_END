@@ -8,6 +8,8 @@ import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.OAuth2UserServiceImpl;
@@ -206,8 +208,8 @@ public class UserController {
             value = "회원 탈퇴",
             notes = "회원 탈퇴\n\n" +
                     "필요 헤더\n\n" +
-                    "\tAuthorization : Bearer + access token"
-    )
+                    "\tAuthorization : Bearer + access token",
+            authorizations = @Authorization(value = "Bearer + refreshToken"))
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiResponses({
             @ApiResponse(code = 204,
@@ -221,8 +223,32 @@ public class UserController {
     }
 
     @ApiOperation(
-            value = "아이디 찾기, 비밀번호 찾기용 인증 이메일 발송",
-            notes = "아이디 찾기, 비밀번호 찾기용 인증 이메일 발송\n\n" +
+            value = "탈퇴 사유 저장",
+            notes = "탈퇴 사유 저장\n\n" +
+                    "필요 헤더\n\n" +
+                    "\tAuthorization : Bearer + access token" +
+                    "\n\n필요한 필드\n\n" +
+                    "\t{\n\n     " +
+                    "reason : 변경 사유,\n\n     " +
+                    "discomfort : 개선 사항\n\n    " +
+                    "}\t\n\n" +
+                    "탈퇴가 먼저 이뤄지면 탈퇴 사유를 저장할 유저를 찾지 못합니다.\n\n" +
+                    "탈퇴 이전에 먼저 탈퇴 사유를 저장해주시길 바랍니다.",
+            authorizations = @Authorization(value = "Bearer + refreshToken"))
+    @ResponseStatus(HttpStatus.CREATED)
+    @ApiResponses({
+            @ApiResponse(code = 201,
+                    message = "생성된 탈퇴 사유")
+    })
+    @PreAuthorize(("hasRole('NORMAL')"))
+    @PostMapping("/user/withdraw-reason")
+    public ResponseEntity<WithdrawReasonResponse> createWithdrawReason(@RequestBody WithdrawRequest request) throws Exception {
+        return new ResponseEntity<WithdrawReasonResponse>(userService.createWithdrawReason(request), HttpStatus.CREATED);
+    }
+
+    @ApiOperation(
+            value = "아이디 찾기 인증 이메일 발송",
+            notes = "아이디 찾기 인증 이메일 발송\n\n" +
                     "\n\n\temail : 인증 받을 이메일"
     )
     @ResponseStatus(HttpStatus.OK)
@@ -230,10 +256,29 @@ public class UserController {
             @ApiResponse(code = 200,
                     message = "OK")
     })
-    @PostMapping("/user/email")
-    public ResponseEntity<String> sendAuthEmailCode(@Email(message = "이메일은 형식을 지켜야 합니다.")
-                                                    @RequestParam String email) throws Exception {
+    @PostMapping("/user/email/account")
+    public ResponseEntity<String> sendAuthEmailAccount(@Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                       @RequestParam String email) throws Exception {
         userService.sendAuthEmailCode(email);
+        return new ResponseEntity<>("OK", HttpStatus.OK);
+    }
+
+    @ApiOperation(
+            value = "비밀번호 찾기 인증 이메일 발송",
+            notes = "비밀번호 찾기 인증 이메일 발송\n\n" +
+                    "\n\n\taccount : 인증 받을 아이디" +
+                    "\n\n\temail : 인증 받을 이메일"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "OK")
+    })
+    @PostMapping("/user/email/password")
+    public ResponseEntity<String> sendAuthEmailPassword(@RequestParam String account,
+                                                        @Email(message = "이메일은 형식을 지켜야 합니다.")
+                                                        @RequestParam String email) throws Exception {
+        userService.sendAuthEmailCode(account, email);
         return new ResponseEntity<>("OK", HttpStatus.OK);
     }
 

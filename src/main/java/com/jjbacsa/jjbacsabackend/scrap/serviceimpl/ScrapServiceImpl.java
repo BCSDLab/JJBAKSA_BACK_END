@@ -2,6 +2,8 @@ package com.jjbacsa.jjbacsabackend.scrap.serviceimpl;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
+import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryRequest;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryResponse;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapRequest;
@@ -33,7 +35,8 @@ import java.util.Objects;
 public class ScrapServiceImpl implements ScrapService {
 
     private final InternalUserService userService;
-    private final InternalShopService shopService;
+    private final InternalGoogleService shopService;
+
     private final InternalScrapService scrapService;
 
     private final ScrapDirectoryRepository scrapDirectoryRepository;
@@ -92,7 +95,7 @@ public class ScrapServiceImpl implements ScrapService {
     public ScrapResponse create(ScrapRequest request) throws Exception {
 
         UserEntity user = userService.getLoginUser();
-        ShopEntity shop = shopService.getShopById(request.getShopId());
+        GoogleShopEntity shop = shopService.getGoogleShopById(request.getShopId());
         ScrapDirectoryEntity directory = getDirectoryOrNull(request.getDirectoryId());
 
         if (directory != null)
@@ -180,7 +183,7 @@ public class ScrapServiceImpl implements ScrapService {
             throw new RequestInputException(ErrorMessage.SCRAP_DIRECTORY_NOT_EXISTS_EXCEPTION);
     }
 
-    private void checkScrapDuplication(UserEntity user, ShopEntity shop) {
+    private void checkScrapDuplication(UserEntity user, GoogleShopEntity shop) {
 
         if (scrapRepository.existsByUserAndShop(user, shop))
             throw new RequestInputException(ErrorMessage.SCRAP_DUPLICATE_EXCEPTION);
@@ -202,7 +205,7 @@ public class ScrapServiceImpl implements ScrapService {
         return scrapDirectoryRepository.save(directory);
     }
 
-    private ScrapEntity saveScrap(UserEntity user, ShopEntity shop, ScrapDirectoryEntity directory) {
+    private ScrapEntity saveScrap(UserEntity user, GoogleShopEntity shop, ScrapDirectoryEntity directory) {
 
         ScrapEntity scrap = ScrapEntity.builder()
                 .user(user)

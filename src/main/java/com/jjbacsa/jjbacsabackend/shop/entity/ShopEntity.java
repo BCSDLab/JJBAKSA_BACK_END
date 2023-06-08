@@ -56,18 +56,22 @@ public class ShopEntity extends BaseEntity {
     private String categoryName;
 
     @Basic
-    @Column(name="address",nullable = false)
+    @Column(name = "address", nullable = false)
     private String address;
 
     @Basic
-    @Column(name="phone",nullable = true)
+    @Column(name = "phone", nullable = true)
     private String phone;
 
     @Basic
-    @Column(name="business_day",nullable = true)
+    @Column(name = "business_day", nullable = true)
     private String businessDay;
 
-    @OneToOne(mappedBy = "shop", fetch = FetchType.LAZY, optional = false, cascade = CascadeType.PERSIST)
+    @Basic
+    @Column(name="photo_reference",nullable = true)
+    private String photoReference;
+
+    @OneToOne(mappedBy = "shop", fetch = FetchType.EAGER, optional = false, cascade = CascadeType.PERSIST)
     @Builder.Default
     private ShopCount shopCount = new ShopCount();
 }

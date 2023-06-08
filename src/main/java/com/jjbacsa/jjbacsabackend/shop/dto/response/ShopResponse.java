@@ -2,12 +2,10 @@ package com.jjbacsa.jjbacsabackend.shop.dto.response;
 
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopCount;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,17 +22,20 @@ public class ShopResponse {
     private Integer totalRating;
     private Integer ratingCount;
 
-    public boolean setShopCount(Integer totalRating, Integer ratingCount){
-        try{
-            this.totalRating=totalRating;
-            this.ratingCount=ratingCount;
+    private byte[] photo;
+
+    public boolean setShopCount(Integer totalRating, Integer ratingCount) {
+        try {
+            this.totalRating = totalRating;
+            this.ratingCount = ratingCount;
 
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             return false;
         }
     }
-    public static ShopResponse from(ShopEntity entity){
+
+    public static ShopResponse from(ShopEntity entity) {
         return ShopResponse.builder()
                 .shopId(entity.getId())
                 .placeId(entity.getPlaceId())

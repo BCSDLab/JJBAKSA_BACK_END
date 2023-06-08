@@ -12,10 +12,14 @@ import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
+import com.jjbacsa.jjbacsabackend.user.entity.WithdrawReasonEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
+import com.jjbacsa.jjbacsabackend.user.repository.WithdrawReasonRepository;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalProfileService;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
@@ -51,6 +55,7 @@ public class UserServiceImpl implements UserService {
     private final InternalEmailService emailService;
     private final UserRepository userRepository;
     private final UserCountRepository userCountRepository;
+    private final WithdrawReasonRepository withdrawReasonRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
@@ -221,6 +226,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    public WithdrawReasonResponse createWithdrawReason(WithdrawRequest request) throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        WithdrawReasonEntity reason = WithdrawReasonEntity.builder()
+                .user(user)
+                .reason(request.getReason())
+                .discomfort(request.getDiscomfort())
+                .build();
+
+        withdrawReasonRepository.save(reason);
+        return new WithdrawReasonResponse(user.getId(), request);
+    }
+
+    @Override
+    @Transactional
     public UserResponse modifyProfile(MultipartFile profile) throws Exception {
         UserEntity user = userService.getLoginUser();
 
@@ -238,10 +258,16 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
-    //TODO : 마스킹 필요하면 마스킹해서 보내줄 것
     @Override
     @Transactional
     public void sendAuthEmailCode(String email) throws Exception {
+        emailService.sendAuthEmailCode(email);
+    }
+
+    @Override
+    @Transactional
+    public void sendAuthEmailCode(String account, String email) throws Exception {
+        validateUserInfo(account, email);
         emailService.sendAuthEmailCode(email);
     }
 
@@ -298,6 +324,14 @@ public class UserServiceImpl implements UserService {
     private void validateExistEmail(String email) {
         if (userRepository.existsByEmailAndPasswordIsNotNull(email)) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_EMAIL);
+        }
+    }
+
+    private void validateUserInfo(String account, String email) {
+        UserEntity user = userService.getUserByAccount(account);
+
+        if (!Objects.equals(user.getEmail(), email)) {
+            throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
         }
     }
 
