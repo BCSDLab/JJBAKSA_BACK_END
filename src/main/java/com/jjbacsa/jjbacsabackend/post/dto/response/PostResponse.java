@@ -1,24 +1,19 @@
 package com.jjbacsa.jjbacsabackend.post.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.*;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
-@Data
+@Getter
+@Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class PostResponse {
     private Long id;
     private String title;
     private String content;
     private String boardType;
-    private String createdAt;
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
+    private Date createdAt;
 
-    public void setCreatedAt(Date createAt){
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        this.createdAt = format.format(createAt);
-    }
 }
