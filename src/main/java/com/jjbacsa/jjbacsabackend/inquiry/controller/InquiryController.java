@@ -8,6 +8,7 @@ import com.jjbacsa.jjbacsabackend.inquiry.service.InquiryService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -43,6 +44,7 @@ public class InquiryController {
                     "{\n\n" +
                     "       \"title\" : \"제목\"\n\n" +
                     "       \"content\" : \"내용\"\n\n" +
+                    "       \"inquiryImages\" : \"문의 이미지\"\n\n" +
                     "       \"secret\" : \"비밀글 여부\"\n\n" +
                     "}", authorizations = @Authorization(value = "Bearer +accessToken"))
     @ApiResponses({
@@ -51,8 +53,8 @@ public class InquiryController {
                     response = InquiryResponse.class)
     })
     @PreAuthorize("hasRole('NORMAL')")
-    @PostMapping(value = "/inquiry")
-    public ResponseEntity<InquiryResponse> create(@Validated(ValidationGroups.Create.class) @RequestBody InquiryRequest inquiryRequest) throws Exception {
+    @PostMapping(value = "/inquiry", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<InquiryResponse> create(@Validated @ModelAttribute InquiryRequest inquiryRequest) throws Exception {
         return new ResponseEntity<>(inquiryService.create(inquiryRequest), HttpStatus.CREATED);
     }
 
@@ -63,6 +65,7 @@ public class InquiryController {
                     "       \"inquiryId\" : \"수정할 Inquiry의 id\"\"\n\n" +
                     "       \"title\" : \"제목\"\n\n" +
                     "       \"content\" : \"내용\"\n\n" +
+                    "       \"inquiryImages\" : \"문의 이미지\"\n\n" +
                     "       \"secret\" : \"비밀글 여부\"\n\n" +
                     "}", authorizations = @Authorization(value = "Bearer +accessToken"))
     @ApiResponses({
@@ -71,8 +74,8 @@ public class InquiryController {
                     response = InquiryResponse.class)
     })
     @PreAuthorize("hasRole('NORMAL')")
-    @PatchMapping(value = "/inquiry/{inquiry-id}")
-    public ResponseEntity<InquiryResponse> modify(@RequestBody InquiryRequest inquiryRequest, @ApiParam("수정할 Inquiry Id") @PathVariable("inquiry-id") Long inquiryId) throws Exception {
+    @PutMapping(value = "/inquiry/{inquiry-id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<InquiryResponse> modify(@Validated @ModelAttribute @RequestBody InquiryRequest inquiryRequest, @ApiParam("수정할 Inquiry Id") @PathVariable("inquiry-id") Long inquiryId) throws Exception {
         return new ResponseEntity<>(inquiryService.modify(inquiryRequest, inquiryId), HttpStatus.OK);
     }
 

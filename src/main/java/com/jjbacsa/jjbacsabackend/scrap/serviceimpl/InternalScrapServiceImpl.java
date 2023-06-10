@@ -26,7 +26,6 @@ public class InternalScrapServiceImpl implements InternalScrapService {
     private final ScrapRepository scrapRepository;
     private final ScrapDirectoryRepository scrapDirectoryRepository;
     private final InternalUserService internalUserService;
-    private final InternalGoogleService internalGoogleService;
 
     @Override
     public ScrapEntity getScrapById(Long scrapId) throws RequestInputException {
@@ -64,10 +63,9 @@ public class InternalScrapServiceImpl implements InternalScrapService {
 
     //상점 id와 사용자 id 비교해서 현재 사용자가 북마크 하는지 여부 반환
     @Override
-    public boolean isUserScrapShop(Long shopId) throws Exception {
+    public boolean isUserScrapShop(GoogleShopEntity googleShop) throws Exception {
 
         UserEntity user=internalUserService.getLoginUser();
-        GoogleShopEntity googleShop=internalGoogleService.getGoogleShopById(shopId);
 
         return scrapRepository.existsByUserAndShop(user, googleShop);
     }

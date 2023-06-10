@@ -9,6 +9,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 /**
  * 리뷰 쓸 때 상점 저장
@@ -22,7 +23,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @SuperBuilder(toBuilder = true)
 @Table(name = "google_shop")
-public class GoogleShopEntity extends BaseEntity {
+public class GoogleShopEntity extends BaseEntity implements Serializable {
 
     private static class GoogleShopEntityBuilderImpl extends GoogleShopEntityBuilder<GoogleShopEntity, GoogleShopEntityBuilderImpl> {
         @Override
