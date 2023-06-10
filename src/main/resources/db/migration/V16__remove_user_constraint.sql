@@ -1,0 +1,3 @@
+ALTER TABLE jjbacsa.user
+CHANGE updated_at
+updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP();
