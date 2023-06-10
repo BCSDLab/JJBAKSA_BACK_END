@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.post.entity.PostEntity;
 import com.jjbacsa.jjbacsabackend.post.entity.QPostEntity;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -33,7 +34,7 @@ public class DslPostRepositoryImpl extends QuerydslRepositorySupport implements 
 
         List<PostEntity> postEntities = queryFactory
                 .selectFrom(post)
-                .where(post.createdAt.stringValue().lt(cursor == null ? LocalDateTime.now().toString() : cursor),
+                .where(customCursor(cursor),
                         post.boardType.stringValue().eq(boardType))
                 .limit(pageable.getPageSize())
                 .orderBy(post.createdAt.desc(), post.id.desc())
@@ -45,6 +46,12 @@ public class DslPostRepositoryImpl extends QuerydslRepositorySupport implements 
                 .where(post.boardType.stringValue().eq(boardType));
 
         return PageableExecutionUtils.getPage(postEntities, pageable, countQuery::fetchOne);
+    }
+
+    private BooleanExpression customCursor(String dateCursor) {
+        if(dateCursor == null) return null;
+
+        return post.createdAt.stringValue().substring(0, 10).lt(dateCursor);
     }
 
 }
