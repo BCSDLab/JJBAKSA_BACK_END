@@ -89,8 +89,6 @@ public class UserEntity extends BaseEntity {
         this.userType = userType;
     }
 
-    public void updateLastLoggedAt() { this.lastLoggedAt = new Date(); }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
