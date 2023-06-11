@@ -25,7 +25,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, DslUser
     @Query(value =
             "select exists (select * from user u where u.account = :account " +
             "and (u.is_deleted = 0 " +
-            "   or (u.is_deleted = 1 and u.updated_at > DATE_ADD(NOW(), INTERVAL - 7 DAY))))",
+            "   or (u.is_deleted = 1 and u.updated_at > DATE_ADD(NOW(), INTERVAL - 1 DAY))))",
             nativeQuery = true)
     Integer existsByAccount(@Param("account") String account);
 
