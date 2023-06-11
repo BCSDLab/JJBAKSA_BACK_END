@@ -11,13 +11,17 @@ import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.Min;
 
@@ -130,4 +134,24 @@ public class FollowController {
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+
+    @ApiOperation(
+            value = "최근 로그인한 팔로워 조회",
+            authorizations = @Authorization(value = "Bearer + accessToken"),
+            notes = "24시간 내 로그인한 유저 목록 검색\n\n\t" +
+                    "pageSize : 한 번에 출력할 결과의 갯수(Default = 20)\n\n\t" +
+                    "cursor : 마지막으로 조회한 유저의 id"
+    )
+    @PreAuthorize("hasRole('NORMAL')")
+    @GetMapping(value = "/recently-active-followers")
+    public ResponseEntity<Page<UserResponse>> getRecentlyActiveFollowers(
+            @ApiParam("가져올 데이터 수(1~100)") @Range(min = 0, max = 100, message = "올바르지 않은 값입니다.")
+            @RequestParam(required = false, defaultValue = "20") Integer pageSize,
+            @ApiParam("마지막으로 조회한 유저의 id(제일 작은 id)")
+            @RequestParam(required = false) Long cursor
+    ) throws Exception {
+        return new ResponseEntity<>(service.getRecentlyActiveFollowers(cursor, pageSize), HttpStatus.OK);
+    }
+
 }

@@ -10,4 +10,6 @@ public interface DslFollowRepository {
     Page<FollowEntity> findAllByUserWithCursor(UserEntity user, String cursor, Pageable pageable);
 
     Long deleteFollowWithUser(UserEntity user);
+
+    Page<FollowEntity> findRecentlyActiveFollowersByUserWithCursor(UserEntity user, Long cursor, Pageable pageable);
 }

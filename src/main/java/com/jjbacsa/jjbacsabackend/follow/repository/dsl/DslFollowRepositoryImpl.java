@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.follow.repository.dsl;
 
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.entity.QFollowEntity;
+import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.StringExpressions;
@@ -11,10 +12,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.data.support.PageableExecutionUtils;
 
+import java.util.Calendar;
 import java.util.List;
 
 public class DslFollowRepositoryImpl extends QuerydslRepositorySupport implements DslFollowRepository {
 
+    private static final QUserEntity qUser = QUserEntity.userEntity;
     private static final QFollowEntity f = QFollowEntity.followEntity;
 
     public DslFollowRepositoryImpl() {
@@ -38,10 +41,30 @@ public class DslFollowRepositoryImpl extends QuerydslRepositorySupport implement
     }
 
     @Override
-    public Long deleteFollowWithUser(UserEntity user){
+    public Long deleteFollowWithUser(UserEntity user) {
         return update(f).set(f.isDeleted, 1)
                 .where(f.follower.eq(user).or(f.user.eq(user)))
                 .execute();
+    }
+
+    @Override
+    public Page<FollowEntity> findRecentlyActiveFollowersByUserWithCursor(UserEntity user, Long cursor, Pageable pageable) {
+        Calendar time = Calendar.getInstance();
+        time.add(Calendar.DATE, -1);
+
+        List<FollowEntity> followers = from(f).select(f)
+                .join(f.follower).fetchJoin()
+                .where(f.user.eq(user),
+                        f.user.lastLoggedAt.gt(time.getTime()),
+                        f.follower.id.gt(cursor == null ? 0 : cursor))
+                .orderBy(f.follower.id.desc())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        JPQLQuery<Long> countQuery = from(f).select(f.count())
+                .where(f.user.eq(user));
+
+        return PageableExecutionUtils.getPage(followers, pageable, countQuery::fetchCount);
     }
 
     private BooleanExpression customCursor(String cursor) {
