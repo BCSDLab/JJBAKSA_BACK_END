@@ -22,7 +22,12 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, DslUser
 
     Optional<UserEntity> findByEmailAndPasswordIsNotNull(String email);
 
-    boolean existsByAccount(String account);
+    @Query(value =
+            "select exists (select * from user u where u.account = :account " +
+            "and (u.is_deleted = 0 " +
+            "   or (u.is_deleted = 1 and u.updated_at > DATE_ADD(NOW(), INTERVAL - 7 DAY))))",
+            nativeQuery = true)
+    Integer existsByAccount(@Param("account") String account);
 
     boolean existsByEmailAndPasswordIsNotNull(String email);
 
