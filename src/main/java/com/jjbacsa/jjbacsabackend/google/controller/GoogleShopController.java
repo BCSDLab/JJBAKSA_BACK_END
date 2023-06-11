@@ -101,18 +101,32 @@ public class GoogleShopController {
                     response = ShopResponse.class
             )
     })
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path"),
-            @ApiImplicitParam(name = "type", value = "핀보기 시, 나타낼 리뷰 type", required = false, dataType = "string", paramType = "query")
-
-    })
+    @ApiImplicitParam(name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path")
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping("/shops/{place_id}")
-    public ResponseEntity<ShopResponse> getGoogleShopDetails(@PathVariable("place_id") String placeId,
-                                                             @RequestParam(name = "type", required = false) String reviewType) throws Exception {
+    public ResponseEntity<ShopResponse> getGoogleShopDetails(@PathVariable("place_id") String placeId) throws Exception {
 
         return ResponseEntity.ok()
-                .body(googleShopService.getShopDetails(placeId, reviewType));
+                .body(googleShopService.getShopDetails(placeId, true));
+    }
+
+    @ApiOperation(
+            value = "핀보기 단일 상점 조회",
+            notes = "place_id를 기반으로 핀보기 단일 상점 정보를 조회한다.\n\n"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "핀보기 단일 상점 조회 결과",
+                    response = ShopResponse.class
+            )
+    })
+    @ApiImplicitParam(name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path")
+    @PreAuthorize("hasRole('NORMAL')")
+    @GetMapping("/shops/pin/{place_id}")
+    public ResponseEntity<ShopResponse> getPinGoogleShop(@PathVariable("place_id") String placeId) throws Exception {
+        return ResponseEntity.ok()
+                .body(googleShopService.getShopDetails(placeId, false));
     }
 
     @ApiOperation(

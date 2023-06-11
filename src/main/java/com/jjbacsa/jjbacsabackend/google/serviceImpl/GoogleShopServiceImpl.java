@@ -26,6 +26,7 @@ import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.scrap.service.InternalScrapService;
+import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -117,12 +118,11 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
     @Transactional(readOnly = true)
     @Override
-    public ShopResponse getShopDetails(String placeId, String reviewType) throws Exception {
+    public ShopResponse getShopDetails(String placeId, boolean isDetail) throws Exception {
         ShopResponse shopResponse;
 
-        //todo: 리뷰 타입에 따른 마지막리뷰 날짜 반환
         String requestField;
-        if (reviewType == null) {
+        if (isDetail) {
             requestField = toFieldString(placeDetailsField);
         } else {
             requestField = toFieldString(pinFields);
@@ -145,7 +145,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             photoTokens = null;
         }
 
-        if (reviewType == null) {
+        if (isDetail) {
             String businessDay;
             String todayBusinessHour;
             try {
@@ -187,7 +187,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .todayBusinessHour(todayBusinessHour)
                     .build();
         } else {
-            //todo: lastReviewDate 반환
             shopResponse = ShopResponse.builder()
                     .placeId(shopApiDto.getPlaceId())
                     .name(shopApiDto.getName())
@@ -316,30 +315,32 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         List<Long> shopIds = new LinkedList<>();
 
         if (friend == 1) {
-            List<Long> friends = followService.getFollowers();
+            List<UserEntity> friends = followService.getFollowers();
 
-            //todo: 후에 리뷰 변경되면 변경
             friends.stream()
                     .map(f -> reviewService.getReviewIdsForUser(f))
-                    .forEach(ids -> shopIds.addAll(ids));
+                    .forEach(ids -> addNonDuplication(ids, shopIds));
         }
 
         shopIds.sort(Comparator.naturalOrder());
 
         if (scrap == 1) {
             List<Long> ids = scrapService.getShopIdsForUserScrap();
-
-            for (Long id : ids) {
-                int insertionIndex = Collections.binarySearch(shopIds, id);
-
-                if (insertionIndex < 0) {
-                    insertionIndex = -(insertionIndex + 1);
-                    shopIds.add(insertionIndex, id);
-                }
-            }
+            addNonDuplication(ids, shopIds);
         }
 
         return shopIds;
+    }
+
+    private void addNonDuplication(List<Long> ids, List<Long> resultIds) {
+        for (Long id : ids) {
+            int insertionIndex = Collections.binarySearch(resultIds, id);
+
+            if (insertionIndex < 0) {
+                insertionIndex = -(insertionIndex + 1);
+                resultIds.add(insertionIndex, id);
+            }
+        }
     }
 
     private ShopQueryResponses queryDtoToQueryResponses(ShopQueryDto shopQueryDto, ShopRequest shopRequest) {

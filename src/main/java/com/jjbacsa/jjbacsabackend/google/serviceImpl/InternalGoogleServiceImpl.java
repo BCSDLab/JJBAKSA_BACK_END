@@ -44,7 +44,7 @@ public class InternalGoogleServiceImpl implements InternalGoogleService {
     @Override
     @Transactional(readOnly = true)
     public ShopResponse getShopDetails(String placeId) throws Exception {
-        return googleService.getShopDetails(placeId);
+        return googleService.getShopDetails(placeId, true);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class InternalGoogleServiceImpl implements InternalGoogleService {
     }
 
     private GoogleShopEntity saveGoogleShop(String placeId) throws Exception {
-        ShopResponse shopResponse = googleService.getShopDetails(placeId);
+        ShopResponse shopResponse = googleService.getShopDetails(placeId, true);
         GoogleShopEntity googleShopEntity = GoogleShopEntity.builder()
                 .placeId(shopResponse.getPlaceId())
                 .build();

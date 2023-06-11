@@ -18,7 +18,7 @@ public interface GoogleShopService {
     ShopQueryResponses searchShopQueryNext(String pageToken, ShopRequest shopRequest) throws JsonProcessingException;
 
     //구글 상점 상세정보
-    ShopResponse getShopDetails(String placeId, String reviewType) throws Exception;
+    ShopResponse getShopDetails(String placeId, boolean isDetail) throws Exception;
 
     //메인페이지
     List<ShopSimpleResponse> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception;
