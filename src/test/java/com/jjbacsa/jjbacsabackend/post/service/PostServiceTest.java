@@ -5,7 +5,9 @@ import com.jjbacsa.jjbacsabackend.etc.dto.CustomPageRequest;
 import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.post.dto.request.PostPageRequest;
 import com.jjbacsa.jjbacsabackend.post.dto.request.PostRequest;
+import com.jjbacsa.jjbacsabackend.post.dto.response.PostPageResponse;
 import com.jjbacsa.jjbacsabackend.post.dto.response.PostResponse;
 import com.jjbacsa.jjbacsabackend.post.entity.PostEntity;
 import com.jjbacsa.jjbacsabackend.post.repository.PostRepository;
@@ -41,10 +43,6 @@ import static org.mockito.Mockito.when;
 @DisplayName("비즈니스 로직 - Post")
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
-    /*
-        TODO:
-         Inquery(문의)에 대한 요구사항 파악 후 기능 추가
-     */
 
     @InjectMocks
     private PostServiceImpl postService;
@@ -140,34 +138,16 @@ public class PostServiceTest {
     @Test
     void givenBoardTypeAndPageRequest_whenGetNotices_thenReturnPage(){
         //Given
-        String boardType = BoardType.NOTICE.getBoardType();
-        PageRequest pageRequest = createPageRequest();
+        PostPageRequest pageRequest = createPageRequest(BoardType.NOTICE.getBoardType());
 
-        given(postRepository.findAllNotices(pageRequest)).willReturn(Page.empty());
+        given(postRepository.findAllNotices(pageRequest.getCursor(), pageRequest.getBoardType(), PageRequest.ofSize(pageRequest.getSize()))).willReturn(Page.empty());
         // When
-        Page<PostResponse> postResponses = postService.getPosts(boardType, pageRequest);
+        Page<PostPageResponse> postResponses = postService.getPosts(pageRequest);
 
         // Then
         assertThat(postResponses).isEmpty();
-        then(postRepository).should().findAllNotices(pageRequest);
+        then(postRepository).should().findAllNotices(pageRequest.getCursor(), pageRequest.getBoardType(), PageRequest.ofSize(pageRequest.getSize()));
     }
-
-    @DisplayName("BoardType과 Pageable 객체를 넘기면 FAQ, INQUIRY 페이지를 반환한다.")
-    @MethodSource
-    @ParameterizedTest(name = "[BoardType] \"{0}\"")
-    void givenBoardTypeAndPageRequest_whenGetFAQsAndInquiries_thenReturnPage(String boardType){
-        //Given
-        PageRequest pageRequest = createPageRequest();
-        given(postRepository.findAllNotices(pageRequest)).willReturn(Page.empty());
-        // When
-        Page<PostResponse> postResponses = postService.getPosts(boardType, pageRequest);
-
-        // Then
-        assertThat(postResponses).isEmpty();
-        then(postRepository).should().findAllNotices(pageRequest);
-    }
-    static Stream<Arguments> givenBoardTypeAndPageRequest_whenGetFAQsAndInquiries_thenReturnPage(){return getFAQAndInqury();}
-
 
     private PostRequest createPostRequest(String title, String content, String boardType) {
         return PostRequest.builder()
@@ -194,17 +174,13 @@ public class PostServiceTest {
     private static Stream<Arguments> getBoardType(){
         return Stream.of(
                 arguments(BoardType.NOTICE.getBoardType()),
-                arguments(BoardType.POWER_NOTICE.getBoardType()),
-                arguments(BoardType.FAQ.getBoardType())
+                arguments(BoardType.POWER_NOTICE.getBoardType())
         );
     }
-    private static Stream<Arguments> getFAQAndInqury(){
-        return Stream.of(
-                arguments(BoardType.FAQ.getBoardType()),
-                arguments(BoardType.INQUIRY.getBoardType())
-        );
-    }
-    private PageRequest createPageRequest(){
-        return CustomPageRequest.builder().build().of();
+
+    private PostPageRequest createPageRequest(String boardType){
+        return PostPageRequest.builder()
+                .boardType(boardType)
+                .build();
     }
 }

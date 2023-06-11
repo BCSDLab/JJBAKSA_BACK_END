@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.annotation.WithMockCustomUser;
 import com.jjbacsa.jjbacsabackend.etc.dto.CustomPageRequest;
 import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
+import com.jjbacsa.jjbacsabackend.post.dto.request.PostPageRequest;
 import com.jjbacsa.jjbacsabackend.post.dto.request.PostRequest;
 import com.jjbacsa.jjbacsabackend.post.serviceImpl.PostServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -53,12 +54,7 @@ public class PostControllerTest {
     @MockBean
     private PostServiceImpl postService;
 
-    /*
-            TODO:
-             Inquery(문의)에 대한 요구사항 파악 후 기능 추가
-     */
-
-    @DisplayName("공지, FAQ Post를 작성하면, Post를 저장한다.")
+    @DisplayName("Post를 작성하면, Post를 저장한다.")
     @MethodSource
     @ParameterizedTest(name="[BoardType] \"{0}\"")
     @WithMockCustomUser(id="4", role = UserType.ADMIN)
@@ -109,16 +105,14 @@ public class PostControllerTest {
     @MethodSource
     @ParameterizedTest(name="[BoardType] \"{0}\"")
     void givenBoardType_whenGetPosts_thenPostsPage(String boardType) throws Exception {
-        PageRequest pageRequest = createPageRequest();
-
+        PostPageRequest pageRequest = createPageRequest(boardType);
 
         mockMvc.perform(get("/post")
-                        .queryParam("boardType", boardType)
-                        .queryParam("page", String.valueOf(pageRequest.getOffset()))
-                        .queryParam("size", String.valueOf(pageRequest.getPageSize()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(pageRequest))
                 ).andDo(print())
                 .andExpect(status().isOk());
-        then(postService).should().getPosts(boardType, pageRequest);
+        then(postService).should().getPosts(pageRequest);
     }
     static Stream<Arguments> givenBoardType_whenGetPosts_thenPostsPage(){return getBoardType();}
 
@@ -148,11 +142,12 @@ public class PostControllerTest {
     private static Stream<Arguments> getBoardType(){
         return Stream.of(
                 arguments(BoardType.NOTICE.getBoardType()),
-                arguments(BoardType.POWER_NOTICE.getBoardType()),
-                arguments(BoardType.FAQ.getBoardType())
+                arguments(BoardType.POWER_NOTICE.getBoardType())
                 );
     }
-    private PageRequest createPageRequest(){
-        return CustomPageRequest.builder().build().of();
+    private PostPageRequest createPageRequest(String boardType){
+        return PostPageRequest.builder()
+                .boardType(boardType)
+                .build();
     }
 }
