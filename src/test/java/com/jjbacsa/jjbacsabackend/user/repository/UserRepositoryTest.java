@@ -49,7 +49,7 @@ class UserRepositoryTest {
 
         userRepository.save(user);
 
-        assertTrue(userRepository.existsByAccount(user.getAccount()));
-        assertFalse(userRepository.existsByAccount("testuser2"));
+        assertEquals(userRepository.existsByAccount(user.getAccount()), 1);
+        assertEquals(userRepository.existsByAccount("testuser2"), 0);
     }
 }
