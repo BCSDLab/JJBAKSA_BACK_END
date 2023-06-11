@@ -1,17 +1,19 @@
 package com.jjbacsa.jjbacsabackend.post.dto.request;
 
+import com.jjbacsa.jjbacsabackend.etc.annotations.IsValidListSize;
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import java.util.List;
 
-@Data
+@Getter
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class PostRequest {
+
     @ApiModelProperty(example = "title")
     @NotNull(groups = {ValidationGroups.AdminCreate.class})
     private String title;
@@ -20,9 +22,6 @@ public class PostRequest {
     @NotNull(groups = {ValidationGroups.AdminCreate.class})
     private String content;
 
-    @ApiModelProperty(example = "NOTICE")
-    @Pattern(regexp = "^(NOTICE|POWER_NOTICE)$", message = "올바른 게시글 타입이 아닙니다.",
-            groups = {ValidationGroups.AdminCreate.class})
-    @NotNull(groups = {ValidationGroups.AdminCreate.class}, message = "게시글 타입을 설정해야합니다.")
-    private String boardType;
+    @IsValidListSize(max = 5, message = "공지사항 이미지는 최대 5개 입니다.")
+    private List<MultipartFile> postImages;
 }
