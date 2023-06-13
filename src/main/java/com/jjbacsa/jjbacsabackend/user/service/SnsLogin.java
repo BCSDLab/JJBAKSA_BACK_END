@@ -5,5 +5,8 @@ import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 
 public interface SnsLogin {
     UserResponse snsLoginByToken(String accessToken) throws Exception;
+
     OAuthType getOAuthType() throws Exception;
+
+    void revoke(String authToken) throws Exception;
 }

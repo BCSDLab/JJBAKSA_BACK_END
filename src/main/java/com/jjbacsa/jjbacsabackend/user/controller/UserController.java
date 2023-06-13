@@ -26,16 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import springfox.documentation.annotations.ApiIgnore;
@@ -448,5 +439,26 @@ public class UserController {
         return new ResponseEntity<>(userService.modifyNickname(nickname), HttpStatus.OK);
     }
 
-
+    @ApiOperation(
+            value = "SNS 회원 탈퇴 및 서비스 해지",
+            notes = "SNS 회원 탈퇴 및 서비스 해지\n\n" +
+                    "필요 헤더\n\n" +
+                    "\n\n\tAuthorization : access token" +
+                    "\n\n필요한 필드" +
+                    "\n\n\tKAKAO, NAVER, GOOGLE : 클라이언트 측에서 발급 받은 access token" +
+                    "\n\n\tAPPLE : authorization_code"
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiResponses({
+            @ApiResponse(code = 204,
+                    message = "반환값 없음")
+    })
+    @DeleteMapping("/user/revoke/{sns-type}")
+    public ResponseEntity<Void> snsRevoke(
+            @PathVariable(name = "sns-type") OAuthType oAuthType,
+            @RequestParam String authToken
+    ) throws Exception {
+        oAuth2UserService.revokeSnsUser(authToken, oAuthType);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

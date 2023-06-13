@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
 
@@ -24,6 +27,15 @@ import java.util.Optional;
 public class NaverLogin extends TokenSnsLogin {
     @Value("${spring.security.oauth2.client.provider.naver.user-info-uri}")
     private String NAVER_USERINFO_URI;
+
+    @Value("${spring.security.oauth2.client.registration.naver.client-id}")
+    private String CLIENT_ID;
+
+    @Value("${spring.security.oauth2.client.registration.naver.client-secret}")
+    private String CLIENT_SECRET;
+
+    @Value("${spring.security.oauth2.client.provider.naver.revoke-uri}")
+    private String NAVER_REVOKE_URI;
 
     private final OAuthInfoRepository oAuthInfoRepository;
 
@@ -37,6 +49,20 @@ public class NaverLogin extends TokenSnsLogin {
         return OAuthType.NAVER;
     }
 
+    @Override
+    public void revoke(String accessToken) throws Exception {
+        RestTemplate restTemplate = new RestTemplate();
+
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        parameters.add("client_id", CLIENT_ID);
+        parameters.add("client_secret", CLIENT_SECRET);
+        parameters.add("access_token", accessToken);
+        parameters.add("grant_type", "delete");
+        parameters.add("service_provider", "NAVER");
+
+        restTemplate.postForEntity(NAVER_REVOKE_URI, parameters, String.class);
+    }
+
     @Transactional
     @Override
     UserResponse profileParsing(ResponseEntity<String> response) throws Exception {
@@ -46,21 +72,21 @@ public class NaverLogin extends TokenSnsLogin {
         JSONObject obj = (JSONObject) jsonObject.get("response");
 
         String apiKey = String.valueOf(obj.get("id"));
-        String profile = String.valueOf(obj.get("profile_image"));
+        //String profile = String.valueOf(obj.get("profile_image"));
 
         Optional<OAuthInfoEntity> oauthOptional =
                 oAuthInfoRepository.findByApiKeyAndOauthType(apiKey, this.getOAuthType());
 
-        ImageEntity imageEntity = ImageEntity.builder()
-                .path(profile)
-                .url(profile)
-                .originalName("original_name")
-                .build();
+//        ImageEntity imageEntity = ImageEntity.builder()
+//                .path(profile)
+//                .url(profile)
+//                .originalName("original_name")
+//                .build();
 
         UserEntity naverUser = UserEntity.builder()
                 .email(obj.get("email").toString())
                 .nickname(obj.get("nickname").toString())
-                .profileImage(imageEntity)
+                //        .profileImage(imageEntity)
                 .userType(UserType.NORMAL)
                 .authEmail(true)
                 .build();
