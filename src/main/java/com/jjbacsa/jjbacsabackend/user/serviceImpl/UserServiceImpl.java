@@ -17,6 +17,7 @@ import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.WithdrawReasonEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
+import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.WithdrawReasonRepository;
@@ -61,6 +62,7 @@ public class UserServiceImpl implements UserService {
     private final RedisUtil redisUtil;
     private final ImageUtil imageUtil;
     private final AuthLinkUtil authLinkUtil;
+    private final OAuthInfoRepository oAuthInfoRepository;
 
     @Override
     @Transactional
@@ -198,6 +200,9 @@ public class UserServiceImpl implements UserService {
     public UserResponse modifyUser(UserRequest request) throws Exception {
         UserEntity user = userService.getLoginUser();
 
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+
         if (request.getPassword() != null) {
 //            emailService.codeCertification(request.getEmail(), code);
             user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -213,6 +218,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void withdraw() throws Exception {
         UserEntity user = userService.getLoginUser();
+
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
 
         userCountRepository.updateAllFriendsCountByUser(user);
         followService.deleteFollowWithUser(user);
@@ -292,7 +300,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String findPassword(EmailRequest request) throws Exception {
 
-        UserEntity user = userService.getUserByAccount(request.getAccount());
+        UserEntity user = userService.getLocalUserByEmail(request.getEmail());
 
         if (!Objects.equals(request.getEmail(), user.getEmail())) {
             throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
@@ -309,6 +317,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse modifyPassword(String password) throws Exception {
         UserEntity user = userService.getLoginUser();
+
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
 
         user.setPassword(passwordEncoder.encode(password));
 
