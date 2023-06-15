@@ -1,3 +1,3 @@
-ALTER TABLE jjbacsa.user
+ALTER TABLE user
 CHANGE updated_at
 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP();
