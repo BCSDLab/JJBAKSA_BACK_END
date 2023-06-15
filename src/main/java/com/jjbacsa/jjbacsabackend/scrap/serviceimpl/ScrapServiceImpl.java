@@ -125,19 +125,18 @@ public class ScrapServiceImpl implements ScrapService {
     }
 
     @Override
-    public Page<ShopScrapResponse> getUserScrapShops(Long cursor, Integer pageSize) throws Exception {
-        UserEntity user = userService.getLoginUser();
+    public Page<ShopScrapResponse> getScrapShops(Long userId, Long cursor, Integer pageSize) throws Exception {
+        UserEntity user;
+
+        if (userId == null)
+            user = userService.getLoginUser();
+        else
+            user = userService.getUserById(userId);
+
         return scrapToShopScrapResponse(user, cursor, pageSize);
     }
 
-    @Override
-    public Page<ShopScrapResponse> getScrapShops(Long userId, Long cursor, Integer pageSize) {
-        UserEntity user = userService.getUserById(userId);
-        return scrapToShopScrapResponse(user, cursor, pageSize);
-
-    }
-
-    private Page<ShopScrapResponse> scrapToShopScrapResponse(UserEntity user, Long cursor, Integer pageSize){
+    private Page<ShopScrapResponse> scrapToShopScrapResponse(UserEntity user, Long cursor, Integer pageSize) {
         Page<ScrapEntity> scraps = scrapRepository.findAllByUserWithCursor(user, cursor, PageRequest.of(0, pageSize));
 
         Page<ShopScrapResponse> formattedScrapedShops = scraps.map(new Function<ScrapEntity, ShopScrapResponse>() {

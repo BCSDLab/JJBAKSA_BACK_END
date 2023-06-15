@@ -93,7 +93,7 @@ class ScrapServiceTest {
         googleShop9 = googleShopRepository.save(getTestShop("ChIJobJ-VXeffDUR7Rnav5QygYc"));
         googleShop10 = googleShopRepository.save(getTestShop("ChIJkaawQ_KefDURKTDMCMK2Ox4"));
 
-        googleShops= Arrays.asList(googleShop1, googleShop2, googleShop3, googleShop4, googleShop5, googleShop6, googleShop7, googleShop8, googleShop9, googleShop10);
+        googleShops = Arrays.asList(googleShop1, googleShop2, googleShop3, googleShop4, googleShop5, googleShop6, googleShop7, googleShop8, googleShop9, googleShop10);
     }
 
     @DisplayName("스크랩 디렉토리 생성")
@@ -213,7 +213,7 @@ class ScrapServiceTest {
         //상점이 없는 경우
         testLogin(user1);
         assertThrows(ApiException.class, () ->
-                scrapService.create(getScrapRequest(0L,"없는 거"))
+                scrapService.create(getScrapRequest(0L, "없는 거"))
         );
 
         //디렉토리가 없는 경우
@@ -254,7 +254,7 @@ class ScrapServiceTest {
         ScrapDirectoryEntity directory1 = scrapDirectoryRepository.save(getTestDirectory(user1, "dir1"));
         ScrapDirectoryEntity directory2 = scrapDirectoryRepository.save(getTestDirectory(user2, "dir2"));
 
-        for(GoogleShopEntity googleShop:googleShops){
+        for (GoogleShopEntity googleShop : googleShops) {
             scrapRepository.save(getTestScrap(user1, googleShop, null));
             scrapRepository.save(getTestScrap(user1, googleShop, directory1));
         }
@@ -374,15 +374,15 @@ class ScrapServiceTest {
         scrapRepository.save(getTestScrap(user1, googleShop10, null)); //떡군이네떡볶이영등포점
 
 
-        Page<ShopScrapResponse> result = scrapService.getUserScrapShops(null, 5);
+        Page<ShopScrapResponse> result = scrapService.getScrapShops(null, null, 5);
         Assertions.assertEquals(5, result.getContent().size());
 
-        for(ShopScrapResponse s:result.getContent()){
+        for (ShopScrapResponse s : result.getContent()) {
             Assertions.assertNotNull(s.getScrapId());
             Assertions.assertNotEquals(s.getName(), "남천할매떡볶이 신세계백화점 영등포점");
         }
 
-        Page<ShopScrapResponse> result2=scrapService.getUserScrapShops(result.getContent().get(4).getScrapId(),10);
+        Page<ShopScrapResponse> result2 = scrapService.getScrapShops(null, result.getContent().get(4).getScrapId(), 10);
         Assertions.assertEquals(5, result2.getContent().size());
         Assertions.assertEquals("떡군이네떡볶이영등포점", result2.getContent().get(4).getName());
     }
