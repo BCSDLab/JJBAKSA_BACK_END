@@ -27,4 +27,6 @@ public interface ScrapService {
     void delete(Long scrapId) throws Exception;
 
     Page<ShopScrapResponse> getUserScrapShops(Long cursor, Integer pageSize) throws Exception;
+
+    Page<ShopScrapResponse> getScrapShops(Long userId, Long cursor, Integer pageSize);
 }
