@@ -51,7 +51,6 @@ public class DslFollowRepositoryImpl extends QuerydslRepositorySupport implement
     public Page<FollowEntity> findRecentlyActiveFollowersByUserWithCursor(UserEntity user, Long cursor, Pageable pageable) {
         Calendar time = Calendar.getInstance();
         time.add(Calendar.DATE, -1);
-        System.out.println(time.toString());
 
         List<FollowEntity> followers = from(f).select(f)
                 .join(f.follower).fetchJoin()
