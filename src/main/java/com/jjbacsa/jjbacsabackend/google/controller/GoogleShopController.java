@@ -52,7 +52,6 @@ public class GoogleShopController {
     @ApiImplicitParam(
             name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "query"
     )
-    @PreAuthorize("hasRole('NORMAL')")
     @PostMapping("/shops")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name = "keyword") String keyword) throws JsonProcessingException {
         searchService.saveForAutoComplete(keyword);
@@ -81,7 +80,6 @@ public class GoogleShopController {
     @ApiImplicitParam(
             name = "page_token", value = "키워드 검색어의 다음 페이지", required = true, dataType = "string", paramType = "path"
     )
-    @PreAuthorize("hasRole('NORMAL')")
     @PostMapping("/shops/page/{page_token}")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsNextPage(@PathVariable("page_token") String pageToken,
                                                                      @RequestBody @Valid ShopRequest shopRequest) throws JsonProcessingException {
@@ -102,7 +100,6 @@ public class GoogleShopController {
             )
     })
     @ApiImplicitParam(name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path")
-    @PreAuthorize("hasRole('NORMAL')")
     @GetMapping("/shops/{place_id}")
     public ResponseEntity<ShopResponse> getGoogleShopDetails(@PathVariable("place_id") String placeId) throws Exception {
 
@@ -122,7 +119,6 @@ public class GoogleShopController {
             )
     })
     @ApiImplicitParam(name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path")
-    @PreAuthorize("hasRole('NORMAL')")
     @GetMapping("/shops/pin/{place_id}")
     public ResponseEntity<ShopResponse> getPinGoogleShop(@PathVariable("place_id") String placeId) throws Exception {
         return ResponseEntity.ok()
