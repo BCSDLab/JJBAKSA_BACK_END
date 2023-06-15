@@ -15,14 +15,11 @@ import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryApiDto;
 import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryDto;
 import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
+import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopCount;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponse;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.scrap.service.InternalScrapService;
@@ -134,7 +131,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         Category category = getCategory(shopApiDto.getTypes());
         List<String> photoTokens = new ArrayList<>();
         try {
-
             int maxRange = shopApiDto.getPhotos().size() >= 10 ? 10 : shopApiDto.getPhotos().size();
 
             for (int p = 0; p < maxRange; p++) {
@@ -240,7 +236,39 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return resultSimpleShopDtos;
     }
 
-//    @Transactional(readOnly = true)
+    @Override
+    public ShopScrapResponse getShopScrap(String placeId, Long scrapId) throws JsonProcessingException {
+
+        String requestField=toFieldString(pinFields);
+        String shopStr=this.callGoogleApi(placeId, requestField);
+        ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
+        Category category = getCategory(shopApiDto.getTypes());
+        String photoToken;
+
+        try{
+            photoToken=getPhotoUrl(shopApiDto.getPhotos().get(0).getPhotoReference());
+        } catch (NullPointerException e){
+            photoToken=null;
+        }
+
+        ShopScrapResponse shopScrapResponse=ShopScrapResponse.builder()
+                .placeId(shopApiDto.getPlaceId())
+                .name(shopApiDto.getName())
+                .category(category.name())
+                .photo(photoToken)
+                .scrapId(scrapId)
+                .build();
+
+        Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopScrapResponse.getPlaceId());
+        if (shop.isPresent()){
+            GoogleShopCount shopCount = shop.get().getShopCount();
+            shopScrapResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
+        }
+
+        return shopScrapResponse;
+    }
+
+    //    @Transactional(readOnly = true)
 //    @Override
 //    public ShopResponse getShop(String placeId) throws Exception {
 //        GoogleShopEntity googleShopEntity = googleShopRepository.findByPlaceId(placeId)

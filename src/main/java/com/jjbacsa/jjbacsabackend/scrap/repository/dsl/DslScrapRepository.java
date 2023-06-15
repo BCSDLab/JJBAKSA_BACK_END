@@ -11,4 +11,6 @@ public interface DslScrapRepository {
     Page<ScrapEntity> findAllByUserAndDirectoryWithCursor(UserEntity user, ScrapDirectoryEntity directory, Long cursor, Pageable pageable);
 
     long deleteAllByDirectory(ScrapDirectoryEntity directory);
+
+    Page<ScrapEntity> findAllByUserWithCursor(UserEntity user, Long cursor, Pageable pageable);
 }
