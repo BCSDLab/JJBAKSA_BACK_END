@@ -52,7 +52,8 @@ public enum ErrorMessage {
     LOGIN_FAIL_EXCEPTION(46, "회원이 아니시거나, 아이디 또는 비밀번호를 잘못 입력했습니다.", HttpStatus.CONFLICT),
     INQUIRY_NOT_EXISTS_EXCEPTION(47, "문의글이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_PERMISSION_INQUIRY(48, "문의글 작성자가 아닙니다.", HttpStatus.BAD_REQUEST),
-    CONTINUAL_API_EXCEPTION(49, "연속적으로 외부 API 요청에 실패합니다.", HttpStatus.BAD_REQUEST)
+    CONTINUAL_API_EXCEPTION(49, "연속적으로 외부 API 요청에 실패합니다.", HttpStatus.BAD_REQUEST),
+    WITHDRAW_FAILED(50, "게시글 삭제 실패로 회원 탈퇴에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR)
     ;
 
     Integer code;
