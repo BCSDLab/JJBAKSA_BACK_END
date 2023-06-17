@@ -1,12 +1,7 @@
 package com.jjbacsa.jjbacsabackend.user.service;
 
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
-import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
-import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.*;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +29,7 @@ public interface UserService {
 
     UserResponse getAccountInfo(Long id) throws Exception;
 
-    UserResponse modifyUser(UserRequest request) throws Exception;
+    UserResponse modifyUser(UserModifyRequest request) throws Exception;
 
     void withdraw() throws Exception;
 
@@ -52,5 +47,5 @@ public interface UserService {
 
     String findPassword(EmailRequest request) throws Exception;
 
-    UserResponse modifyPassword(String password) throws Exception;
+    UserResponse validatePassword(String password) throws Exception;
 }
