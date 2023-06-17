@@ -9,12 +9,11 @@ import com.jjbacsa.jjbacsabackend.follow.repository.FollowRequestRepository;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,14 +38,19 @@ public class InternalFollowServiceImpl implements InternalFollowService {
     }
 
     @Override
-    public Long deleteFollowWithUser(UserEntity user){
+    public Long deleteFollowWithUser(UserEntity user) {
         return followRepository.deleteFollowWithUser(user);
     }
 
     @Override
-    public List<Long> getFollowers() throws Exception{
+    public Long deleteFollowRequestWithUser(UserEntity user) {
+        return followRequestRepository.deleteFollowRequestWithUser(user);
+    }
 
-        UserEntity user=userService.getLoginUser();
+    @Override
+    public List<Long> getFollowers() throws Exception {
+
+        UserEntity user = userService.getLoginUser();
 
         return followRepository.findAllByFollower(user)
                 .stream()

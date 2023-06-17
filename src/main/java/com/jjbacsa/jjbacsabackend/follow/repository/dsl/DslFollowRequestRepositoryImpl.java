@@ -5,12 +5,11 @@ import com.jjbacsa.jjbacsabackend.follow.entity.QFollowRequestEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.JPQLQuery;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.data.support.PageableExecutionUtils;
-
-import java.util.List;
 
 public class DslFollowRequestRepositoryImpl extends QuerydslRepositorySupport implements DslFollowRequestRepository {
 
@@ -47,5 +46,12 @@ public class DslFollowRequestRepositoryImpl extends QuerydslRepositorySupport im
 
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount);
 
+    }
+
+    @Override
+    public Long deleteFollowRequestWithUser(UserEntity user) {
+        return update(fr).set(fr.isDeleted, 1)
+                .where(fr.user.id.eq(user.getId()).or(fr.follower.id.eq(user.getId())))
+                .execute();
     }
 }
