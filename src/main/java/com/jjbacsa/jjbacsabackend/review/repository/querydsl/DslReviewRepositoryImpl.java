@@ -12,6 +12,7 @@ import com.jjbacsa.jjbacsabackend.review_image.entity.QReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
 import com.jjbacsa.jjbacsabackend.util.QueryDslUtil;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.StringExpression;
@@ -178,8 +179,8 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
 
     @Override
     public List<String> findShopPlaceIdsByMyReviews(Long userId, Long cursor, Pageable pageable) throws Exception {
-        List<String> shopPlaceIds = queryFactory
-                .selectDistinct(review.shop.placeId)
+        List<Tuple> results = queryFactory
+                .selectDistinct(review.shop.placeId, review.shop.id)
                 .from(review)
                 .join(review.shop, shop)
                 .where(review.writer.id.eq(userId),
@@ -188,6 +189,9 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
                 .orderBy(review.shop.id.asc())
                 .limit(pageable.getPageSize())
                 .fetch();
+        List<String> shopPlaceIds = results.stream()
+                .map(tuple -> tuple.get(review.shop.placeId))
+                .collect(Collectors.toList());
         return shopPlaceIds;
     }
 
