@@ -2,35 +2,34 @@ package com.jjbacsa.jjbacsabackend.post.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjbacsa.jjbacsabackend.annotation.WithMockCustomUser;
-import com.jjbacsa.jjbacsabackend.etc.dto.CustomPageRequest;
-import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
-import com.jjbacsa.jjbacsabackend.post.dto.request.PostPageRequest;
+import com.jjbacsa.jjbacsabackend.post.dto.request.PostCursorRequest;
 import com.jjbacsa.jjbacsabackend.post.dto.request.PostRequest;
 import com.jjbacsa.jjbacsabackend.post.serviceImpl.PostServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 
 import javax.transaction.Transactional;
-import java.util.stream.Stream;
 
-import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.mockito.ArgumentMatchers.any;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -55,38 +54,52 @@ public class PostControllerTest {
     private PostServiceImpl postService;
 
     @DisplayName("Post를 작성하면, Post를 저장한다.")
-    @MethodSource
-    @ParameterizedTest(name="[BoardType] \"{0}\"")
-    @WithMockCustomUser(id="4", role = UserType.ADMIN)
-    void givenPostInfo_whenWritePost_thenCreatePost(String boardType) throws Exception {
+    @Test
+    @WithMockCustomUser(id = "4", role = UserType.ADMIN)
+    void givenPostInfo_whenWritePost_thenCreatePost() throws Exception {
         String title = "title";
         String content = "content";
-        PostRequest postRequest = createPostRequest(title, content, boardType);
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image",                // 파일 이름
+                "image.jpg",            // 파일 이름과 확장자
+                MediaType.IMAGE_JPEG_VALUE, // 이미지 파일의 MIME 타입
+                loadImageBytes()        // 이미지 파일의 바이트 배열
+        );
+        PostRequest postRequest = createPostRequest(title, content, imageFile);
 
-        mockMvc.perform(post("/admin/post")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsBytes(postRequest))
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/admin/post")
+                        .param("title", postRequest.getTitle())
+                        .param("content", postRequest.getContent())
+                        .content(postRequest.getPostImages().get(0).getBytes())
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                 ).andDo(print())
                 .andExpect(status().isCreated());
         then(postService).should().createPost(any(PostRequest.class));
     }
-    static Stream<Arguments> givenPostInfo_whenWritePost_thenCreatePost(){return getBoardType();}
 
     @DisplayName("Post Id와 Post 수정 내용을 주면, Post를 수정한다.")
     @Test
-    @WithMockCustomUser(id="4", role = UserType.ADMIN)
+    @WithMockCustomUser(id = "4", role = UserType.ADMIN)
     void givenPostInfo_whenModifyPost_thenModifyPost() throws Exception {
         String title = "new title";
         String content = "new content";
         Long postId = 1L;
-        PostRequest postRequest = createPostRequest(title, content);
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image",                // 파일 이름
+                "image.jpg",            // 파일 이름과 확장자
+                MediaType.IMAGE_JPEG_VALUE, // 이미지 파일의 MIME 타입
+                loadImageBytes()        // 이미지 파일의 바이트 배열
+        );
+        PostRequest postRequest = createPostRequest(title, content, imageFile);
 
-        mockMvc.perform(patch("/admin/post/" + postId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsBytes(postRequest))
+        mockMvc.perform(MockMvcRequestBuilders.put("/admin/post/"+postId)
+                        .param("title", postRequest.getTitle())
+                        .param("content", postRequest.getContent())
+                        .content(postRequest.getPostImages().get(0).getBytes())
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                 ).andDo(print())
                 .andExpect(status().isOk());
-        then(postService).should().modifyAdminPost(postRequest, postId);
+        then(postService).should().modifyAdminPost(any(PostRequest.class), eq(postId));
     }
 
 
@@ -102,24 +115,25 @@ public class PostControllerTest {
     }
 
     @DisplayName("Post 페이지를 조회한다.")
-    @MethodSource
-    @ParameterizedTest(name="[BoardType] \"{0}\"")
-    void givenBoardType_whenGetPosts_thenPostsPage(String boardType) throws Exception {
-        PostPageRequest pageRequest = createPageRequest(boardType);
+    @Test
+    void givenCursorRequest_whenGetPosts_thenPostsPage() throws Exception {
+        PostCursorRequest pageRequest = createPageRequest();
 
         mockMvc.perform(get("/post")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param("cursor", String.valueOf(pageRequest.getCursor()))
+                        .param("size", String.valueOf(pageRequest.getSize()))
                         .content(objectMapper.writeValueAsBytes(pageRequest))
                 ).andDo(print())
                 .andExpect(status().isOk());
-        then(postService).should().getPosts(pageRequest);
+
+        then(postService).should().getPosts(refEq(pageRequest));
     }
-    static Stream<Arguments> givenBoardType_whenGetPosts_thenPostsPage(){return getBoardType();}
 
 
     @DisplayName("Post Id로 Post를 삭제한다.")
     @Test
-    @WithMockCustomUser(id="4", role = UserType.ADMIN)
+    @WithMockCustomUser(id = "4", role = UserType.ADMIN)
     void givenPostId_whenDeletePost_thenReturnNothing() throws Exception {
         Long postId = 1L;
 
@@ -128,26 +142,30 @@ public class PostControllerTest {
                 .andExpect(status().isNoContent());
         then(postService).should().deletePost(postId);
     }
-    private PostRequest createPostRequest(String title, String content, String boardType) {
-        return PostRequest.builder()
-                .title(title)
-                .content(content).
-                boardType(boardType).build();
-    }
+
     private PostRequest createPostRequest(String title, String content) {
         return PostRequest.builder()
                 .title(title)
                 .content(content).build();
     }
-    private static Stream<Arguments> getBoardType(){
-        return Stream.of(
-                arguments(BoardType.NOTICE.getBoardType()),
-                arguments(BoardType.POWER_NOTICE.getBoardType())
-                );
+
+    private PostRequest createPostRequest(String title, String content, MockMultipartFile image) {
+        return PostRequest.builder()
+                .title(title)
+                .content(content)
+                .postImages(List.of(image)).build();
     }
-    private PostPageRequest createPageRequest(String boardType){
-        return PostPageRequest.builder()
-                .boardType(boardType)
+
+    private PostCursorRequest createPageRequest() {
+        return PostCursorRequest.builder()
                 .build();
+    }
+
+    private byte[] loadImageBytes() throws IOException {
+        URL imageUrl = new URL("https://jjbaksa-stage-storage.s3.ap-northeast-2.amazonaws.com/review/b2362afd-7991-43f4-9c3f-b82213314765.png"); // 실제 이미지 파일의 URL
+        try (InputStream inputStream = imageUrl.openStream()) {
+            byte[] imageBytes = inputStream.readAllBytes();
+            return imageBytes;
+        }
     }
 }

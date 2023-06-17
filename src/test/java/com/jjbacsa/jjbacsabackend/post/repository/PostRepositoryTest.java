@@ -1,7 +1,6 @@
 package com.jjbacsa.jjbacsabackend.post.repository;
 
 import com.jjbacsa.jjbacsabackend.etc.config.BeanConfig;
-import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
 import com.jjbacsa.jjbacsabackend.post.entity.PostEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,17 +25,18 @@ class PostRepositoryTest {
     @Test
     void findAllByBoardType() {
         int size = 3;
+        String title = "title";
+        String content = "content";
 
         PostEntity noticePost = PostEntity.builder()
-                .title("title")
-                .content("content")
-                .boardType(BoardType.NOTICE)
+                .title(title)
+                .content(content)
                 .build();
 
         postRepository.save(noticePost);
 
-        Page<PostEntity> noticePosts = postRepository.findAllNotices(null, BoardType.NOTICE.getBoardType(), PageRequest.ofSize(size));
+        Page<PostEntity> noticePosts = postRepository.findAllPosts(null, null, PageRequest.ofSize(size));
 
-        assertEquals(noticePosts.get().collect(Collectors.toList()).get(0).getBoardType(), BoardType.NOTICE);
+        assertEquals(noticePosts.get().collect(Collectors.toList()).get(0).getContent(), content);
     }
 }
