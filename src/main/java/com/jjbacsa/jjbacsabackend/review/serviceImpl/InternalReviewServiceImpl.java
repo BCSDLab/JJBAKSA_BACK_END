@@ -30,7 +30,7 @@ public class InternalReviewServiceImpl implements InternalReviewService {
     @Override
     public List<Long> getReviewIdsForUser(Long userId) {
 
-        return reviewRepository.findAllByWriterId(userId)
+        return reviewRepository.findAllByWriter(userId)
                 .stream()
                 .map(ReviewEntity::getShop)
                 .map(ShopEntity::getId)
@@ -40,7 +40,7 @@ public class InternalReviewServiceImpl implements InternalReviewService {
     @Override
     public List<ReviewEntity> findReviewsByWriter(UserEntity user) {
 
-        return reviewRepository.findAllByWriterId(user.getId());
+        return reviewRepository.findAllByWriter(user);
     }
 
 
