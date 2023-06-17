@@ -3,7 +3,9 @@ package com.jjbacsa.jjbacsabackend.post.serviceImpl;
 import com.jjbacsa.jjbacsabackend.etc.enums.BoardType;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.post.dto.request.PostPageRequest;
 import com.jjbacsa.jjbacsabackend.post.dto.request.PostRequest;
+import com.jjbacsa.jjbacsabackend.post.dto.response.PostPageResponse;
 import com.jjbacsa.jjbacsabackend.post.dto.response.PostResponse;
 import com.jjbacsa.jjbacsabackend.post.entity.PostEntity;
 import com.jjbacsa.jjbacsabackend.post.mapper.PostMapper;
@@ -12,6 +14,7 @@ import com.jjbacsa.jjbacsabackend.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class PostServiceImpl implements PostService {
-    /*
-            TODO:
-             Inquery(문의)에 대한 요구사항 파악 후 기능 추가
-     */
 
     private final PostRepository postRepository;
 
@@ -44,7 +43,6 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostResponse modifyAdminPost(PostRequest postRequest, Long postId) {
-        // BoardType은 수정이 불가능 함
         PostEntity postEntity = postRepository.findById(postId)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.POST_NOT_EXISTS_EXCEPTION));
         postEntity.update(postRequest);
@@ -60,11 +58,10 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Page<PostResponse> getPosts(String boardType, Pageable pageable) {
-        if(boardType.equals(BoardType.NOTICE.getBoardType()) || boardType.equals(BoardType.POWER_NOTICE.getBoardType())){
-            return postRepository.findAllNotices(pageable).map(PostMapper.INSTANCE::toPostResponse);
-        }
-        else return postRepository.findAllInquiries(pageable).map(PostMapper.INSTANCE::toPostResponse);
+    public Page<PostPageResponse> getPosts(PostPageRequest postPageRequest) {
+        return postRepository.findAllNotices(postPageRequest.getCursor(),
+                postPageRequest.getBoardType(),
+                PageRequest.ofSize(postPageRequest.getSize())).map(PostMapper.INSTANCE::toPostPageResponse);
     }
 
     private PostEntity createPostEntity(PostRequest postRequest) {

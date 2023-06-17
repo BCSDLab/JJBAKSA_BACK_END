@@ -32,12 +32,15 @@ public class PostEntity extends BaseEntity {
     @Column(name = "board_type", nullable = false)
     private BoardType boardType;
 
-    public void update(PostRequest postRequest){
-        if(postRequest.getTitle() != null){
+    public void update(PostRequest postRequest) {
+        if (postRequest.getTitle() != null) {
             this.title = postRequest.getTitle();
         }
-        if(postRequest.getContent() != null){
+        if (postRequest.getContent() != null) {
             this.content = postRequest.getContent();
+        }
+        if (postRequest.getBoardType() != null) {
+            this.boardType = BoardType.valueOf(postRequest.getBoardType());
         }
     }
 }

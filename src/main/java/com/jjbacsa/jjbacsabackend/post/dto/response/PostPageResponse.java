@@ -8,10 +8,9 @@ import java.util.Date;
 @Getter
 @Builder
 @AllArgsConstructor
-public class PostResponse {
+public class PostPageResponse {
     private Long id;
     private String title;
-    private String content;
     private String boardType;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private Date createdAt;
