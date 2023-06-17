@@ -1,6 +1,5 @@
 package com.jjbacsa.jjbacsabackend.review.mapper;
 
-import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review_image.dto.response.ReviewImageResponse;
@@ -28,11 +27,5 @@ public interface ReviewMapper {
     @Mapping(source = "writer", target = "userReviewResponse")
     @Mapping(source = "shop.placeId", target ="shopPlaceId")
     ReviewResponse fromReviewEntityWithIgnoreImage(ReviewEntity reviewEntity);
-
-
-    @Mapping(source = "writer", target = "userReviewResponse")
-    @Mapping(source = "shop", target ="shopReviewResponse")
-    ReviewDeleteResponse fromReviewEntityToDelete(ReviewEntity reviewEntity);
-
 
 }
