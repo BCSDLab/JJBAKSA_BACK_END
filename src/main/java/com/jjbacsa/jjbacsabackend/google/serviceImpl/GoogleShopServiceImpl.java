@@ -179,8 +179,8 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         if (shop.isPresent()) {
             GoogleShopCount shopCount = shop.get().getShopCount();
             shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
-
-            isScrap = scrapService.isUserScrapShop(shop.get().getId());
+            shopResponse.setShopId(shop.get().getId());
+            isScrap = scrapService.isUserScrapShop(shop.get());
         }
 
         shopResponse.setIsScrap(isScrap);
