@@ -1,11 +1,9 @@
 package com.jjbacsa.jjbacsabackend.review.controller;
 
-import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.request.*;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewCountResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDateResponse;
-import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.service.ReviewService;
 import io.swagger.annotations.ApiOperation;
@@ -31,7 +29,7 @@ public class ReviewController {
             notes = "리뷰를 작성합니다. MediaType은 MULTIPART_FORM_DATA_VALUE를 선택해주세요.\n\n" +
                     "example : \n\n" +
                     "{\n\n" +
-                    "       \"shopId\" : \"상점 id\"\n\n" +
+                    "       \"placeId\" : \"상점 id\"\n\n" +
                     "       \"content\" : \"내용\"\n\n" +
                     "       \"rate\" : \"별점\"\n\n" +
                     "       \"reviewImages\" : \"리뷰 이미지\"\n\n" +
@@ -57,8 +55,9 @@ public class ReviewController {
             notes = "리뷰를 삭제합니다.\n\n", authorizations = @Authorization(value = "Bearer +accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
     @DeleteMapping(value = "/review")
-    public ResponseEntity<ReviewDeleteResponse> delete(@ApiParam("삭제할 리뷰 id") @RequestParam("delete-id") Long reviewId) throws Exception {
-        return new ResponseEntity<>(reviewService.delete(reviewId), HttpStatus.OK);
+    public ResponseEntity<Void> delete(@ApiParam("삭제할 리뷰 id") @RequestParam("review-id") Long reviewId) throws Exception {
+        reviewService.delete(reviewId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @ApiOperation(
@@ -69,7 +68,7 @@ public class ReviewController {
                     "       \"content\" : \"내용\"\n\n" +
                     "       \"rate\" : \"별점\"\n\n" +
                     "       \"reviewImages\" : \"리뷰 이미지\"\n\n" +
-                    "       \"shopId\" : \"상점 id는 사용되지 않습니다.\"\n\n" +
+                    "       \"placeId\" : \"상점 id\"\n\n" +
                     "}",
             authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
@@ -93,8 +92,8 @@ public class ReviewController {
                     "       \"sort\" : \"정렬기준 - createdAt, rate Default: createdAt\"\n\n" +
                     "}", authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping(value = "/review/shop/{shop-place-id}")
-    public ResponseEntity<Page<ReviewResponse>> getMyReviewsByShop(@Validated ReviewCursorRequest reviewCursorRequest, @ApiParam("리뷰를 조회할 상점 place-id") @PathVariable(name = "shop-place-id") String placeId) throws Exception {
+    @GetMapping(value = "/review/shop/{place-id}")
+    public ResponseEntity<Page<ReviewResponse>> getMyReviewsByShop(@Validated ReviewCursorRequest reviewCursorRequest, @ApiParam("리뷰를 조회할 상점 place-id") @PathVariable(name = "place-id") String placeId) throws Exception {
         return new ResponseEntity<>(reviewService.getMyReviewsByShop(reviewCursorRequest, placeId), HttpStatus.OK);
     }
 
@@ -113,8 +112,8 @@ public class ReviewController {
                     "       \"sort\" : \"정렬기준 - createdAt, rate Default: createdAt\"\n\n" +
                     "}", authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping(value = "/review/followers/shop/{shop-place-id}")
-    public ResponseEntity<Page<ReviewResponse>> getFollowersReviewsByShop(@Validated ReviewCursorRequest reviewCursorRequest, @ApiParam("리뷰를 조회할 상점 place-id") @PathVariable(name = "shop-place-id") String placeId) throws Exception {
+    @GetMapping(value = "/review/followers/shop/{place-id}")
+    public ResponseEntity<Page<ReviewResponse>> getFollowersReviewsByShop(@Validated ReviewCursorRequest reviewCursorRequest, @ApiParam("리뷰를 조회할 상점 place-id") @PathVariable(name = "place-id") String placeId) throws Exception {
         return new ResponseEntity<>(reviewService.getFollowersReviewsByShop(reviewCursorRequest, placeId), HttpStatus.OK);
     }
 
@@ -133,8 +132,8 @@ public class ReviewController {
                     "       \"sort\" : \"정렬기준 - createdAt, rate Default: createdAt\"\n\n" +
                     "}", authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping(value = "/review/follower/{follower-id}/shop/{shop-place-id}")
-    public ResponseEntity<Page<ReviewResponse>> getFollowerReviewsByShop(@Validated ReviewCursorRequest reviewCursorRequest, @ApiParam("팔로워 id") @PathVariable(name = "follower-id") Long followerId, @ApiParam("리뷰를 조회할 상점 place-id") @PathVariable(name = "shop-place-id") String placeId) throws Exception {
+    @GetMapping(value = "/review/follower/{follower-id}/shop/{place-id}")
+    public ResponseEntity<Page<ReviewResponse>> getFollowerReviewsByShop(@Validated ReviewCursorRequest reviewCursorRequest, @ApiParam("팔로워 id") @PathVariable(name = "follower-id") Long followerId, @ApiParam("리뷰를 조회할 상점 place-id") @PathVariable(name = "place-id") String placeId) throws Exception {
         return new ResponseEntity<>(reviewService.getFollowerReviewsByShop(reviewCursorRequest, followerId, placeId), HttpStatus.OK);
     }
 
@@ -177,11 +176,7 @@ public class ReviewController {
 
     @ApiOperation(
             value = "팔로워 리뷰 개수 조회",
-            notes = "팔로워가 작성한 모든 리뷰의 개수를 조회합니다.\n\n" +
-                    "example : \n\n" +
-                    "{\n\n" +
-                    "       \"userAccount\" : \"조회할 팔로워 account\"\n\n" +
-                    "}", authorizations = @Authorization(value = "Bearer + accessToken"))
+            notes = "팔로워가 작성한 모든 리뷰의 개수를 조회합니다.\n\n" , authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value = "/review/follower/{follower-id}/count")
     public ResponseEntity<ReviewCountResponse> getFollowerReviewCount(@ApiParam("팔로워 id") @PathVariable(name = "follower-id") Long followerId) throws Exception {
@@ -192,8 +187,8 @@ public class ReviewController {
             value = "상점 내 모든 팔로워 리뷰 개수 조회",
             notes = "특정 상점에 대한 모든 팔로워가 작성한 리뷰의 개수를 조회합니다.\n\n", authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping(value = "/review/followers/count/shop/{shop-place-id}")
-    public ResponseEntity<ReviewCountResponse> getFollowersReviewCountByShop(@PathVariable("shop-place-id") String placeId) throws Exception {
+    @GetMapping(value = "/review/followers/count/shop/{place-id}")
+    public ResponseEntity<ReviewCountResponse> getFollowersReviewCountByShop(@PathVariable("place-id") String placeId) throws Exception {
         return new ResponseEntity<>(reviewService.getFollowersReviewCount(placeId), HttpStatus.OK);
     }
 
@@ -201,8 +196,8 @@ public class ReviewController {
             value = "상점 내 팔로워 마지막 리뷰 날짜",
             notes = "특정 상점에 대해 팔로워가 작성한 마지막 리뷰의 날짜를 조회합니다.\n\n", authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping(value = "/review/followers/last-date/shop/{shop-place-id}")
-    public ResponseEntity<ReviewDateResponse> getFollowerReviewLastDateByShop(@PathVariable("shop-place-id") String placeId) throws Exception {
+    @GetMapping(value = "/review/followers/last-date/shop/{place-id}")
+    public ResponseEntity<ReviewDateResponse> getFollowerReviewLastDateByShop(@PathVariable("place-id") String placeId) throws Exception {
         return new ResponseEntity<>(reviewService.getFollowerReviewLastDateByShop(placeId), HttpStatus.OK);
     }
 
@@ -210,8 +205,8 @@ public class ReviewController {
             value = "상점 내 나의 마지막 리뷰 날짜",
             notes = "특정 상점에 대해 내가 작성한 마지막 리뷰의 날짜를 조회합니다.\n\n", authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
-    @GetMapping(value = "/review/last-date/shop/{shop-place-id}")
-    public ResponseEntity<ReviewDateResponse> getReviewLastDateByShop(@PathVariable("shop-place-id") String placeId) throws Exception {
+    @GetMapping(value = "/review/last-date/shop/{place-id}")
+    public ResponseEntity<ReviewDateResponse> getReviewLastDateByShop(@PathVariable("place-id") String placeId) throws Exception {
         return new ResponseEntity<>(reviewService.getReviewLastDateByShop(placeId), HttpStatus.OK);
     }
 
