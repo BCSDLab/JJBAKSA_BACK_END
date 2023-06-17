@@ -8,6 +8,8 @@ import com.jjbacsa.jjbacsabackend.user.entity.QUserCount;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
@@ -47,6 +49,7 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
                 .leftJoin(qImage).on(qUser.profileImage.eq(qImage))
                 .where(qUser.nickname.contains(keyword))
                 .where(getCursorExpression(cursor, cursorNickname, keyword))
+                .orderBy(new OrderSpecifier(Order.ASC, createCursorExpression(keyword)))
                 .limit(pageable.getPageSize())
                 .fetch();
 
@@ -64,21 +67,25 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
 
         Integer equalState = 3;
 
-        if (nickname.toString().equals(keyword)) {
+        if (nickname.equals(keyword)) {
             equalState = 1;
-        } else if (nickname.toString().startsWith(keyword)) {
+        } else if (nickname.startsWith(keyword)) {
             equalState = 2;
         }
 
         StringExpression cursorExpression = Expressions.asString(equalState.toString()).concat(
                 StringExpressions.lpad(Expressions.asString(cursor.toString()), 10, '0'));
 
-        return cursorExpression.lt(
-                new CaseBuilder()
-                        .when(qUser.nickname.eq(keyword)).then(1)
-                        .when(qUser.nickname.like(keyword + "%")).then(2)
-                        .otherwise(3).stringValue()
-                        .concat(StringExpressions.lpad(qUser.id.stringValue(), 10, '0')));
+        return cursorExpression.lt(createCursorExpression(keyword));
+    }
+
+    private StringExpression createCursorExpression(String keyword) {
+
+        return new CaseBuilder()
+                .when(qUser.nickname.eq(keyword)).then(1)
+                .when(qUser.nickname.like(keyword + "%")).then(2)
+                .otherwise(3).stringValue()
+                .concat(StringExpressions.lpad(qUser.id.stringValue(), 10, '0'));
     }
 
     @Override
