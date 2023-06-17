@@ -40,7 +40,7 @@ public class PostController {
     }
 
     @ApiOperation(
-            value = "NOTICE 작성",
+            value = "공지사항 작성",
             notes = "Post를 작성합니다.\n\n" +
                     "ADMIN 권한이 필요합니다.\n\n" +
                     "{\n\n" +
@@ -60,7 +60,7 @@ public class PostController {
     }
 
     @ApiOperation(
-            value = "NOTICE 수정",
+            value = "공지사항 수정",
             notes = "Post를 수정합니다.\n\n" +
                     "ADMIN 권한이 필요합니다.\n\n" +
                     "{\n\n" +
@@ -81,7 +81,7 @@ public class PostController {
     }
 
     @ApiOperation(
-            value = "NOTICE 삭제",
+            value = "공지사항 삭제",
             notes = "ADMIN 권한이 필요합니다.\n\n" +
                     "{\n\n" +
                     "       \"post-id\" : \"삭제할 Post의 id\"\"\n\n" +
@@ -99,7 +99,7 @@ public class PostController {
 
     @ApiOperation(
             value = "Post 조회",
-            notes = "Post를 조회합니다.\n\n" +
+            notes = "Post 목록을 조회합니다.\n\n" +
                     "example : \n\n" +
                     "{\n\n" +
                     "       \"idCursor\" : \"마지막 조회한 post id\"\n\n" +
