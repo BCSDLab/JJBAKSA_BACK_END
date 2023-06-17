@@ -13,8 +13,6 @@ public interface UserService {
 
     URI authEmail(String accessToken, String refreshToken) throws Exception;
 
-    UserResponse modifyNickname(String nickname) throws Exception;
-
     String checkDuplicateAccount(String account) throws Exception;
 
     Token login(UserRequest request) throws Exception;

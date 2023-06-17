@@ -421,26 +421,4 @@ public class UserController {
         return new ModelAndView("authenticate-failed");
     }
 
-    @ApiOperation(
-            value = "닉네임 변경",
-            notes = "닉네임 변경\n\n" +
-                    "필요 헤더" +
-                    "\n\n\tAuthorization : Bearer + access token\n\n" +
-                    "필요한 필드" +
-                    "\n\n\tnickname : 변경할 유저 닉네임(영문자, 한글, 숫자로 이루어진 1~20글자의 문자열)\n\n\t",
-            authorizations = @Authorization(value = "Bearer + accessToken"))
-    @ApiResponses({
-            @ApiResponse(code = 200,
-                    message = "변경된 유저 정보",
-                    response = UserResponse.class)
-    })
-    @PreAuthorize("hasRole('NORMAL')")
-    @PatchMapping("/user/nickname")
-    public ResponseEntity<UserResponse> modifyNickname(@Pattern(regexp = "^[a-zA-z가-힣0-9]{1,20}$",
-            groups = {ValidationGroups.Update.class}, message = "닉네임에 특수문자와 초성은 불가능합니다.")
-                                                       @RequestParam String nickname) throws Exception {
-        return new ResponseEntity<>(userService.modifyNickname(nickname), HttpStatus.OK);
-    }
-
-
 }

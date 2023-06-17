@@ -93,16 +93,6 @@ public class UserServiceImpl implements UserService {
         return authLinkUtil.getAuthLink(accessToken, refreshToken);
     }
 
-    @Transactional
-    @Override
-    public UserResponse modifyNickname(String nickname) throws Exception {
-        UserEntity user = userService.getLoginUser();
-
-        user.setNickname(nickname);
-
-        return UserMapper.INSTANCE.toUserResponse(user);
-    }
-
     @Override
     public String checkDuplicateAccount(String account) throws Exception {
         validateExistAccount(account);
