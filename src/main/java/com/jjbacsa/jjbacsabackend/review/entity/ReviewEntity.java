@@ -1,8 +1,9 @@
 package com.jjbacsa.jjbacsabackend.review.entity;
 
 import com.jjbacsa.jjbacsabackend.etc.entity.BaseEntity;
+import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
+import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
-import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -23,12 +24,12 @@ import java.util.List;
 @Table(name = "review")
 public class ReviewEntity extends BaseEntity {
 
-    private static class ReviewEntityBuilderImpl extends ReviewEntityBuilder<ReviewEntity, ReviewEntityBuilderImpl>{
+    private static class ReviewEntityBuilderImpl extends ReviewEntityBuilder<ReviewEntity, ReviewEntityBuilderImpl> {
 
         @Override
-        public ReviewEntity build(){
+        public ReviewEntity build() {
             ReviewEntity reviewEntity = new ReviewEntity(this);
-            if(reviewEntity.getReviewImages() != null) {
+            if (reviewEntity.getReviewImages() != null) {
                 for (ReviewImageEntity image : reviewEntity.getReviewImages()) {
                     image.setReview(reviewEntity);
                 }
@@ -43,8 +44,8 @@ public class ReviewEntity extends BaseEntity {
     private UserEntity writer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id")
-    private ShopEntity shop;
+    @JoinColumn(name = "google_place_id", referencedColumnName = "place_id")
+    private GoogleShopEntity shop;
 
     @Setter
     @Basic(optional = false)
@@ -53,7 +54,7 @@ public class ReviewEntity extends BaseEntity {
     private String content;
 
     @Setter
-    @Column(name="rate")
+    @Column(name = "rate")
     private Integer rate;
 
     @OrderBy("id asc")
@@ -67,4 +68,8 @@ public class ReviewEntity extends BaseEntity {
         reviewImageEntity.setReview(this);
     }
 
+    public void update(ReviewRequest reviewRequest) {
+        this.content = reviewRequest.getContent();
+        this.rate = reviewRequest.getRate();
+    }
 }
