@@ -25,4 +25,9 @@ public interface InquiryMapper {
 
     @Mapping(source = "writer.nickname", target = "createdBy")
     InquiryResponse toInquiryResponse(InquiryEntity inquiryEntity);
+
+    @Mapping(target = "content", ignore = true)
+    @Mapping(target = "answer", ignore = true)
+    @Mapping(target = "inquiryImages", ignore = true)
+    InquiryResponse toInquiryPageResponse(InquiryEntity inquiryEntity);
 }
