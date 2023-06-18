@@ -102,7 +102,7 @@ public class DslInquiryRepositoryImpl extends QuerydslRepositorySupport implemen
     }
 
     private BooleanExpression customCursor(String dateCursor, Long idCursor) {
-        if(dateCursor == null || idCursor == null) return null;
+        if (dateCursor == null || idCursor == null) return null;
 
         StringBuilder sb = new StringBuilder(dateCursor);
         sb.append(String.format("%1$" + 5 + "s", idCursor).replace(' ', '0'));

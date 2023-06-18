@@ -7,8 +7,11 @@ import org.springframework.data.domain.Pageable;
 
 public interface DslInquiryRepository {
     Page<InquiryEntity> findAllInquiries(String dateCursor, Long idCursor, Pageable pageable);
+
     Page<InquiryEntity> findAllMyInquiries(String dateCursor, Long idCursor, Long userId, Pageable pageable);
+
     Page<InquiryEntity> findAllSearchInquiries(String dateCursor, Long idCursor, String searchWord, Pageable pageable);
+
     Page<InquiryEntity> findAllSearchMyInquiries(String dateCursor, Long idCursor, String searchWord, Long userId, Pageable pageable);
 
 }

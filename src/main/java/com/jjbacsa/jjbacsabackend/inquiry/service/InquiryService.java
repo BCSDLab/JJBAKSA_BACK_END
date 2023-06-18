@@ -18,6 +18,7 @@ public interface InquiryService {
     InquiryResponse addAnswer(AnswerRequest answer, Long inquiryId);
 
     Page<InquiryResponse> getInquiries(InquiryCursorRequest inquiryCursorRequest);
+
     Page<InquiryResponse> getMyInquiries(InquiryCursorRequest inquiryCursorRequest) throws Exception;
 
     Page<InquiryResponse> searchInquiries(InquiryCursorRequest inquiryCursorRequest, String searchWord);
