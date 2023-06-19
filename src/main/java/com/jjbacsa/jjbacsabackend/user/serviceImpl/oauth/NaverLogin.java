@@ -2,7 +2,6 @@ package com.jjbacsa.jjbacsabackend.user.serviceImpl.oauth;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
-import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.OAuthInfoEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -72,21 +71,13 @@ public class NaverLogin extends TokenSnsLogin {
         JSONObject obj = (JSONObject) jsonObject.get("response");
 
         String apiKey = String.valueOf(obj.get("id"));
-        //String profile = String.valueOf(obj.get("profile_image"));
 
         Optional<OAuthInfoEntity> oauthOptional =
                 oAuthInfoRepository.findByApiKeyAndOauthType(apiKey, this.getOAuthType());
 
-//        ImageEntity imageEntity = ImageEntity.builder()
-//                .path(profile)
-//                .url(profile)
-//                .originalName("original_name")
-//                .build();
-
         UserEntity naverUser = UserEntity.builder()
                 .email(obj.get("email").toString())
                 .nickname(obj.get("nickname").toString())
-                //        .profileImage(imageEntity)
                 .userType(UserType.NORMAL)
                 .authEmail(true)
                 .build();

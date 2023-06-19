@@ -2,7 +2,6 @@ package com.jjbacsa.jjbacsabackend.user.serviceImpl.oauth;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
-import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.OAuthInfoEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -30,9 +29,6 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 public class KakaoLogin extends TokenSnsLogin {
     @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
     private String KAKAO_USERINFO_URI;
-
-    @Value("${spring.security.oauth2.client.registration.kakao.admin-key}")
-    private String appAdminKey;
 
     @Value("${spring.security.oauth2.client.provider.kakao.unlink-uri}")
     private String KAKAO_UNLINK_URI;
@@ -67,7 +63,6 @@ public class KakaoLogin extends TokenSnsLogin {
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
         JSONObject kakaoAccount = (JSONObject) jsonObject.get("kakao_account");
-        //JSONObject profile = (JSONObject) kakaoAccount.get("profile");
         JSONObject properties = (JSONObject) jsonObject.get("properties");
         String apiKey = String.valueOf(jsonObject.get("id"));
 
@@ -77,7 +72,6 @@ public class KakaoLogin extends TokenSnsLogin {
         UserEntity kakaoUser = UserEntity.builder()
                 .email(kakaoAccount.get("email").toString())
                 .nickname(properties.get("nickname").toString())
-                //.profileImage(imageEntity)
                 .userType(UserType.NORMAL)
                 .authEmail(true)
                 .build();

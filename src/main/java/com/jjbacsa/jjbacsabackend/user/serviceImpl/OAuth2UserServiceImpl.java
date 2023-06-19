@@ -7,7 +7,6 @@ import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
-import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.OAuthInfoEntity;
@@ -104,17 +103,10 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
         Optional<OAuthInfoEntity> oauthOptional =
                 oAuthInfoRepository.findByApiKeyAndOauthType(oAuth2UserInfo.getApiKey(), oAuth2UserInfo.getOAuthType());
 
-//        ImageEntity imageEntity = ImageEntity.builder()
-//                .path(oAuth2UserInfo.getProfileImage())
-//                .url(oAuth2UserInfo.getProfileImage())
-//                .originalName("original_name")
-//                .build();
-
         UserEntity user = UserEntity.builder()
                 .email(oAuth2UserInfo.getEmail())
                 .nickname(oAuth2UserInfo.getName())
                 .userType(UserType.NORMAL)
-                //.profileImage(imageEntity)
                 .authEmail(true)
                 .build();
 
