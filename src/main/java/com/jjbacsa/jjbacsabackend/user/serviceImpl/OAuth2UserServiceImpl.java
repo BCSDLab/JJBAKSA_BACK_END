@@ -63,15 +63,16 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
         String token = request.getHeader("Authorization");
 
         UserResponse user = snsLogin.snsLoginByToken(token);
+        Long userId = oAuthInfoRepository.getUserId(user.getEmail(), oAuthType);
 
-        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
+        String existToken = redisUtil.getStringValue(String.valueOf(userId));
 
         if (existToken == null) {
-            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH, user.getUserType().getUserType());
-            redisUtil.setToken(String.valueOf(user.getId()), existToken);
+            existToken = jwtUtil.generateToken(userId, TokenType.REFRESH, user.getUserType().getUserType());
+            redisUtil.setToken(String.valueOf(userId), existToken);
         }
 
-        return new Token(jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()), existToken);
+        return new Token(jwtUtil.generateToken(userId, TokenType.ACCESS, user.getUserType().getUserType()), existToken);
     }
 
     @Transactional
