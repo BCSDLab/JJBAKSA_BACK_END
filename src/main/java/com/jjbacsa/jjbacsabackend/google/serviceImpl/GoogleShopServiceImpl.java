@@ -268,15 +268,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return shopScrapResponse;
     }
 
-    //    @Transactional(readOnly = true)
-//    @Override
-//    public ShopResponse getShop(String placeId) throws Exception {
-//        GoogleShopEntity googleShopEntity = googleShopRepository.findByPlaceId(placeId)
-//                .orElseThrow(() -> new RequestInputException(ErrorMessage.SHOP_NOT_EXISTS_EXCEPTION));
-//
-//        return this.getShopDetails(googleShopEntity.getPlaceId());
-//    }
-
     private String toFieldString(String[] fields) {
         StringBuilder stringBuilder = new StringBuilder();
 
