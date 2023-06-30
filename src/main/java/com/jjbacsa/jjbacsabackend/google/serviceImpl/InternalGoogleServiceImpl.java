@@ -2,15 +2,21 @@ package com.jjbacsa.jjbacsabackend.google.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
+import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopScrapResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
+import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +50,7 @@ public class InternalGoogleServiceImpl implements InternalGoogleService {
     @Override
     @Transactional(readOnly = true)
     public ShopResponse getShopDetails(String placeId) throws Exception {
-        return googleService.getShopDetails(placeId);
+        return googleService.getShopDetails(placeId, true);
     }
 
     @Override
@@ -69,7 +75,7 @@ public class InternalGoogleServiceImpl implements InternalGoogleService {
     }
 
     private GoogleShopEntity saveGoogleShop(String placeId) throws Exception {
-        ShopResponse shopResponse = googleService.getShopDetails(placeId);
+        ShopResponse shopResponse = googleService.getShopDetails(placeId, true);
         GoogleShopEntity googleShopEntity = GoogleShopEntity.builder()
                 .placeId(shopResponse.getPlaceId())
                 .build();
@@ -77,4 +83,9 @@ public class InternalGoogleServiceImpl implements InternalGoogleService {
         return googleShopRepository.save(googleShopEntity);
     }
 
+    @Override
+    public ShopScrapResponse formattedToShopResponse(ScrapEntity scrap) throws Exception {
+        ShopScrapResponse shopScrapResponse = this.googleService.getShopScrap(scrap.getShop().getPlaceId(), scrap.getId());
+        return shopScrapResponse;
+    }
 }

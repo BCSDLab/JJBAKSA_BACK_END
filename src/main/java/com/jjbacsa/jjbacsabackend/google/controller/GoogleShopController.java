@@ -52,7 +52,6 @@ public class GoogleShopController {
     @ApiImplicitParam(
             name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "query"
     )
-    @PreAuthorize("hasRole('NORMAL')")
     @PostMapping("/shops")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name = "keyword") String keyword) throws JsonProcessingException {
         searchService.saveForAutoComplete(keyword);
@@ -81,13 +80,13 @@ public class GoogleShopController {
     @ApiImplicitParam(
             name = "page_token", value = "키워드 검색어의 다음 페이지", required = true, dataType = "string", paramType = "path"
     )
-    @PreAuthorize("hasRole('NORMAL')")
     @PostMapping("/shops/page/{page_token}")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsNextPage(@PathVariable("page_token") String pageToken,
                                                                      @RequestBody @Valid ShopRequest shopRequest) throws JsonProcessingException {
         return ResponseEntity.ok()
                 .body(googleShopService.searchShopQueryNext(pageToken, shopRequest));
     }
+
 
     @ApiOperation(
             value = "단일 상점 조회",
@@ -100,14 +99,30 @@ public class GoogleShopController {
                     response = ShopResponse.class
             )
     })
-    @ApiImplicitParam(
-            name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path"
-    )
-    @PreAuthorize("hasRole('NORMAL')")
+    @ApiImplicitParam(name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path")
     @GetMapping("/shops/{place_id}")
     public ResponseEntity<ShopResponse> getGoogleShopDetails(@PathVariable("place_id") String placeId) throws Exception {
+
         return ResponseEntity.ok()
-                .body(googleShopService.getShopDetails(placeId));
+                .body(googleShopService.getShopDetails(placeId, true));
+    }
+
+    @ApiOperation(
+            value = "핀보기 단일 상점 조회",
+            notes = "place_id를 기반으로 핀보기 단일 상점 정보를 조회한다.\n\n"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "핀보기 단일 상점 조회 결과",
+                    response = ShopResponse.class
+            )
+    })
+    @ApiImplicitParam(name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path")
+    @GetMapping("/shops/pin/{place_id}")
+    public ResponseEntity<ShopResponse> getPinGoogleShop(@PathVariable("place_id") String placeId) throws Exception {
+        return ResponseEntity.ok()
+                .body(googleShopService.getShopDetails(placeId, false));
     }
 
     @ApiOperation(
@@ -133,7 +148,7 @@ public class GoogleShopController {
             @ApiImplicitParam(name = "options_scrap", required = true, dataType = "Integer", value = "스크랩 음식점 필터 여부")
     })
     @PostMapping("/shops/maps")
-    public ResponseEntity<List<ShopSimpleResponse>> getGoogleShops(@RequestParam(name = "options_nearby", required = true, defaultValue = "0") Integer nearBy,
+    public ResponseEntity<List<ShopSimpleResponse>> getGoogleShops(@RequestParam(name = "options_nearby", required = false, defaultValue = "0") Integer nearBy,
                                                                    @RequestParam(name = "options_friend", required = false, defaultValue = "0") Integer friend,
                                                                    @RequestParam(name = "options_scrap", required = false, defaultValue = "0") Integer scrap,
                                                                    @RequestBody @Valid ShopRequest shopRequest) throws Exception {
