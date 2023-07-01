@@ -2,11 +2,13 @@ package com.jjbacsa.jjbacsabackend.inquiry.controller;
 
 import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.inquiry.dto.request.AnswerRequest;
+import com.jjbacsa.jjbacsabackend.inquiry.dto.request.InquiryCursorRequest;
 import com.jjbacsa.jjbacsabackend.inquiry.dto.request.InquiryRequest;
 import com.jjbacsa.jjbacsabackend.inquiry.dto.response.InquiryResponse;
 import com.jjbacsa.jjbacsabackend.inquiry.service.InquiryService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +42,7 @@ public class InquiryController {
 
     @ApiOperation(
             value = "Inquiry 작성",
-            notes = "Inquiry를 작성합니다.\n\n" +
+            notes = "Inquiry를 작성합니다. MediaType은 MULTIPART_FORM_DATA_VALUE를 선택해주세요.\n\n" +
                     "{\n\n" +
                     "       \"title\" : \"제목\"\n\n" +
                     "       \"content\" : \"내용\"\n\n" +
@@ -60,7 +62,7 @@ public class InquiryController {
 
     @ApiOperation(
             value = "Inquiry 수정",
-            notes = "Inquiry를 수정합니다.\n\n" +
+            notes = "Inquiry를 수정합니다. MediaType은 MULTIPART_FORM_DATA_VALUE를 선택해주세요.\n\n" +
                     "{\n\n" +
                     "       \"inquiryId\" : \"수정할 Inquiry의 id\"\"\n\n" +
                     "       \"title\" : \"제목\"\n\n" +
@@ -113,4 +115,87 @@ public class InquiryController {
     public ResponseEntity<InquiryResponse> answer(@Validated(ValidationGroups.Create.class) @RequestBody AnswerRequest answerRequest, @ApiParam("답변할 Inquiry Id") @PathVariable("inquiry-id") Long inquiryId) {
         return new ResponseEntity<>(inquiryService.addAnswer(answerRequest, inquiryId), HttpStatus.OK);
     }
+
+    @ApiOperation(
+            value = "전체 Inquiry 조회",
+            notes = "전체 Inquiry를 조회합니다.\n\n" +
+                    "커서 기반 페이징\n\n" +
+                    "example : \n\n" +
+                    "{\n\n" +
+                    "       \"idCursor\" : \"조회한 마지막 Inquiry id, 첫 조회는 null\"\n\n" +
+                    "       \"dateCursor\" : \"조회한 마지막 리뷰 createdAt, 첫 조회는 null\"\n\n" +
+                    "       \"size\" : \"조회할 Inquiry의 개수\"\n\n" +
+                    "}", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "조회한 Inquiry 정보",
+                    response = InquiryResponse.class)
+    })
+    @GetMapping(value = "/inquiry")
+    public ResponseEntity<Page<InquiryResponse>> getInquiries(@Validated InquiryCursorRequest inquiryCursorRequest) {
+        return new ResponseEntity<>(inquiryService.getInquiries(inquiryCursorRequest), HttpStatus.OK);
+    }
+
+    @ApiOperation(
+            value = "나의 Inquiry 조회",
+            notes = "나의 Inquiry를 조회합니다.\n\n" +
+                    "커서 기반 페이징\n\n" +
+                    "example : \n\n" +
+                    "{\n\n" +
+                    "       \"idCursor\" : \"조회한 마지막 Inquiry id, 첫 조회는 null\"\n\n" +
+                    "       \"dateCursor\" : \"조회한 마지막 리뷰 createdAt, 첫 조회는 null\"\n\n" +
+                    "       \"size\" : \"조회할 Inquiry의 개수\"\n\n" +
+                    "}", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "조회한 Inquiry 정보",
+                    response = InquiryResponse.class)
+    })
+    @GetMapping(value = "/inquiry/me")
+    public ResponseEntity<Page<InquiryResponse>> getMyInquiries(@Validated InquiryCursorRequest inquiryCursorRequest) throws Exception {
+        return new ResponseEntity<>(inquiryService.getMyInquiries(inquiryCursorRequest), HttpStatus.OK);
+    }
+
+    @ApiOperation(
+            value = "Inquiry 검색",
+            notes = "Inquiry를 검색 합니다.\n\n" +
+                    "커서 기반 페이징\n\n" +
+                    "example : \n\n" +
+                    "{\n\n" +
+                    "       \"idCursor\" : \"조회한 마지막 Inquiry id, 첫 조회는 null\"\n\n" +
+                    "       \"dateCursor\" : \"조회한 마지막 리뷰 createdAt, 첫 조회는 null\"\n\n" +
+                    "       \"size\" : \"조회할 Inquiry의 개수\"\n\n" +
+                    "       \"searchWord\" : \"검색어\"\n\n" +
+                    "}", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "조회한 Inquiry 정보",
+                    response = InquiryResponse.class)
+    })
+    @GetMapping(value = "/inquiry/search/{search-word}")
+    public ResponseEntity<Page<InquiryResponse>> searchInquiries(@Validated InquiryCursorRequest inquiryCursorRequest, @ApiParam("검색어") @PathVariable(name = "search-word") String searchWord) {
+        return new ResponseEntity<>(inquiryService.searchInquiries(inquiryCursorRequest, searchWord), HttpStatus.OK);
+    }
+
+    @ApiOperation(
+            value = "나의 Inquiry 검색",
+            notes = "나의 Inquiry를 검색합니다.\n\n" +
+                    "커서 기반 페이징\n\n" +
+                    "example : \n\n" +
+                    "{\n\n" +
+                    "       \"idCursor\" : \"조회한 마지막 Inquiry id, 첫 조회는 null\"\n\n" +
+                    "       \"dateCursor\" : \"조회한 마지막 리뷰 createdAt, 첫 조회는 null\"\n\n" +
+                    "       \"size\" : \"조회할 Inquiry의 개수\"\n\n" +
+                    "       \"searchWord\" : \"검색어\"\n\n" +
+                    "}", authorizations = @Authorization(value = "Bearer +accessToken"))
+    @ApiResponses({
+            @ApiResponse(code = 200,
+                    message = "조회한 Inquiry 정보",
+                    response = InquiryResponse.class)
+    })
+    @GetMapping(value = "/inquiry/search/me/{search-word}")
+    public ResponseEntity<Page<InquiryResponse>> searchMyInquiries(@Validated InquiryCursorRequest inquiryCursorRequest, @ApiParam("검색어") @PathVariable(name = "search-word") String searchWord) throws Exception {
+        return new ResponseEntity<>(inquiryService.searchMyInquiries(inquiryCursorRequest, searchWord), HttpStatus.OK);
+    }
+
 }

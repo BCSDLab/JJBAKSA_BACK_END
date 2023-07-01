@@ -112,10 +112,12 @@ cloud:
       review:
       profile:
       inquiry:
+      post:
     cloudfront:
       review-url-format:
       profile-url-format:
-      inquiry-url-format
+      inquiry-url-format:
+      post-url-format:
     stack:
       auto: false
     ses:

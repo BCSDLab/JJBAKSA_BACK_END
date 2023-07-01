@@ -8,12 +8,7 @@ import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
-import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
-import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.*;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.WithdrawReasonEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
@@ -96,16 +91,6 @@ public class UserServiceImpl implements UserService {
         user.setAuthEmail(true);
 
         return authLinkUtil.getAuthLink(accessToken, refreshToken);
-    }
-
-    @Transactional
-    @Override
-    public UserResponse modifyNickname(String nickname) throws Exception {
-        UserEntity user = userService.getLoginUser();
-
-        user.setNickname(nickname);
-
-        return UserMapper.INSTANCE.toUserResponse(user);
     }
 
     @Override
@@ -194,14 +179,15 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
-    //TODO : Email 인증 추가 완료 시 파라미터 추가 (변경 시 채널에 고지 )
+    //TODO : 2차 배포 시 파라미터(아이디) 추가 (변경 시 채널에 고지 )
     @Override
     @Transactional
-    public UserResponse modifyUser(UserRequest request) throws Exception {
+    public UserResponse modifyUser(UserModifyRequest request) throws Exception {
         UserEntity user = userService.getLoginUser();
 
-        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+        if (user.getPassword() == null && request.getPassword() != null) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
 
         if (request.getPassword() != null) {
 //            emailService.codeCertification(request.getEmail(), code);
@@ -315,13 +301,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse modifyPassword(String password) throws Exception {
+    public UserResponse validatePassword(String password) throws Exception {
         UserEntity user = userService.getLoginUser();
 
         if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
 
-        user.setPassword(passwordEncoder.encode(password));
+        if(!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RequestInputException(ErrorMessage.PASSWORD_INCORRECT_EXCEPTION);
+        }
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }

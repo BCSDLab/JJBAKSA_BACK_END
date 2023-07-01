@@ -4,12 +4,7 @@ import com.jjbacsa.jjbacsabackend.etc.annotations.ValidationGroups;
 import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.etc.enums.OAuthType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
-import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
-import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.*;
 import com.jjbacsa.jjbacsabackend.user.service.InternalEmailService;
 import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.user.serviceImpl.OAuth2UserServiceImpl;
@@ -26,7 +21,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import springfox.documentation.annotations.ApiIgnore;
@@ -173,15 +177,14 @@ public class UserController {
 
     @ApiOperation(
             value = "유저 정보 변경",
-            notes = "유저 정보 변경\n\n" +
+            notes = "유저 정보 변경(단일 필드 변경 가능)\n\n" +
                     "필요 헤더\n\n" +
                     "\tAuthorization : Bearer + access token\n\n" +
                     "필요한 필드\n\n" +
                     "\t{\n\n     " +
-                    "password : 변경할 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열)(차후 인증 적용),\n\n     " +
+                    "password : 변경할 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열),\n\n     " +
                     "nickname : 변경할 유저 닉네임(영문자, 한글, 숫자로 이루어진 1~20글자의 문자열),\n\n     " +
-                    "email : 변경할 유저 계정 (차후 인증 적용),\n\n" +
-                    "\t}",
+                    "}",
             authorizations = @Authorization(value = "Bearer + refreshToken"))
     @ApiResponses({
             @ApiResponse(code = 200,
@@ -191,7 +194,7 @@ public class UserController {
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping("/user/me")
     public ResponseEntity<UserResponse> modifyUser(@Validated(ValidationGroups.Update.class)
-                                                   @RequestBody UserRequest request) throws Exception {
+                                                   @RequestBody UserModifyRequest request) throws Exception {
         return new ResponseEntity<>(userService.modifyUser(request), HttpStatus.OK);
     }
 
@@ -334,24 +337,24 @@ public class UserController {
     }
 
     @ApiOperation(
-            value = "비밀번호 변경",
-            notes = "비밀번호 변경\n\n" +
+            value = "현재 비밀번호 확인",
+            notes = "현재 비밀번호 확인\n\n" +
                     "필요 헤더" +
                     "\n\n\tAuthorization : Bearer + access token\n\n" +
                     "필요한 필드" +
-                    "\n\n\tpassword : 변경할 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열)\n\n\t",
+                    "\n\n\tpassword : 유저 패스워드(영문자, 숫자, 특수문자를 포함하는 8~16의 문자열)\n\n\t",
             authorizations = @Authorization(value = "Bearer + accessToken"))
     @ApiResponses({
             @ApiResponse(code = 200,
-                    message = "변경된 유저 정보",
+                    message = "유저 정보",
                     response = UserResponse.class)
     })
     @PreAuthorize("hasRole('NORMAL')")
-    @PatchMapping("/user/password")
-    public ResponseEntity<UserResponse> modifyPassword(@Pattern(regexp = "(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[0-9])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[a-zA-z])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[~!@#$%^&*()\\-_=+]).{8,16}",
+    @PostMapping("/user/check-password")
+    public ResponseEntity<UserResponse> validatePassword(@Pattern(regexp = "(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[0-9])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[a-zA-z])(?=[0-9a-zA-z~!@#$%^&*()\\-_=+]*[~!@#$%^&*()\\-_=+]).{8,16}",
             groups = {ValidationGroups.Update.class}, message = "올바른 형식의 비밀번호가 아닙니다.")
-                                                       @RequestParam String password) throws Exception {
-        return new ResponseEntity<>(userService.modifyPassword(password), HttpStatus.OK);
+                                                         @RequestParam String password) throws Exception {
+        return new ResponseEntity<>(userService.validatePassword(password), HttpStatus.OK);
     }
 
     @ApiOperation(
@@ -371,7 +374,7 @@ public class UserController {
     @PreAuthorize("hasRole('NORMAL')")
     @PatchMapping(value = "/user/profile")
     public ResponseEntity<UserResponse> modifyProfile(@RequestPart(value = "profile", required = false)
-                                                              MultipartFile profile) throws Exception {
+                                                      MultipartFile profile) throws Exception {
         return new ResponseEntity<>(userService.modifyProfile(profile), HttpStatus.OK);
     }
 
@@ -418,26 +421,6 @@ public class UserController {
         return new ModelAndView("authenticate-failed");
     }
 
-    @ApiOperation(
-            value = "닉네임 변경",
-            notes = "닉네임 변경\n\n" +
-                    "필요 헤더" +
-                    "\n\n\tAuthorization : Bearer + access token\n\n" +
-                    "필요한 필드" +
-                    "\n\n\tnickname : 변경할 유저 닉네임(영문자, 한글, 숫자로 이루어진 1~20글자의 문자열)\n\n\t",
-            authorizations = @Authorization(value = "Bearer + accessToken"))
-    @ApiResponses({
-            @ApiResponse(code = 200,
-                    message = "변경된 유저 정보",
-                    response = UserResponse.class)
-    })
-    @PreAuthorize("hasRole('NORMAL')")
-    @PatchMapping("/user/nickname")
-    public ResponseEntity<UserResponse> modifyNickname(@Pattern(regexp = "^[a-zA-z가-힣0-9]{1,20}$",
-            groups = {ValidationGroups.Update.class}, message = "닉네임에 특수문자와 초성은 불가능합니다.")
-                                                       @RequestParam String nickname) throws Exception {
-        return new ResponseEntity<>(userService.modifyNickname(nickname), HttpStatus.OK);
-    }
 
     @ApiOperation(
             value = "SNS 회원 탈퇴 및 서비스 해지",

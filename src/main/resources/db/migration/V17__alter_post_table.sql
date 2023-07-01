@@ -1,0 +1,1 @@
+ALTER TABLE post DROP board_type;

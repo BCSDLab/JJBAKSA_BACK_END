@@ -4,10 +4,7 @@ import com.jjbacsa.jjbacsabackend.etc.dto.Token;
 import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
-import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.*;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserCount;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
@@ -115,7 +112,7 @@ public class UserServiceTest {
     @DisplayName("유저 수정")
     @Test
     void modifyUser() throws Exception {
-        UserRequest request = new UserRequest();
+        UserModifyRequest request = new UserModifyRequest();
         request.setNickname("Test");
 
         userService.modifyUser(request);
@@ -129,7 +126,7 @@ public class UserServiceTest {
                 .searchUsers("NoSearchName", 10, 0L);
         assertTrue(result.isEmpty());
 
-        UserRequest request = new UserRequest();
+        UserModifyRequest request = new UserModifyRequest();
         request.setNickname("SearchName");
         userService.modifyUser(request);
 
