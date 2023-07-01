@@ -53,7 +53,8 @@ public enum ErrorMessage {
     INQUIRY_NOT_EXISTS_EXCEPTION(47, "문의글이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     INVALID_PERMISSION_INQUIRY(48, "문의글 작성자가 아닙니다.", HttpStatus.BAD_REQUEST),
     CONTINUAL_API_EXCEPTION(49, "연속적으로 외부 API 요청에 실패합니다.", HttpStatus.BAD_REQUEST),
-    INTERNAL_SHOP_EXCEPTION(50, "상점 정보 조회에 실패합니다.", HttpStatus.INTERNAL_SERVER_ERROR)
+    INTERNAL_SHOP_EXCEPTION(50, "상점 정보 조회에 실패합니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    PASSWORD_INCORRECT_EXCEPTION(51, "현재 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
     ;
 
     Integer code;
