@@ -46,14 +46,14 @@ public class DslPostRepositoryImpl extends QuerydslRepositorySupport implements 
 
     private BooleanExpression customCursor(String dateCursor, Long idCursor) {
         log.info(dateCursor + idCursor);
-        if(dateCursor == null || idCursor == null) return null;
+        if (dateCursor == null || idCursor == null) return null;
 
         StringBuilder sb = new StringBuilder(dateCursor);
         sb.append(String.format("%1$" + 5 + "s", idCursor).replace(' ', '0'));
 
         return post.createdAt.stringValue().substring(0, 10)
                 .concat(StringExpressions.lpad(post.id.stringValue(), 5, '0'))
-                        .lt(sb.toString());
+                .lt(sb.toString());
     }
 
 }

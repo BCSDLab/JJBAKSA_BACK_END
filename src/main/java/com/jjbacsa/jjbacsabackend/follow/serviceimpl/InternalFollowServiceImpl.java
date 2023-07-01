@@ -44,14 +44,13 @@ public class InternalFollowServiceImpl implements InternalFollowService {
     }
 
     @Override
-    public List<Long> getFollowers() throws Exception{
+    public List<UserEntity> getFollowers() throws Exception{
 
         UserEntity user=userService.getLoginUser();
 
-        return followRepository.findAllByFollower(user)
+        return followRepository.findAllByUser(user)
                 .stream()
-                .map(FollowEntity::getUser)
-                .map(UserEntity::getId)
+                .map(FollowEntity::getFollower)
                 .collect(Collectors.toList());
     }
 }

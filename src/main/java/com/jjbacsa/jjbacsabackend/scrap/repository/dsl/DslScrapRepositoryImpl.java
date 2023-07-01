@@ -56,6 +56,19 @@ public class DslScrapRepositoryImpl extends QuerydslRepositorySupport implements
         return deletedCount;
     }
 
+    @Override
+    public Page<ScrapEntity> findAllByUserWithCursor(UserEntity user, Long cursor, Pageable pageable) {
+        List<ScrapEntity> content = from(s).select(s)
+                .where(s.user.eq(user),customCursor(cursor))
+                .orderBy(s.id.asc())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        JPQLQuery<ScrapEntity> countQuery=from(s).select(s)
+                .where(s.user.eq(user));
+        return PageableExecutionUtils.getPage(content,pageable,countQuery::fetchCount);
+    }
+
     private BooleanExpression getScrapCondition(UserEntity user, ScrapDirectoryEntity directory) {
 
         if (directory == null)

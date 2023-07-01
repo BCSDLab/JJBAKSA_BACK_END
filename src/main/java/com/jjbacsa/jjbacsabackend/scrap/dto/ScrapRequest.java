@@ -17,6 +17,6 @@ public class ScrapRequest {
                     "0이면 root")
     private Long directoryId;
 
-    @ApiModelProperty(value = "스크랩할 상점 ID\n\n")
-    private Long shopId;
+    @ApiModelProperty(value = "스크랩할 place ID\n\n")
+    private String placeId;
 }
