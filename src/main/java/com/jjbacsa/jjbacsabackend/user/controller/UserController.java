@@ -346,7 +346,7 @@ public class UserController {
             authorizations = @Authorization(value = "Bearer + accessToken"))
     @ApiResponses({
             @ApiResponse(code = 200,
-                    message = "변경된 유저 정보",
+                    message = "유저 정보",
                     response = UserResponse.class)
     })
     @PreAuthorize("hasRole('NORMAL')")
@@ -421,4 +421,27 @@ public class UserController {
         return new ModelAndView("authenticate-failed");
     }
 
+
+    @ApiOperation(
+            value = "SNS 회원 탈퇴 및 서비스 해지",
+            notes = "SNS 회원 탈퇴 및 서비스 해지\n\n" +
+                    "필요 헤더\n\n" +
+                    "\n\n\tAuthorization : access token" +
+                    "\n\n필요한 필드" +
+                    "\n\n\tKAKAO, NAVER, GOOGLE : 클라이언트 측에서 발급 받은 access token" +
+                    "\n\n\tAPPLE : authorization_code"
+    )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiResponses({
+            @ApiResponse(code = 204,
+                    message = "반환값 없음")
+    })
+    @DeleteMapping("/user/revoke/{sns-type}")
+    public ResponseEntity<Void> snsRevoke(
+            @PathVariable(name = "sns-type") OAuthType oAuthType,
+            @RequestParam String authToken
+    ) throws Exception {
+        oAuth2UserService.revokeSnsUser(authToken, oAuthType);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

@@ -205,6 +205,9 @@ public class UserServiceImpl implements UserService {
     public void withdraw() throws Exception {
         UserEntity user = userService.getLoginUser();
 
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+
         userCountRepository.updateAllFriendsCountByUser(user);
         followService.deleteFollowWithUser(user);
 
@@ -283,7 +286,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String findPassword(EmailRequest request) throws Exception {
 
-        UserEntity user = userService.getUserByAccount(request.getAccount());
+        UserEntity user = userService.getLocalUserByEmail(request.getEmail());
 
         if (!Objects.equals(request.getEmail(), user.getEmail())) {
             throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
