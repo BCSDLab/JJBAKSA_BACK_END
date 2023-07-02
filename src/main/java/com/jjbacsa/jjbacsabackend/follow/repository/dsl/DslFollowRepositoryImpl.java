@@ -5,6 +5,8 @@ import com.jjbacsa.jjbacsabackend.follow.entity.QFollowEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.core.types.dsl.StringExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import org.springframework.data.domain.Page;
@@ -52,12 +54,19 @@ public class DslFollowRepositoryImpl extends QuerydslRepositorySupport implement
         Calendar time = Calendar.getInstance();
         time.add(Calendar.DATE, -1);
 
+        StringExpression cursorExpression = null;
+        if (cursor != null) {
+            UserEntity cursorUser = from(qUser).select(qUser).where(qUser.id.eq(cursor)).fetchOne();
+            cursorExpression = Expressions.asString(cursorUser.getLastLoggedAt().toString().substring(10))
+                    .concat(StringExpressions.lpad(Expressions.asString(cursorUser.getId().toString()), 10, '0'));
+        }
+
         List<FollowEntity> followers = from(f).select(f)
                 .join(f.follower).fetchJoin()
                 .where(f.user.eq(user),
                         f.follower.lastLoggedAt.gt(time.getTime()),
-                        f.follower.id.gt(cursor == null ? 0 : cursor))
-                .orderBy(f.follower.id.desc())
+                        getLastLoggedInCursor(cursorExpression))
+                .orderBy(f.follower.lastLoggedAt.desc(), f.follower.id.desc())
                 .limit(pageable.getPageSize())
                 .fetch();
 
@@ -75,5 +84,16 @@ public class DslFollowRepositoryImpl extends QuerydslRepositorySupport implement
         return StringExpressions.lpad(f.follower.nickname.stringValue(), 20, '0')
                 .concat(StringExpressions.lpad(f.follower.id.stringValue(), 10, '0'))
                 .gt(cursor);
+    }
+
+    private BooleanExpression getLastLoggedInCursor(StringExpression cursorExpression) {
+
+        if (cursorExpression == null) {
+            return null;
+        }
+
+        return f.follower.lastLoggedAt.stringValue().substring(10)
+                .concat(StringExpressions.lpad(f.follower.id.stringValue(), 10, '0'))
+                .lt(cursorExpression);
     }
 }
