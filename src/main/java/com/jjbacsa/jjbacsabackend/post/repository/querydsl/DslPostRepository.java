@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface DslPostRepository {
 
-    Page<PostEntity> findAllNotices(Pageable pageable);
-    Page<PostEntity> findAllInquiries(Pageable pageable);
+    Page<PostEntity> findAllPosts(String cursor, Long idCursor, Pageable pageable);
 
 }

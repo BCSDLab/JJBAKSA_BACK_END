@@ -1,23 +1,22 @@
 package com.jjbacsa.jjbacsabackend.post.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.jjbacsa.jjbacsabackend.post_image.dto.response.PostImageResponse;
+import lombok.*;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
-@Data
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@Getter
+@Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class PostResponse {
+    private Long id;
     private String title;
     private String content;
-    private String boardType;
-    private String createdAt;
-
-    public void setCreatedAt(Date createAt){
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        this.createdAt = format.format(createAt);
-    }
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
+    private Date createdAt;
+    private List<PostImageResponse> postImages;
 }

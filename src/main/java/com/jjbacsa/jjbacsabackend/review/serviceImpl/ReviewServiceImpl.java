@@ -9,7 +9,6 @@ import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.*;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewCountResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDateResponse;
-import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review.mapper.ReviewMapper;
@@ -64,7 +63,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewDeleteResponse delete(Long reviewId) throws Exception {
+    public void delete(Long reviewId) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
         ReviewEntity reviewEntity = reviewRepository.findByReviewId(reviewId);
         if (reviewEntity == null) throw new RequestInputException(ErrorMessage.REVIEW_NOT_EXISTS_EXCEPTION);
@@ -81,8 +80,6 @@ public class ReviewServiceImpl implements ReviewService {
         Long shopId = reviewEntity.getShop().getId();
         shopService.addTotalRating(shopId, -reviewEntity.getRate());
         shopService.decreaseRatingCount(shopId);
-
-        return ReviewDeleteResponse.from(reviewEntity);
     }
 
     @Override

@@ -4,7 +4,6 @@ import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.request.*;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewCountResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDateResponse;
-import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
 import org.springframework.data.domain.Page;
 
@@ -14,7 +13,7 @@ public interface ReviewService {
 
     ReviewResponse modify(ReviewRequest reviewRequest, Long reviewId) throws Exception;
 
-    ReviewDeleteResponse delete(Long reviewId) throws Exception;
+    void delete(Long reviewId) throws Exception;
 
     ReviewResponse get(Long reviewId) throws Exception;
 
