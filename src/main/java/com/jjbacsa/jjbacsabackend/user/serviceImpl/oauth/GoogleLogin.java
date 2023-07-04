@@ -20,6 +20,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -33,6 +36,9 @@ public class GoogleLogin implements SnsLogin {
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String GOOGLE_CLIENT_ID;
+
+    @Value("${spring.security.oauth2.client.provider.google.revoke-uri}")
+    private String GOOGLE_REVOKE_URI;
 
     @Transactional
     @Override
@@ -65,6 +71,15 @@ public class GoogleLogin implements SnsLogin {
     @Override
     public OAuthType getOAuthType() throws Exception {
         return OAuthType.GOOGLE;
+    }
+
+    @Override
+    public void revoke(String accessToken) throws Exception {
+        RestTemplate restTemplate = new RestTemplate();
+
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        parameters.add("token", accessToken);
+        restTemplate.postForEntity(GOOGLE_REVOKE_URI, parameters, String.class);
     }
 
     private GoogleIdToken verifyToken(String idToken) throws Exception {
