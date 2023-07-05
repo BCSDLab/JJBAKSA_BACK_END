@@ -8,21 +8,25 @@ import com.jjbacsa.jjbacsabackend.user.entity.QUserCount;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringExpression;
+import com.querydsl.core.types.dsl.StringExpressions;
 import com.querydsl.jpa.JPQLQuery;
-
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.data.support.PageableExecutionUtils;
 
-import java.util.List;
-
 public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements DslUserRepository {
+
     private static final QUserEntity qUser = QUserEntity.userEntity;
     private static final QImageEntity qImage = QImageEntity.imageEntity;
     private static final QFollowEntity qFollow = QFollowEntity.followEntity;
@@ -34,17 +38,18 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
 
     @Override
     public Page<UserEntity> findAllByUserNameWithCursor(String keyword, Pageable pageable, Long cursor) {
+
+        String cursorNickname = null;
+        if (cursor != null) {
+            cursorNickname = from(qUser).select(qUser.nickname).where(qUser.id.eq(cursor)).fetchOne();
+        }
+
         List<UserEntity> users = from(qUser).select(qUser)
                 .join(qUser.userCount).fetchJoin()
                 .leftJoin(qImage).on(qUser.profileImage.eq(qImage))
-                .where(qUser.nickname.contains(keyword).or(qUser.account.contains(keyword)))
-                .where(qUser.id.gt(cursor == null ? 0 : cursor))
-                .orderBy(new CaseBuilder()
-                        .when(qUser.nickname.eq(keyword)
-                                .or(qUser.account.eq(keyword))).then(0)
-                        .when(qUser.nickname.like(keyword + "%")
-                                .or(qUser.account.like(keyword + "%"))).then(1)
-                        .otherwise(2).asc(), qUser.id.asc())
+                .where(qUser.nickname.contains(keyword))
+                .where(getCursorExpression(cursor, cursorNickname, keyword))
+                .orderBy(new OrderSpecifier(Order.ASC, createCursorExpression(keyword)))
                 .limit(pageable.getPageSize())
                 .fetch();
 
@@ -52,6 +57,35 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
                 .where(qUser.nickname.contains(keyword));
 
         return PageableExecutionUtils.getPage(users, pageable, countQuery::fetchCount);
+    }
+
+    private BooleanExpression getCursorExpression(Long cursor, String nickname, String keyword) {
+
+        if (cursor == null) {
+            return null;
+        }
+
+        Integer equalState = 3;
+
+        if (nickname.equals(keyword)) {
+            equalState = 1;
+        } else if (nickname.startsWith(keyword)) {
+            equalState = 2;
+        }
+
+        StringExpression cursorExpression = Expressions.asString(equalState.toString()).concat(
+                StringExpressions.lpad(Expressions.asString(cursor.toString()), 10, '0'));
+
+        return cursorExpression.lt(createCursorExpression(keyword));
+    }
+
+    private StringExpression createCursorExpression(String keyword) {
+
+        return new CaseBuilder()
+                .when(qUser.nickname.eq(keyword)).then(1)
+                .when(qUser.nickname.like(keyword + "%")).then(2)
+                .otherwise(3).stringValue()
+                .concat(StringExpressions.lpad(qUser.id.stringValue(), 10, '0'));
     }
 
     @Override
