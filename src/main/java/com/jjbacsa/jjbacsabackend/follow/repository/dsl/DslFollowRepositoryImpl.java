@@ -4,6 +4,7 @@ import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.entity.QFollowEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.QUserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
+import com.querydsl.core.types.ConstantImpl;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringExpression;
@@ -57,7 +58,10 @@ public class DslFollowRepositoryImpl extends QuerydslRepositorySupport implement
         StringExpression cursorExpression = null;
         if (cursor != null) {
             UserEntity cursorUser = from(qUser).select(qUser).where(qUser.id.eq(cursor)).fetchOne();
-            cursorExpression = Expressions.asString(cursorUser.getLastLoggedAt().toString().substring(10))
+            cursorExpression = Expressions.dateTemplate(String.class,
+                    "DATE_FORMAT({0}, {1})",
+                    cursorUser.getLastLoggedAt(),
+                    ConstantImpl.create("%Y%m%d%H%i%s")).stringValue()
                     .concat(StringExpressions.lpad(Expressions.asString(cursorUser.getId().toString()), 10, '0'));
         }
 
@@ -92,7 +96,10 @@ public class DslFollowRepositoryImpl extends QuerydslRepositorySupport implement
             return null;
         }
 
-        return f.follower.lastLoggedAt.stringValue().substring(10)
+        return Expressions.dateTemplate(String.class,
+                        "DATE_FORMAT({0}, {1})",
+                        f.follower.lastLoggedAt,
+                        ConstantImpl.create("%Y%m%d%H%i%s")).stringValue()
                 .concat(StringExpressions.lpad(f.follower.id.stringValue(), 10, '0'))
                 .lt(cursorExpression);
     }
