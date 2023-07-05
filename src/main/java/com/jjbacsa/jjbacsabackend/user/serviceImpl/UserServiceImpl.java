@@ -8,18 +8,15 @@ import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
-<<<<<<< HEAD
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.UserModifyRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
 import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
 import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
-=======
-import com.jjbacsa.jjbacsabackend.user.dto.*;
->>>>>>> develop
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.WithdrawReasonEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
@@ -225,13 +222,11 @@ public class UserServiceImpl implements UserService {
     public void withdraw() throws Exception {
         UserEntity user = userService.getLoginUser();
 
-<<<<<<< HEAD
-        // follower / follower 신청 내역 전체 삭제
-=======
-        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
 
->>>>>>> develop
+        // follower / follower 신청 내역 전체 삭제
         userCountRepository.updateAllFriendsCountByUser(user);
         followService.deleteFollowWithUser(user);
         followService.deleteFollowRequestWithUser(user);
@@ -344,10 +339,11 @@ public class UserServiceImpl implements UserService {
     public UserResponse validatePassword(String password) throws Exception {
         UserEntity user = userService.getLoginUser();
 
-        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
 
-        if(!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RequestInputException(ErrorMessage.PASSWORD_INCORRECT_EXCEPTION);
         }
 

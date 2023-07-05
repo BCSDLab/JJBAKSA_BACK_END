@@ -1,12 +1,7 @@
 package com.jjbacsa.jjbacsabackend.review.service;
 
-<<<<<<< HEAD
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
-=======
-import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
-
->>>>>>> develop
 import java.util.List;
 
 public interface InternalReviewService {
