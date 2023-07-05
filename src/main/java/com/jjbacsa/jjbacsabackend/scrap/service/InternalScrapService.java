@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.scrap.service;
 
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
+import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapDirectoryEntity;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapEntity;
 
@@ -16,7 +17,7 @@ public interface InternalScrapService {
 
     List<Long> getShopIdsForUserScrap() throws Exception;
 
-    boolean isUserScrapShop(Long shopId) throws Exception;
+    boolean isUserScrapShop(GoogleShopEntity googleShop) throws Exception;
 }
 
 

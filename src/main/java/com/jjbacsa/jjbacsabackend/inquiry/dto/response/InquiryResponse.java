@@ -1,12 +1,14 @@
 package com.jjbacsa.jjbacsabackend.inquiry.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.jjbacsa.jjbacsabackend.inquiry_image.dto.response.InquiryImageResponse;
 import lombok.*;
 
 import java.util.Date;
 import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Getter
 @Builder
 @AllArgsConstructor

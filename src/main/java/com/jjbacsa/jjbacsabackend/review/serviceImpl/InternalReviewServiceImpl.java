@@ -1,17 +1,28 @@
 package com.jjbacsa.jjbacsabackend.review.serviceImpl;
 
+<<<<<<< HEAD
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
+=======
+import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
+>>>>>>> develop
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
 import com.jjbacsa.jjbacsabackend.review_image.service.InternalReviewImageService;
 import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
+<<<<<<< HEAD
 import com.jjbacsa.jjbacsabackend.shop.service.InternalShopService;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.service.InternalUserService;
+=======
+import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+>>>>>>> develop
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +37,13 @@ public class InternalReviewServiceImpl implements InternalReviewService {
     private final InternalShopService shopService;
     private final InternalReviewImageService reviewImageService;
 
-    //todo: 구글 상점으로 변경되면 추후 수정
     @Override
-    public List<Long> getReviewIdsForUser(Long userId) {
+    public List<Long> getReviewIdsForUser(UserEntity user) {
 
-        return reviewRepository.findAllByWriter(userId)
+        return reviewRepository.findAllByWriter(user)
                 .stream()
                 .map(ReviewEntity::getShop)
-                .map(ShopEntity::getId)
+                .map(GoogleShopEntity::getId)
                 .collect(Collectors.toList());
     }
 

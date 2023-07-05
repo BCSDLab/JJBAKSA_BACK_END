@@ -16,5 +16,4 @@ public interface ScrapRepository extends JpaRepository<ScrapEntity, Long>, DslSc
     boolean existsByUserAndShop(UserEntity user, GoogleShopEntity shop);
 
     List<ScrapEntity> findAllByUser(UserEntity user);
-
 }
