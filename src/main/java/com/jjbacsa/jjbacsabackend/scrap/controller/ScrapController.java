@@ -1,5 +1,7 @@
 package com.jjbacsa.jjbacsabackend.scrap.controller;
 
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopScrapResponse;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryRequest;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryResponse;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapRequest;
@@ -146,4 +148,18 @@ public class ScrapController {
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @ApiOperation(
+            value = "유저 스크랩 상점 조회",
+            notes = "userId가 null인 경우 현재 사용자의 상점 조회\n\n",
+            authorizations = @Authorization(value = "Bearer + accessToken"))
+    @GetMapping("/scraps")
+    @PreAuthorize("hasRole('NORMAL')")
+    public ResponseEntity <Page<ShopScrapResponse>> getUserScrapShops(@ApiParam("조회할 사용자 ID") @RequestParam(required=false, name = "user") Long userId,
+                                                                      @RequestParam(required = false) Long cursor,
+                                                                      @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "10") Integer pageSize) throws Exception {
+
+        return ResponseEntity.ok(service.getScrapShops(userId, cursor, pageSize));
+    }
+
 }

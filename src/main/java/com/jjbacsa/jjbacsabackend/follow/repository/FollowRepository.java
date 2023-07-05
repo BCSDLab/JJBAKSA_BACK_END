@@ -17,4 +17,6 @@ public interface FollowRepository extends JpaRepository<FollowEntity, Long>, Dsl
     boolean existsByUserAndFollower(UserEntity user, UserEntity follower);
 
     List<FollowEntity> findAllByFollower(UserEntity user);
+
+    List<FollowEntity> findAllByUser(UserEntity user);
 }

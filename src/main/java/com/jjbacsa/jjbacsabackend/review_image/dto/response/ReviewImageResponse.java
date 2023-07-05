@@ -1,15 +1,12 @@
 package com.jjbacsa.jjbacsabackend.review_image.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReviewImageResponse {
-    Long imageId;
     String originalName;
-    String path;
     String imageUrl;
 }

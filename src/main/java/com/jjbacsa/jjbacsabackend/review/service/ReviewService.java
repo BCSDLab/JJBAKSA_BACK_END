@@ -1,25 +1,39 @@
 package com.jjbacsa.jjbacsabackend.review.service;
 
-import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewRequest;
-import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDeleteResponse;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
+import com.jjbacsa.jjbacsabackend.review.dto.request.*;
+import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewCountResponse;
+import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewDateResponse;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewResponse;
-import com.jjbacsa.jjbacsabackend.shop.dto.response.ShopResponse;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface ReviewService {
 
-    ReviewResponse createReview(ReviewRequest reviewRequest) throws Exception;
-    ReviewResponse modifyReview(ReviewRequest reviewRequest, Long reviewId) throws Exception;
-    ReviewDeleteResponse deleteReview(Long reviewId) throws Exception;
-    ReviewResponse getReview(Long reviewId);
-    Page<ReviewResponse> searchShopReviews(Long shopId, Pageable pageable);
-    Page<ReviewResponse> searchWriterReviews(Long writerId, Pageable pageable);
+    ReviewResponse create(ReviewRequest reviewRequest) throws Exception;
 
-    Page<ReviewResponse> getMyReviews(Pageable pageable) throws Exception;
-    Page<ReviewResponse> getFollowersReviews(Pageable pageable) throws Exception;
-    Page<ReviewResponse> searchFollowerReviews(String followerAccount, Pageable pageable) throws Exception;
-    Page<ReviewResponse> searchFollowersShopReviews(Long shopId, Pageable pageable) throws Exception;
+    ReviewResponse modify(ReviewRequest reviewRequest, Long reviewId) throws Exception;
 
-    Page<ShopResponse> searchShopByReviewContentsAndFollowers (String cursor, String searchWord, Integer size) throws Exception;
+    void delete(Long reviewId) throws Exception;
+
+    ReviewResponse get(Long reviewId) throws Exception;
+
+    Page<ReviewResponse> getMyReviewsByShop(ReviewCursorRequest reviewCursorRequest, String placeId) throws Exception;
+
+    Page<ReviewResponse> getFollowersReviewsByShop(ReviewCursorRequest reviewCursorRequest, String placeId) throws Exception;
+
+    Page<ReviewResponse> getFollowerReviewsByShop(ReviewCursorRequest reviewCursorRequest, Long followerId, String placeId) throws Exception;
+
+    Page<ShopResponse> getShopsByMyReviews(ShopCursorRequest shopCursorRequest) throws Exception;
+
+    Page<ShopResponse> getShopsByFollowerReviews(ShopCursorRequest shopCursorRequest, Long followerId) throws Exception;
+
+    ReviewCountResponse getMyReviewCount() throws Exception;
+
+    ReviewCountResponse getFollowerReviewCount(Long followerId) throws Exception;
+
+    ReviewCountResponse getFollowersReviewCount(String placeId) throws Exception;
+
+    ReviewDateResponse getFollowerReviewLastDateByShop(String placeId) throws Exception;
+
+    ReviewDateResponse getReviewLastDateByShop(String placeId) throws Exception;
 }
