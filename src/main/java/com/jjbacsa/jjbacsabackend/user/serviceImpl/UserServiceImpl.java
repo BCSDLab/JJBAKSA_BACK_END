@@ -315,7 +315,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void validateExistAccount(String account) {
-        if (userRepository.existsByAccount(account)) {
+        if (userRepository.existsByAccount(account) > 0) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
     }
