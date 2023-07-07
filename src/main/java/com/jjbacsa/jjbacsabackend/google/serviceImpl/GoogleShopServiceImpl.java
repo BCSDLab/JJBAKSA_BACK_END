@@ -228,7 +228,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 failCnt++;
             }
 
-            if (failCnt >= simpleShopDtos.size() / 2) {
+            if (failCnt >= simpleShopDtos.size() / 2 && failCnt!=0) {
                 throw new ApiException(ErrorMessage.OVER_QUERY_LIMIT_EXCEPTION);
             }
         }
