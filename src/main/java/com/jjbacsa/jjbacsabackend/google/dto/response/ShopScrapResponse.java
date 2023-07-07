@@ -13,6 +13,7 @@ public class ShopScrapResponse {
     private Integer totalRating;
     private Integer ratingCount;
     private Long scrapId;
+    private String address;
 
     public void setShopCount(Integer totalRating, Integer ratingCount) {
         this.totalRating = totalRating;

@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -160,6 +161,16 @@ public class ScrapController {
                                                                       @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "10") Integer pageSize) throws Exception {
 
         return ResponseEntity.ok(service.getScrapShops(userId, cursor, pageSize));
+    }
+
+    @ApiOperation(
+            value = "스크랩 상점 조회",
+            notes = "scarpId에 해당하는 상점 데이터 제공\n\n",
+            authorizations = @Authorization(value = "Bearer + accessToken"))
+    @GetMapping("/scraps/shops/{scrap_id}")
+    @PreAuthorize("hasRole('NORMAL')")
+    public ResponseEntity <ShopScrapResponse> getScrapShop(@ApiParam("조회할 scrap ID") @PathVariable(name = "scrap_id") Long scrapId) throws Exception {
+        return ResponseEntity.ok(service.getScrapShop(scrapId));
     }
 
 }
