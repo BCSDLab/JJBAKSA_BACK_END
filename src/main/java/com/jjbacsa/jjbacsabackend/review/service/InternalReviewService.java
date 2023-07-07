@@ -11,6 +11,4 @@ public interface InternalReviewService {
 
     List<ReviewEntity> findReviewsByWriter(UserEntity user);
 
-    void deleteReview(ReviewEntity review) throws Exception;
-
 }
