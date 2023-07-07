@@ -36,6 +36,7 @@ import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -115,6 +116,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Token login(UserRequest request) throws Exception {
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION));
@@ -138,6 +140,8 @@ public class UserServiceImpl implements UserService {
                 jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
                 existToken);
 
+        userRepository.updateLastLoggedAt(user.getId(), new Date());
+
         return token;
     }
 
@@ -147,6 +151,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Token refresh() throws Exception {
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
@@ -164,6 +169,8 @@ public class UserServiceImpl implements UserService {
         if (existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH))) {
             throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
         }
+
+        userRepository.updateLastLoggedAt(user.getId(), new Date());
 
         return new Token(
                 jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
@@ -361,7 +368,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void validateExistAccount(String account) {
-        if (userRepository.existsByAccount(account)) {
+        if (userRepository.existsByAccount(account) > 0) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
     }
