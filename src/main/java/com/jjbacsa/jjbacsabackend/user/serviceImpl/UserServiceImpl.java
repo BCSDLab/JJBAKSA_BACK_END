@@ -7,9 +7,12 @@ import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
+import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
+import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
+import com.jjbacsa.jjbacsabackend.review_image.service.InternalReviewImageService;
 import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserModifyRequest;
 import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
@@ -59,6 +62,8 @@ public class UserServiceImpl implements UserService {
     private final InternalProfileService profileService;
     private final InternalEmailService emailService;
     private final InternalReviewService reviewService;
+    private final InternalReviewImageService reviewImageService;
+    private final InternalGoogleService shopService;
     private final UserRepository userRepository;
     private final UserCountRepository userCountRepository;
     private final WithdrawReasonRepository withdrawReasonRepository;
@@ -234,13 +239,18 @@ public class UserServiceImpl implements UserService {
         // 작성한 리뷰 및 리뷰 내 사진, 별점 삭제
         List<ReviewEntity> reviews = reviewService.findReviewsByWriter(user);
 
-        reviews.stream().forEach(review -> {
-            try {
-                reviewService.deleteReview(review);
-            } catch (Exception e) {
-                throw new RequestInputException(ErrorMessage.WITHDRAW_FAILED);
+        for (ReviewEntity review : reviews) {
+
+            for (ReviewImageEntity reviewImage : review.getReviewImages()) { // 리뷰 이미지를 버킷에서 삭제
+                reviewImageService.delete(reviewImage);
             }
-        });
+            review.setIsDeleted(1);
+
+            // 리뷰 수, 별점 처리
+            Long shopId = review.getShop().getId();
+            shopService.addTotalRating(shopId, -review.getRate());
+            shopService.decreaseRatingCount(shopId);
+        }
 
         user.getUserCount().setReviewCount(0);
         user.setIsDeleted(1);
