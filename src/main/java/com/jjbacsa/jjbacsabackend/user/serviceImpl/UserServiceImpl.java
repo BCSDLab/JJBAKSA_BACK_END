@@ -37,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -100,6 +101,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Token login(UserRequest request) throws Exception {
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION));
@@ -123,6 +125,8 @@ public class UserServiceImpl implements UserService {
                 jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
                 existToken);
 
+        userRepository.updateLastLoggedAt(user.getId(), new Date());
+
         return token;
     }
 
@@ -132,6 +136,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Token refresh() throws Exception {
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
@@ -148,6 +153,8 @@ public class UserServiceImpl implements UserService {
         //null인 경우에는 다시 로그인 필요
         if (existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH)))
             throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
+
+        userRepository.updateLastLoggedAt(user.getId(), new Date());
 
         return new Token(
                 jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
@@ -315,7 +322,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void validateExistAccount(String account) {
-        if (userRepository.existsByAccount(account)) {
+        if (userRepository.existsByAccount(account) > 0) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
     }

@@ -11,8 +11,10 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
+import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.Objects;
 
 @Getter
@@ -55,6 +57,11 @@ public class UserEntity extends BaseEntity {
     @Column(name = "nickname", nullable = false)
     @Setter
     private String nickname;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "last_logged_at", nullable = false)
+    @CreatedDate
+    private Date lastLoggedAt;
 
     @Basic
     @Column(name = "auth_email", nullable = false, columnDefinition = "boolean default false")
