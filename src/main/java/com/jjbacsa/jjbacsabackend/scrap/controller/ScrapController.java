@@ -158,7 +158,7 @@ public class ScrapController {
     @PreAuthorize("hasRole('NORMAL')")
     public ResponseEntity <Page<ShopScrapResponse>> getUserScrapShops(@ApiParam("조회할 사용자 ID") @RequestParam(required=false, name = "user") Long userId,
                                                                       @RequestParam(required = false) Long cursor,
-                                                                      @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "10") Integer pageSize) throws Exception {
+                                                                      @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "10", name="size") Integer pageSize) throws Exception {
 
         return ResponseEntity.ok(service.getScrapShops(userId, cursor, pageSize));
     }
