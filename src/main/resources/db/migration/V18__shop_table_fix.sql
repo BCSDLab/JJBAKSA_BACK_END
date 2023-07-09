@@ -1,1 +1,0 @@
-ALTER TABLE shop ADD photo_reference VARCHAR(255);
