@@ -10,4 +10,6 @@ public interface DslFollowRequestRepository {
     Page<FollowRequestEntity> findAllByUser(UserEntity user, Pageable pageable);
 
     Page<FollowRequestEntity> findAllByFollower(UserEntity follower, Pageable pageable);
+
+    Long deleteFollowRequestWithUser(UserEntity user);
 }

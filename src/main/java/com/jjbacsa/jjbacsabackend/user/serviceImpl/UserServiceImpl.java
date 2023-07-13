@@ -7,8 +7,19 @@ import com.jjbacsa.jjbacsabackend.etc.enums.TokenType;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
+import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
-import com.jjbacsa.jjbacsabackend.user.dto.*;
+import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
+import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
+import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
+import com.jjbacsa.jjbacsabackend.review_image.service.InternalReviewImageService;
+import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.UserModifyRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
+import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.WithdrawReasonEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
@@ -24,6 +35,13 @@ import com.jjbacsa.jjbacsabackend.util.AuthLinkUtil;
 import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
+import java.net.URI;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,21 +53,18 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import java.net.URI;
-import java.util.Date;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
+
     private final InternalUserService userService;
     private final InternalFollowService followService;
     private final InternalProfileService profileService;
     private final InternalEmailService emailService;
+    private final InternalReviewService reviewService;
+    private final InternalReviewImageService reviewImageService;
+    private final InternalGoogleService shopService;
     private final UserRepository userRepository;
     private final UserCountRepository userCountRepository;
     private final WithdrawReasonRepository withdrawReasonRepository;
@@ -151,8 +166,9 @@ public class UserServiceImpl implements UserService {
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
 
         //null인 경우에는 다시 로그인 필요
-        if (existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH)))
+        if (existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH))) {
             throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
+        }
 
         userRepository.updateLastLoggedAt(user.getId(), new Date());
 
@@ -167,21 +183,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponseWithFollowedType> searchUsers(String keyword, Integer pageSize, Long cursor) throws Exception {
+    public Page<UserResponseWithFollowedType> searchUsers(String keyword, Integer pageSize, Long cursor)
+            throws Exception {
         Pageable pageable = PageRequest.of(0, pageSize);
 
         Page<UserEntity> result = userRepository.findAllByUserNameWithCursor(keyword, pageable, cursor);
 
         UserEntity loginUser = userService.getLoginUser();
-        Map<Long, FollowedType> followedTypes = userRepository.getFollowedTypesByUserAndUsers(loginUser, result.getContent());
-        return result.map(user -> UserMapper.INSTANCE.toUserResponse(user, followedTypes.getOrDefault(user.getId(), FollowedType.NONE)));
+        Map<Long, FollowedType> followedTypes = userRepository.getFollowedTypesByUserAndUsers(loginUser,
+                result.getContent());
+        return result.map(user -> UserMapper.INSTANCE.toUserResponse(user,
+                followedTypes.getOrDefault(user.getId(), FollowedType.NONE)));
     }
 
     @Override
     public UserResponse getAccountInfo(Long id) throws Exception {
         UserEntity user = userRepository.findUserByIdWithCount(id);
 
-        if (user == null) throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+        if (user == null) {
+            throw new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION);
+        }
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
@@ -200,8 +221,9 @@ public class UserServiceImpl implements UserService {
 //            emailService.codeCertification(request.getEmail(), code);
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        if (request.getNickname() != null)
+        if (request.getNickname() != null) {
             user.setNickname(request.getNickname());
+        }
 
         userRepository.save(user);
         return UserMapper.INSTANCE.toUserResponse(user);
@@ -212,17 +234,39 @@ public class UserServiceImpl implements UserService {
     public void withdraw() throws Exception {
         UserEntity user = userService.getLoginUser();
 
-        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
 
+        // follower / follower 신청 내역 전체 삭제
         userCountRepository.updateAllFriendsCountByUser(user);
         followService.deleteFollowWithUser(user);
+        followService.deleteFollowRequestWithUser(user);
 
+        // 작성한 리뷰 및 리뷰 내 사진, 별점 삭제
+        List<ReviewEntity> reviews = reviewService.findReviewsByWriter(user);
+
+        for (ReviewEntity review : reviews) {
+
+            for (ReviewImageEntity reviewImage : review.getReviewImages()) { // 리뷰 이미지를 버킷에서 삭제
+                reviewImageService.delete(reviewImage);
+            }
+            review.setIsDeleted(1);
+
+            // 리뷰 수, 별점 처리
+            Long shopId = review.getShop().getId();
+            shopService.addTotalRating(shopId, -review.getRate());
+            shopService.decreaseRatingCount(shopId);
+        }
+
+        user.getUserCount().setReviewCount(0);
         user.setIsDeleted(1);
 
         //회원 탈퇴에 따른 리프레시 토큰 삭제
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
-        if (existToken != null) redisUtil.deleteValue(String.valueOf(user.getId()));
+        if (existToken != null) {
+            redisUtil.deleteValue(String.valueOf(user.getId()));
+        }
     }
 
     @Override
@@ -283,8 +327,9 @@ public class UserServiceImpl implements UserService {
 
         UserEntity user = userService.getLocalUserByEmail(email);
 
-        if (!emailService.codeCertification(email, code))
+        if (!emailService.codeCertification(email, code)) {
             throw new RequestInputException(ErrorMessage.BAD_AUTHENTICATION_CODE);
+        }
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
@@ -311,10 +356,11 @@ public class UserServiceImpl implements UserService {
     public UserResponse validatePassword(String password) throws Exception {
         UserEntity user = userService.getLoginUser();
 
-        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
             throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
 
-        if(!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RequestInputException(ErrorMessage.PASSWORD_INCORRECT_EXCEPTION);
         }
 
