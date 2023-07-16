@@ -244,22 +244,9 @@ public class UserServiceImpl implements UserService {
         followService.deleteFollowRequestWithUser(user);
 
         // 작성한 리뷰 및 리뷰 내 사진, 별점 삭제
-        List<ReviewEntity> reviews = reviewService.findReviewsByWriter(user);
-
-        for (ReviewEntity review : reviews) {
-
-            for (ReviewImageEntity reviewImage : review.getReviewImages()) { // 리뷰 이미지를 버킷에서 삭제
-                reviewImageService.delete(reviewImage);
-            }
-            review.setIsDeleted(1);
-
-            // 리뷰 수, 별점 처리
-            Long shopId = review.getShop().getId();
-            shopService.addTotalRating(shopId, -review.getRate());
-            shopService.decreaseRatingCount(shopId);
-        }
-
+        reviewService.deleteReviewsWithUser(user);
         user.getUserCount().setReviewCount(0);
+
         user.setIsDeleted(1);
 
         //회원 탈퇴에 따른 리프레시 토큰 삭제

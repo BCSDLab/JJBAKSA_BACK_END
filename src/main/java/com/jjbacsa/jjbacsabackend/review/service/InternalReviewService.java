@@ -11,4 +11,6 @@ public interface InternalReviewService {
 
     List<ReviewEntity> findReviewsByWriter(UserEntity user);
 
+    void deleteReviewsWithUser(UserEntity user);
+
 }
