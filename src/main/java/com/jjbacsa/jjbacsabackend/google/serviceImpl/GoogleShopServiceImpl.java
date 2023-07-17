@@ -63,7 +63,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     private final String[] placeDetailsField = {"formatted_address", "formatted_phone_number", "name", "geometry/location/lat", "geometry/location/lng", "types", "place_id", "opening_hours/open_now", "opening_hours/weekday_text", "photos/photo_reference"};
     private final String[] pinFields = {"name", "types", "place_id", "photos/photo_reference"};
     private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference"};
-
+    private final String[] scrapFields = {"name", "types", "place_id", "photos/photo_reference", "formatted_address"};
     public GoogleShopServiceImpl(ObjectMapper objectMapper, @Value("${external.api.key}") String key, GoogleShopRepository googleShopRepository, InternalFollowService internalFollowService, InternalReviewService internalReviewService, InternalScrapService internalScrapService) {
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -228,7 +228,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 failCnt++;
             }
 
-            if (failCnt >= simpleShopDtos.size() / 2) {
+            if (failCnt >= simpleShopDtos.size() / 2 && failCnt!=0) {
                 throw new ApiException(ErrorMessage.OVER_QUERY_LIMIT_EXCEPTION);
             }
         }
@@ -239,7 +239,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     @Override
     public ShopScrapResponse getShopScrap(String placeId, Long scrapId) throws JsonProcessingException {
 
-        String requestField=toFieldString(pinFields);
+        String requestField=toFieldString(scrapFields);
         String shopStr=this.callGoogleApi(placeId, requestField);
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
         Category category = getCategory(shopApiDto.getTypes());
@@ -257,6 +257,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 .category(category.name())
                 .photo(photoToken)
                 .scrapId(scrapId)
+                .address(shopApiDto.getFormattedAddress())
                 .build();
 
         Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopScrapResponse.getPlaceId());
