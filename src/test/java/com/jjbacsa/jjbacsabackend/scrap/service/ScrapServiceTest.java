@@ -387,6 +387,17 @@ class ScrapServiceTest {
         Assertions.assertEquals("떡군이네떡볶이영등포점", result2.getContent().get(4).getName());
     }
 
+    @DisplayName("개별 스크랩 상점 정보")
+    @Test
+    void getScrapShop() throws Exception {
+        testLogin(user1);
+
+        ScrapEntity scrap = scrapRepository.save(getTestScrap(user1, googleShop1, null));
+        ShopScrapResponse shopScrapResponse = scrapService.getScrapShop(scrap.getId());
+
+        Assertions.assertNotNull(shopScrapResponse.getAddress());
+    }
+
     private UserEntity getTestUser(String account) {
 
         return UserEntity.builder()
