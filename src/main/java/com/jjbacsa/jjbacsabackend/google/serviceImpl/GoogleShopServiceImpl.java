@@ -13,16 +13,15 @@ import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.google.dto.*;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
+import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopCount;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponse;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.scrap.service.InternalScrapService;
+import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +33,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
@@ -56,6 +57,10 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     private final InternalFollowService followService;
     private final InternalReviewService reviewService;
     private final InternalScrapService scrapService;
+
+    private final String[] placeDetailsField = {"formatted_address", "formatted_phone_number", "name", "geometry/location/lat", "geometry/location/lng", "types", "place_id", "opening_hours/open_now", "opening_hours/weekday_text", "photos/photo_reference"};
+    private final String[] pinFields = {"name", "types", "place_id", "photos/photo_reference"};
+    private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference"};
 
     public GoogleShopServiceImpl(ObjectMapper objectMapper, @Value("${external.api.key}") String key, GoogleShopRepository googleShopRepository, InternalFollowService internalFollowService, InternalReviewService internalReviewService, InternalScrapService internalScrapService) {
         this.objectMapper = objectMapper;
@@ -108,68 +113,89 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
     @Transactional(readOnly = true)
     @Override
-    public ShopResponse getShopDetails(String placeId) throws Exception {
-        String shopStr = this.callGoogleApiByPlaceId(placeId);
+    public ShopResponse getShopDetails(String placeId, boolean isDetail) throws Exception {
+        ShopResponse shopResponse;
+
+        String requestField;
+        if (isDetail) {
+            requestField = toFieldString(placeDetailsField);
+        } else {
+            requestField = toFieldString(pinFields);
+        }
+
+        String shopStr = this.callGoogleApi(placeId, requestField);
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
 
-        String businessDay;
-        String todayBusinessHour;
-        try {
-            //오늘 날짜 가져오기
-            LocalDate today = LocalDate.now();
-            int dayOfWeek = today.getDayOfWeek().getValue() - 1;
-
-            JSONArray jsonArray = new JSONArray();
-            for (String weekday : shopApiDto.getOpeningHours().getWeekdayText()) {
-                jsonArray.add(weekday);
-            }
-            businessDay = jsonArray.toJSONString();
-
-            todayBusinessHour = shopApiDto.getOpeningHours().getWeekdayText().get(dayOfWeek);
-            todayBusinessHour = todayBusinessHour.substring(5);
-
-        } catch (NullPointerException e) {
-            businessDay = null;
-            todayBusinessHour = null;
-        }
-
-        Boolean openNow;
-        try {
-            openNow = (shopApiDto.getOpeningHours().getOpenNow() == "true") ? true : false;
-        } catch (NullPointerException e) {
-            openNow = null;
-        }
-
-        String token;
-        try {
-            token = shopApiDto.getPhotos().get(0).getPhoto_reference();
-        } catch (NullPointerException e) {
-            token = null;
-        }
-
         Category category = getCategory(shopApiDto.getTypes());
+        List<String> photoTokens = new ArrayList<>();
+        try {
+            int maxRange = shopApiDto.getPhotos().size() >= 10 ? 10 : shopApiDto.getPhotos().size();
 
-        ShopResponse shopResponse = ShopResponse.builder()
-                .placeId(shopApiDto.getPlaceId())
-                .name(shopApiDto.getName())
-                .formattedAddress(shopApiDto.getFormattedAddress())
-                .formattedPhoneNumber(shopApiDto.getFormattedPhoneNumber())
-                .lat(shopApiDto.getGeometry().getLocation().getLat())
-                .lng(shopApiDto.getGeometry().getLocation().getLng())
-                .openNow(openNow)
-                .photoToken(token)
-                .businessDay(businessDay)
-                .category(category.name())
-                .todayBusinessHour(todayBusinessHour)
-                .build();
+            for (int p = 0; p < maxRange; p++) {
+                photoTokens.add(getPhotoUrl(shopApiDto.getPhotos().get(p).getPhotoReference()));
+            }
+
+        } catch (NullPointerException e) {
+            photoTokens = null;
+        }
+
+        if (isDetail) {
+            String businessDay;
+            String todayBusinessHour;
+            try {
+                LocalDate today = LocalDate.now();
+                int dayOfWeek = today.getDayOfWeek().getValue() - 1;
+
+                JSONArray jsonArray = new JSONArray();
+                for (String weekday : shopApiDto.getOpeningHours().getWeekdayText()) {
+                    jsonArray.add(weekday);
+                }
+                businessDay = jsonArray.toJSONString();
+
+                todayBusinessHour = shopApiDto.getOpeningHours().getWeekdayText().get(dayOfWeek);
+                todayBusinessHour = todayBusinessHour.substring(5);
+
+            } catch (NullPointerException e) {
+                businessDay = null;
+                todayBusinessHour = null;
+            }
+
+            Boolean openNow;
+            try {
+                openNow = (shopApiDto.getOpeningHours().getOpenNow() == "true") ? true : false;
+            } catch (NullPointerException e) {
+                openNow = null;
+            }
+
+            shopResponse = ShopResponse.builder()
+                    .placeId(shopApiDto.getPlaceId())
+                    .name(shopApiDto.getName())
+                    .formattedAddress(shopApiDto.getFormattedAddress())
+                    .formattedPhoneNumber(shopApiDto.getFormattedPhoneNumber())
+                    .lat(shopApiDto.getGeometry().getLocation().getLat())
+                    .lng(shopApiDto.getGeometry().getLocation().getLng())
+                    .openNow(openNow)
+                    .photos(photoTokens)
+                    .businessDay(businessDay)
+                    .category(category.name())
+                    .todayBusinessHour(todayBusinessHour)
+                    .build();
+        } else {
+            shopResponse = ShopResponse.builder()
+                    .placeId(shopApiDto.getPlaceId())
+                    .name(shopApiDto.getName())
+                    .category(category.name())
+                    .photos(photoTokens)
+                    .build();
+        }
 
         Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopResponse.getPlaceId());
         boolean isScrap = false;
         if (shop.isPresent()) {
             GoogleShopCount shopCount = shop.get().getShopCount();
             shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
-
-            isScrap = scrapService.isUserScrapShop(shop.get().getId());
+            shopResponse.setShopId(shop.get().getId());
+            isScrap = scrapService.isUserScrapShop(shop.get());
         }
 
         shopResponse.setIsScrap(isScrap);
@@ -179,17 +205,17 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<SimpleShopDto> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception {
+    public List<ShopSimpleResponse> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception {
 
         List<Long> shopIds = getShopId(nearBy, friend, scrap);
         List<String> placeIDs = getPlaceIds(shopIds);
 
         // 2000m(2km) 이내
-        List<SimpleShopDto> simpleShopDtos = this.callApiByPlaceIdsNonBlocking(placeIDs);
+        List<ShopSimpleResponse> simpleShopDtos = this.callApiByPlaceIdsNonBlocking(placeIDs);
 
         int failCnt = 0;
-        List<SimpleShopDto> resultSimpleShopDtos = new ArrayList<>();
-        for (SimpleShopDto dto : simpleShopDtos) {
+        List<ShopSimpleResponse> resultSimpleShopDtos = new ArrayList<>();
+        for (ShopSimpleResponse dto : simpleShopDtos) {
             try {
                 Double dist = getMeter(dto.getGeometry(), shopRequest);
 
@@ -208,42 +234,49 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return resultSimpleShopDtos;
     }
 
-    @Transactional(readOnly = true)
     @Override
-    public ShopResponse getShop(String placeId) throws Exception {
-        GoogleShopEntity googleShopEntity = googleShopRepository.findByPlaceId(placeId)
-                .orElseThrow(() -> new RequestInputException(ErrorMessage.SHOP_NOT_EXISTS_EXCEPTION));
+    public ShopScrapResponse getShopScrap(String placeId, Long scrapId) throws JsonProcessingException {
 
-        return this.getShopDetails(googleShopEntity.getPlaceId());
+        String requestField=toFieldString(pinFields);
+        String shopStr=this.callGoogleApi(placeId, requestField);
+        ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
+        Category category = getCategory(shopApiDto.getTypes());
+        String photoToken;
+
+        try{
+            photoToken=getPhotoUrl(shopApiDto.getPhotos().get(0).getPhotoReference());
+        } catch (NullPointerException e){
+            photoToken=null;
+        }
+
+        ShopScrapResponse shopScrapResponse=ShopScrapResponse.builder()
+                .placeId(shopApiDto.getPlaceId())
+                .name(shopApiDto.getName())
+                .category(category.name())
+                .photo(photoToken)
+                .scrapId(scrapId)
+                .build();
+
+        Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopScrapResponse.getPlaceId());
+        if (shop.isPresent()){
+            GoogleShopCount shopCount = shop.get().getShopCount();
+            shopScrapResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
+        }
+
+        return shopScrapResponse;
     }
 
-    @Override
-    public List<String> getAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException {
-        List<String> autoCompleteResult = new ArrayList<>();
+    private String toFieldString(String[] fields) {
+        StringBuilder stringBuilder = new StringBuilder();
 
-        String autoCompleteStr = this.callGoogleAutoComplete(query, autoCompleteRequest);
-
-        Map<String, Object> map = null;
-        try {
-            map = this.checkApiReturn(autoCompleteStr);
-        } catch (ApiException e) {
-            if (e.getErrorMessage().equals(ErrorMessage.ZERO_RESULTS_EXCEPTION.getErrorMessage())) {
-                return autoCompleteResult;
-            }
+        for (String field : fields) {
+            stringBuilder.append(field);
+            stringBuilder.append(",");
         }
 
-        String reusltStr = objectMapper.writeValueAsString(map.get("predictions"));
-        Prediction[] autoCompleteApiDto = objectMapper.readValue(reusltStr, Prediction[].class);
+        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
 
-        for (Prediction p : autoCompleteApiDto) {
-            String pStr = p.getStructuredFormatting().getMainText();
-
-            if (!autoCompleteResult.contains(pStr)) {
-                autoCompleteResult.add(pStr);
-            }
-        }
-
-        return autoCompleteResult;
+        return stringBuilder.toString();
     }
 
     private Double getMeter(Geometry geometry, ShopRequest shopRequest) {
@@ -296,33 +329,35 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .collect(Collectors.toList());
         }
 
-        List<Long> shopIds = new ArrayList<>();
+        List<Long> shopIds = new LinkedList<>();
 
         if (friend == 1) {
-            List<Long> friends = followService.getFollowers();
+            List<UserEntity> friends = followService.getFollowers();
 
-            //todo: 후에 리뷰 변경되면 변경
             friends.stream()
                     .map(f -> reviewService.getReviewIdsForUser(f))
-                    .forEach(ids -> shopIds.addAll(ids));
+                    .forEach(ids -> addNonDuplication(ids, shopIds));
         }
 
         shopIds.sort(Comparator.naturalOrder());
 
         if (scrap == 1) {
             List<Long> ids = scrapService.getShopIdsForUserScrap();
-
-            for (Long id : ids) {
-                int insertionIndex = Collections.binarySearch(shopIds, id);
-
-                if (insertionIndex < 0) {
-                    insertionIndex = -(insertionIndex + 1);
-                    shopIds.add(insertionIndex, id);
-                }
-            }
+            addNonDuplication(ids, shopIds);
         }
 
         return shopIds;
+    }
+
+    private void addNonDuplication(List<Long> ids, List<Long> resultIds) {
+        for (Long id : ids) {
+            int insertionIndex = Collections.binarySearch(resultIds, id);
+
+            if (insertionIndex < 0) {
+                insertionIndex = -(insertionIndex + 1);
+                resultIds.add(insertionIndex, id);
+            }
+        }
     }
 
     private ShopQueryResponses queryDtoToQueryResponses(ShopQueryDto shopQueryDto, ShopRequest shopRequest) {
@@ -338,7 +373,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
             String token;
             try {
-                token = dto.getPhotos().get(0).getPhoto_reference();
+                token = getPhotoUrl(dto.getPhotos().get(0).getPhotoReference());
             } catch (NullPointerException e) {
                 token = null;
             }
@@ -376,19 +411,18 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     /**
      * 여러 place_ids에서 간단하게 상점 정보를 받아오는 메소드
      */
-    private List<SimpleShopDto> callApiByPlaceIdsNonBlocking(List<String> placeIds) throws JsonProcessingException {
+    private List<ShopSimpleResponse> callApiByPlaceIdsNonBlocking(List<String> placeIds) throws JsonProcessingException {
         List<Mono<String>> monos = new ArrayList<>();
 
         for (String id : placeIds) {
             Mono<String> shopStr;
 
-            //todo: queryParam 설명에는 fields list 된다고 되어있는데 실제로 안됨 확인좀(string으로 넣어주면 됨)
             shopStr = webClient.get().uri(uriBuilder ->
                             uriBuilder.path("/details/json")
                                     .queryParam("place_id", id)
                                     .queryParam("language", "ko")
                                     .queryParam("key", API_KEY)
-                                    .queryParam("fields", "geometry/location/lng,geometry/location/lat,place_id,name")
+                                    .queryParam("fields", toFieldString(simpleFields))
                                     .build()
                     )
                     .retrieve().bodyToMono(String.class);
@@ -399,7 +433,10 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         Function<Object[], List> combinator = monoList -> Arrays.stream(monoList).collect(Collectors.toList());
         List<String> results = Mono.zip(monos, combinator).block();
 
-        List<SimpleShopDto> simpleShopDtos = new ArrayList<>();
+        if (results == null)
+            results = new ArrayList<>();
+
+        List<ShopSimpleResponse> simpleShopDtos = new ArrayList<>();
         int continualException = 0;
         for (String result : results) {
             if (continualException > 5) {
@@ -408,7 +445,22 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             try {
                 continualException = 0;
                 SimpleShopDto simpleShopDto = this.jsonToSimpleShopDto(result);
-                simpleShopDtos.add(simpleShopDto);
+
+                String photoToken;
+                try {
+                    photoToken = getPhotoUrl(simpleShopDto.getPhoto().get(0).getPhotoReference());
+                } catch (NullPointerException e) {
+                    photoToken = null;
+                }
+
+                ShopSimpleResponse shopSimpleResponse = ShopSimpleResponse.builder()
+                        .placeId(simpleShopDto.getPlaceId())
+                        .name(simpleShopDto.getName())
+                        .geometry(simpleShopDto.getGeometry())
+                        .photo(photoToken)
+                        .build();
+
+                simpleShopDtos.add(shopSimpleResponse);
             } catch (ApiException e) {
                 continualException++;
             }
@@ -464,13 +516,13 @@ public class GoogleShopServiceImpl implements GoogleShopService {
      * @param placeId 구글에서 발행한 상점 아이디
      * @return block으로 받아온 단일 상점 결과
      */
-    private String callGoogleApiByPlaceId(String placeId) {
+    private String callGoogleApi(String placeId, String fieldStr) {
         String shopStr = webClient.get().uri(uriBuilder ->
                 uriBuilder.path("/details/json")
                         .queryParam("place_id", placeId)
                         .queryParam("language", "ko")
                         .queryParam("key", API_KEY)
-                        .queryParam("fields", "formatted_address,formatted_phone_number,name,geometry/location/lat,geometry/location/lng,types,place_id,opening_hours/open_now,opening_hours/weekday_text")
+                        .queryParam("fields", fieldStr)
                         .build()
         ).retrieve().bodyToMono(String.class).block();
 
@@ -580,6 +632,20 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             }
         }
         return Category.restaurant;
+    }
+
+    private String getPhotoUrl(String photoToken) {
+        UriComponents uri = UriComponentsBuilder.newInstance()
+                .scheme("https")
+                .host("maps.googleapis.com")
+                .path("/maps/api/place/photo")
+                .queryParam("photo_reference", photoToken)
+                .queryParam("key", API_KEY)
+                .queryParam("maxwidth", 400)
+                .queryParam("maxheight", 400)
+                .build();
+
+        return uri.toUriString();
     }
 }
 

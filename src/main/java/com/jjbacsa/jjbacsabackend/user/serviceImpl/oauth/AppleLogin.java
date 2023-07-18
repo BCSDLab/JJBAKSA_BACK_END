@@ -17,23 +17,27 @@ import com.jjbacsa.jjbacsabackend.user.service.SnsLogin;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +49,21 @@ public class AppleLogin implements SnsLogin {
 
     @Value("${spring.security.oauth2.client.provider.apple.key-uri}")
     private String APPLE_KEY_URI;
+
+    @Value("${spring.security.oauth2.client.provider.apple.key-id}")
+    private String APPLE_KEY_ID;
+
+    @Value("${spring.security.oauth2.client.provider.apple.team-id}")
+    private String APPLE_TEAM_ID;
+
+    @Value("${spring.security.oauth2.client.provider.apple.private-key}")
+    private String APPLE_PRIVATE_KEY;
+
+    @Value("${spring.security.oauth2.client.provider.apple.token-uri}")
+    private String APPLE_TOKEN_URI;
+
+    @Value("${spring.security.oauth2.client.provider.apple.revoke-uri}")
+    private String APPLE_REVOKE_URI;
 
     private final OAuthInfoRepository oAuthInfoRepository;
 
@@ -82,6 +101,69 @@ public class AppleLogin implements SnsLogin {
         return OAuthType.APPLE;
     }
 
+    @Override
+    public void revoke(String authorizationCode) throws Exception {
+        String clientSecret = createClientSecret();
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client_id", APPLE_CLIENT_ID);
+        params.add("client_secret", clientSecret);
+        params.add("token", getAppleRefreshToken(clientSecret, authorizationCode));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(params, headers);
+        restTemplate.postForEntity(APPLE_REVOKE_URI, httpEntity, String.class);
+    }
+
+    private String getAppleRefreshToken(String clientSecret, String authorizationCode) throws JsonProcessingException {
+        RestTemplate restTemplate = new RestTemplate();
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("client_secret", clientSecret);
+        params.add("code", authorizationCode);
+        params.add("grant_type", "authorization_code");
+        params.add("client_id", APPLE_CLIENT_ID);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(params, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(APPLE_TOKEN_URI, httpEntity, String.class);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> body = objectMapper.readValue(response.getBody(), Map.class);
+
+        return body.get("refresh_token").toString();
+    }
+
+    private String createClientSecret() throws NoSuchAlgorithmException, InvalidKeySpecException {
+        Date exp = Date.from(LocalDateTime.now()
+                .plusDays(30)
+                .atZone(ZoneId.systemDefault()).toInstant());
+        Map<String, Object> jwtHeader = new HashMap<>();
+        jwtHeader.put("kid", APPLE_KEY_ID);
+        jwtHeader.put("alg", "ES256");
+        return Jwts.builder()
+                .setHeaderParams(jwtHeader)
+                .setIssuer(APPLE_TEAM_ID)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(exp)
+                .setAudience("https://appleid.apple.com")
+                .setSubject(APPLE_CLIENT_ID)
+                .signWith(getApplePrivateKey(), SignatureAlgorithm.ES256)
+                .compact();
+    }
+
+    private PrivateKey getApplePrivateKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
+        KeyFactory kf = KeyFactory.getInstance("EC");
+        return kf.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(APPLE_PRIVATE_KEY)));
+    }
+
     private Optional<Claims> verifyToken(String identityToken) throws Exception {
         try {
             PublicKeys applePublicKeys = requestApplePublicKeys();
@@ -107,10 +189,7 @@ public class AppleLogin implements SnsLogin {
     private PublicKeys requestApplePublicKeys() throws JsonProcessingException {
         RestTemplate rt = new RestTemplate();
 
-        ResponseEntity<String> response = rt.getForEntity(
-                APPLE_KEY_URI,
-                String.class
-        );
+        ResponseEntity<String> response = rt.getForEntity(APPLE_KEY_URI, String.class);
 
         return new ObjectMapper().readValue(response.getBody(), PublicKeys.class);
     }

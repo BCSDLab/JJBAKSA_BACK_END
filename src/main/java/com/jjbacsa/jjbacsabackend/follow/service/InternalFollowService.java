@@ -14,5 +14,5 @@ public interface InternalFollowService {
 
     Long deleteFollowWithUser(UserEntity user);
 
-    List<Long> getFollowers() throws Exception;
+    List<UserEntity> getFollowers() throws Exception;
 }

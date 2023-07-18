@@ -24,4 +24,6 @@ public interface FollowService {
     Page<FollowRequestResponse> getReceiveRequests(Integer page, Integer pageSize) throws Exception;
 
     Page<UserResponse> getFollowers(String cursor, Integer pageSize) throws Exception;
+
+    Page<UserResponse> getRecentlyActiveFollowers(Long cursor, Integer pageSize) throws Exception;
 }

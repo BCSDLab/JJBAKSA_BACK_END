@@ -8,15 +8,11 @@ import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
-import com.jjbacsa.jjbacsabackend.user.dto.EmailRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserRequest;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.UserResponseWithFollowedType;
-import com.jjbacsa.jjbacsabackend.user.dto.WithdrawReasonResponse;
-import com.jjbacsa.jjbacsabackend.user.dto.WithdrawRequest;
+import com.jjbacsa.jjbacsabackend.user.dto.*;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.entity.WithdrawReasonEntity;
 import com.jjbacsa.jjbacsabackend.user.mapper.UserMapper;
+import com.jjbacsa.jjbacsabackend.user.repository.OAuthInfoRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserCountRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
 import com.jjbacsa.jjbacsabackend.user.repository.WithdrawReasonRepository;
@@ -41,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -61,6 +58,7 @@ public class UserServiceImpl implements UserService {
     private final RedisUtil redisUtil;
     private final ImageUtil imageUtil;
     private final AuthLinkUtil authLinkUtil;
+    private final OAuthInfoRepository oAuthInfoRepository;
 
     @Override
     @Transactional
@@ -96,16 +94,6 @@ public class UserServiceImpl implements UserService {
         return authLinkUtil.getAuthLink(accessToken, refreshToken);
     }
 
-    @Transactional
-    @Override
-    public UserResponse modifyNickname(String nickname) throws Exception {
-        UserEntity user = userService.getLoginUser();
-
-        user.setNickname(nickname);
-
-        return UserMapper.INSTANCE.toUserResponse(user);
-    }
-
     @Override
     public String checkDuplicateAccount(String account) throws Exception {
         validateExistAccount(account);
@@ -113,6 +101,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Token login(UserRequest request) throws Exception {
         UserEntity user = userRepository.findByAccount(request.getAccount())
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.LOGIN_FAIL_EXCEPTION));
@@ -136,6 +125,8 @@ public class UserServiceImpl implements UserService {
                 jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
                 existToken);
 
+        userRepository.updateLastLoggedAt(user.getId(), new Date());
+
         return token;
     }
 
@@ -145,6 +136,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Token refresh() throws Exception {
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
@@ -161,6 +153,8 @@ public class UserServiceImpl implements UserService {
         //null인 경우에는 다시 로그인 필요
         if (existToken == null || !existToken.equals(token.substring(JwtUtil.BEARER_LENGTH)))
             throw new RequestInputException(ErrorMessage.INVALID_TOKEN);
+
+        userRepository.updateLastLoggedAt(user.getId(), new Date());
 
         return new Token(
                 jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType()),
@@ -192,11 +186,15 @@ public class UserServiceImpl implements UserService {
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
-    //TODO : Email 인증 추가 완료 시 파라미터 추가 (변경 시 채널에 고지 )
+    //TODO : 2차 배포 시 파라미터(아이디) 추가 (변경 시 채널에 고지 )
     @Override
     @Transactional
-    public UserResponse modifyUser(UserRequest request) throws Exception {
+    public UserResponse modifyUser(UserModifyRequest request) throws Exception {
         UserEntity user = userService.getLoginUser();
+
+        if (user.getPassword() == null && request.getPassword() != null) {
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
 
         if (request.getPassword() != null) {
 //            emailService.codeCertification(request.getEmail(), code);
@@ -213,6 +211,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void withdraw() throws Exception {
         UserEntity user = userService.getLoginUser();
+
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
 
         userCountRepository.updateAllFriendsCountByUser(user);
         followService.deleteFollowWithUser(user);
@@ -292,7 +293,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String findPassword(EmailRequest request) throws Exception {
 
-        UserEntity user = userService.getUserByAccount(request.getAccount());
+        UserEntity user = userService.getLocalUserByEmail(request.getEmail());
 
         if (!Objects.equals(request.getEmail(), user.getEmail())) {
             throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
@@ -307,16 +308,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse modifyPassword(String password) throws Exception {
+    public UserResponse validatePassword(String password) throws Exception {
         UserEntity user = userService.getLoginUser();
 
-        user.setPassword(passwordEncoder.encode(password));
+        if (oAuthInfoRepository.findByUserId(user.getId()).isPresent())
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+
+        if(!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RequestInputException(ErrorMessage.PASSWORD_INCORRECT_EXCEPTION);
+        }
 
         return UserMapper.INSTANCE.toUserResponse(user);
     }
 
     private void validateExistAccount(String account) {
-        if (userRepository.existsByAccount(account)) {
+        if (userRepository.existsByAccount(account) > 0) {
             throw new RequestInputException(ErrorMessage.ALREADY_EXISTS_ACCOUNT);
         }
     }

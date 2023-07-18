@@ -6,12 +6,14 @@ import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
-import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
+import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
+import com.jjbacsa.jjbacsabackend.review.repository.ReviewRepository;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapEntity;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapRepository;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
@@ -21,10 +23,8 @@ import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -118,7 +118,7 @@ public class GoogleShopServiceTest {
     public void 상점_메인페이지_가까운필터() throws Exception {
         saveAllShops();
 
-        List<SimpleShopDto> shops = googleShopService.getShops(1, 0, 0, shopRequest);
+        List<ShopSimpleResponse> shops = googleShopService.getShops(1, 0, 0, shopRequest);
         Assertions.assertEquals(4, shops.size());
 
         shops.stream().forEach(s -> {
@@ -130,7 +130,16 @@ public class GoogleShopServiceTest {
     //todo: 필터 테스트
     @Transactional
     @Test
-    public void 상점_메인페이지_친구필터() {
+    public void 상점_메인페이지_친구필터() throws Exception {
+        //user 회원가입
+        userRepository.save(user);
+
+        //user 로그인
+        this.tempLoginForTest(user);
+
+        //팔로우 할 친구들 저장
+        userRepository.save(following1);
+        userRepository.save(following2);
 
         //팔로우
         FollowEntity follow1 = FollowEntity.builder()
@@ -141,13 +150,29 @@ public class GoogleShopServiceTest {
         followRepository.save(follow1);
         followRepository.save(follow2);
 
+        this.saveAllShops();
+
         //팔로우한 친구가 리뷰 작성
-        //todo: 리뷰 로직 변경되면 작성
+        ReviewEntity reviewEntity1 = ReviewEntity.builder()
+                .shop(googleShop1).writer(following1).content("1").rate(2).build();
+        ReviewEntity reviewEntity2 = ReviewEntity.builder()
+                .shop(googleShop2).writer(following1).content("2").rate(2).build();
+        ReviewEntity reviewEntity3 = ReviewEntity.builder()
+                .shop(googleShop2).writer(following2).content("3").rate(2).build();
+
+        reviewRepository.save(reviewEntity1);
+        reviewRepository.save(reviewEntity2);
+        reviewRepository.save(reviewEntity3);
+
+//        List<ShopSimpleResponse> results=this.googleShopService.getShops(0,0,0,shopRequest);
+//        Assertions.assertEquals(results.size(),0);
+
+        List<ShopSimpleResponse> results2 = this.googleShopService.getShops(0, 1, 0, shopRequest);
+        Assertions.assertEquals(2, results2.size());
     }
 
     @Transactional
     @Test
-    //todo: 현재 내가 북마크한 필터
     public void 상점_메인페이지_북마크필터() throws Exception {
         //user 회원 가입
         userRepository.save(user);
@@ -167,15 +192,58 @@ public class GoogleShopServiceTest {
         scrapRepository.save(scrap2);
         scrapRepository.save(scrap3);
 
-        List<SimpleShopDto> dtos = googleShopService.getShops(0, 0, 1, shopRequest);
+        List<ShopSimpleResponse> dtos = googleShopService.getShops(0, 0, 1, shopRequest);
 
         Assertions.assertEquals(dtos.size(), 3);
     }
 
     @Transactional
     @Test
-    public void 상점_메인페이지_친구북마크필터() {
-        //todo: 리뷰 상점 변경되면 작성
+    public void 상점_메인페이지_친구북마크필터() throws Exception {
+        //user 회원가입, 로그인
+        userRepository.save(user);
+        this.tempLoginForTest(user);
+
+        //상점저장
+        saveAllShops();
+
+        //팔로우 할 친구들 저장
+        userRepository.save(following1);
+        userRepository.save(following2);
+
+        //팔로우
+        FollowEntity follow1 = FollowEntity.builder()
+                .user(user).follower(following1).build();
+        FollowEntity follow2 = FollowEntity.builder()
+                .user(user).follower(following2).build();
+
+        followRepository.save(follow1);
+        followRepository.save(follow2);
+
+        //팔로우한 친구가 리뷰 작성
+        ReviewEntity reviewEntity1 = ReviewEntity.builder()
+                .shop(googleShop1).writer(following1).content("1").rate(2).build();
+        ReviewEntity reviewEntity2 = ReviewEntity.builder()
+                .shop(googleShop2).writer(following1).content("2").rate(2).build();
+        ReviewEntity reviewEntity3 = ReviewEntity.builder()
+                .shop(googleShop2).writer(following2).content("3").rate(2).build();
+
+        reviewRepository.save(reviewEntity1);
+        reviewRepository.save(reviewEntity2);
+        reviewRepository.save(reviewEntity3);
+
+        //user 북마크
+        ScrapEntity scrap1 = ScrapEntity.builder().shop(googleShop3).user(user).build();
+        ScrapEntity scrap2 = ScrapEntity.builder().shop(googleShop4).user(user).build();
+        ScrapEntity scrap3 = ScrapEntity.builder().shop(googleShop1).user(user).build();
+
+        scrapRepository.save(scrap1);
+        scrapRepository.save(scrap2);
+        scrapRepository.save(scrap3);
+
+        List<ShopSimpleResponse> result = this.googleShopService.getShops(0, 1, 1, shopRequest);
+        Assertions.assertEquals(result.size(), 4);
+
     }
 
     @Transactional
@@ -194,34 +262,11 @@ public class GoogleShopServiceTest {
         ScrapEntity scrap1 = ScrapEntity.builder().shop(googleShop1).user(user).build();
         scrapRepository.save(scrap1);
 
-        ShopResponse shopResponse = googleShopService.getShopDetails(googleShop1.getPlaceId());
+        ShopResponse shopResponse = googleShopService.getShopDetails(googleShop1.getPlaceId(), true);
         Assertions.assertEquals(shopResponse.isScrap(), true);
 
-        ShopResponse shopResponse2 = googleShopService.getShopDetails(googleShop2.getPlaceId());
+        ShopResponse shopResponse2 = googleShopService.getShopDetails(googleShop2.getPlaceId(), true);
         Assertions.assertEquals(shopResponse2.isScrap(), false);
-    }
-
-    @Transactional
-    @Test
-    public void DB_내_상점_세부정보_북마크여부() throws Exception {
-        //user 회원 가입
-        userRepository.save(user);
-
-        //임시 로그인
-        tempLoginForTest(user);
-
-        //상점 저장
-        GoogleShopEntity googleShopEntity = googleShopRepository.save(googleShop1);
-
-        //북마크 추가
-        ScrapEntity scrap1 = ScrapEntity.builder().shop(googleShop1).user(user).build();
-        scrapRepository.save(scrap1);
-
-        ShopResponse shopResponse1 = googleShopService.getShop(googleShopEntity.getPlaceId());
-        Assertions.assertEquals(shopResponse1.isScrap(), true);
-        Assertions.assertThrows(RequestInputException.class, () ->
-                googleShopService.getShop(googleShop2.getPlaceId())
-        );
     }
 
     @Test
@@ -251,7 +296,5 @@ public class GoogleShopServiceTest {
                 new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
 
         SecurityContextHolder.getContext().setAuthentication(token);
-
-
     }
 }

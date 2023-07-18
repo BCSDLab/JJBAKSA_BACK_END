@@ -120,6 +120,16 @@ public class FollowServiceImpl implements FollowService {
         return followRepository.findAllByUserWithCursor(user, cursor, pageable).map(follow -> UserMapper.INSTANCE.toUserResponse(follow.getFollower()));
     }
 
+    @Override
+    public Page<UserResponse> getRecentlyActiveFollowers(Long cursor, Integer pageSize) throws Exception {
+
+        UserEntity user = userService.getLoginUser();
+        Pageable pageable = PageRequest.of(0, pageSize);
+
+        return followRepository.findRecentlyActiveFollowersByUserWithCursor(user, cursor, pageable)
+                .map(follow -> UserMapper.INSTANCE.toUserResponse(follow.getFollower()));
+    }
+
     private void checkValidFollowRequest(UserEntity user, UserEntity follower) throws RequestInputException {
 
         if (user.equals(follower))
