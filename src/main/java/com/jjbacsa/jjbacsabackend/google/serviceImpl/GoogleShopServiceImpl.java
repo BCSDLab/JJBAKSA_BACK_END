@@ -13,6 +13,7 @@ import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.google.dto.*;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
+import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopCount;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
@@ -232,6 +233,35 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         }
 
         return resultSimpleShopDtos;
+    }
+
+    @Override
+    public List<String> getAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException {
+        List<String> autoCompleteResult = new ArrayList<>();
+
+        String autoCompleteStr = this.callGoogleAutoComplete(query, autoCompleteRequest);
+
+        Map<String, Object> map = null;
+        try {
+            map = this.checkApiReturn(autoCompleteStr);
+        } catch (ApiException e) {
+            if (e.getErrorMessage().equals(ErrorMessage.ZERO_RESULTS_EXCEPTION.getErrorMessage())) {
+                return autoCompleteResult;
+            }
+        }
+
+        String reusltStr = objectMapper.writeValueAsString(map.get("predictions"));
+        Prediction[] autoCompleteApiDto = objectMapper.readValue(reusltStr, Prediction[].class);
+
+        for (Prediction p : autoCompleteApiDto) {
+            String pStr = p.getStructuredFormatting().getMainText();
+
+            if (!autoCompleteResult.contains(pStr)) {
+                autoCompleteResult.add(pStr);
+            }
+        }
+
+        return autoCompleteResult;
     }
 
     @Override

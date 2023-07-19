@@ -2,10 +2,9 @@ package com.jjbacsa.jjbacsabackend.google.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
-import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
-import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
@@ -46,6 +45,7 @@ public class GoogleShopServiceTest {
     private final FollowRepository followRepository;
     private final UserService userService;
     private final ScrapRepository scrapRepository;
+    private final ReviewRepository reviewRepository;
 
     private static UserEntity user;
     private static UserEntity following1; //user가 팔로우하는 사람
@@ -108,7 +108,7 @@ public class GoogleShopServiceTest {
 
     @Test
     public void 상점_상세정보() throws Exception {
-        ShopResponse shopResponse = googleShopService.getShopDetails(place_id);
+        ShopResponse shopResponse = googleShopService.getShopDetails(place_id, true);
         Assertions.assertNotEquals(shopResponse.getLat(), null);
         Assertions.assertNotEquals(shopResponse.getLng(), null);
     }
@@ -199,7 +199,7 @@ public class GoogleShopServiceTest {
 
     @Transactional
     @Test
-    public void 상점_메인페이지_친구북마크필터() throws Exception {
+    public void  상점_메인페이지_친구북마크필터() throws Exception {
         //user 회원가입, 로그인
         userRepository.save(user);
         this.tempLoginForTest(user);
