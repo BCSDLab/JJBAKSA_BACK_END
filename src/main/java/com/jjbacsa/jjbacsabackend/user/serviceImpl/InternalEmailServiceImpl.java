@@ -59,6 +59,11 @@ public class InternalEmailServiceImpl implements InternalEmailService {
         calendar.add(Calendar.SECOND, 5 * 60);
 
         String secret = getRandomNumber();
+        Map<String, Object> model = new HashMap<>();
+        model.put("authCode", secret);
+
+        Context context = new Context(Locale.KOREA, model);
+        String template = templateEngine.process("email_authenticate_code", context);
 
         if(userRepository.findByEmailAndPasswordIsNotNull(email).isPresent()) {
             AuthEmailEntity authEmail = AuthEmailEntity.builder()
@@ -72,7 +77,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
             authEmailRepository.save(authEmail);
         }
 
-        sesSender.sendMail(email, "쩝쩝박사 서비스 인증 메일입니다.", secret);
+        sesSender.sendMail(email, "쩝쩝박사 서비스 인증 메일입니다.", template);
     }
 
     @Override
