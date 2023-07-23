@@ -10,11 +10,10 @@ import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
-import com.jjbacsa.jjbacsabackend.google.dto.ShopApiDto;
-import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryApiDto;
-import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryDto;
-import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.*;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
+import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopCount;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
@@ -234,6 +233,35 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         }
 
         return resultSimpleShopDtos;
+    }
+
+    @Override
+    public List<String> getAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException {
+        List<String> autoCompleteResult = new ArrayList<>();
+
+        String autoCompleteStr = this.callGoogleAutoComplete(query, autoCompleteRequest);
+
+        Map<String, Object> map = null;
+        try {
+            map = this.checkApiReturn(autoCompleteStr);
+        } catch (ApiException e) {
+            if (e.getErrorMessage().equals(ErrorMessage.ZERO_RESULTS_EXCEPTION.getErrorMessage())) {
+                return autoCompleteResult;
+            }
+        }
+
+        String reusltStr = objectMapper.writeValueAsString(map.get("predictions"));
+        Prediction[] autoCompleteApiDto = objectMapper.readValue(reusltStr, Prediction[].class);
+
+        for (Prediction p : autoCompleteApiDto) {
+            String pStr = p.getStructuredFormatting().getMainText();
+
+            if (!autoCompleteResult.contains(pStr)) {
+                autoCompleteResult.add(pStr);
+            }
+        }
+
+        return autoCompleteResult;
     }
 
     @Override
@@ -530,6 +558,28 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         ).retrieve().bodyToMono(String.class).block();
 
         return shopStr;
+    }
+
+
+    /**
+     * 자동완성 요청을 위한 내부 메소드
+     */
+    private String callGoogleAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) {
+        String locationQuery = String.valueOf(autoCompleteRequest.getLat()) + ", " + String.valueOf(autoCompleteRequest.getLng());
+
+        String autoCompleteStr = webClient.get().uri(uriBuilder ->
+                uriBuilder.path("/autocomplete/json")
+                        .queryParam("input", query)
+                        .queryParam("components", "country:kr")
+                        .queryParam("language", "ko")
+                        .queryParam("location", locationQuery)
+                        .queryParam("radius", 500)
+                        .queryParam("types", "restaurant|cafe")
+                        .queryParam("key", API_KEY)
+                        .build()
+        ).retrieve().bodyToMono(String.class).block();
+
+        return autoCompleteStr;
     }
 
     /**
