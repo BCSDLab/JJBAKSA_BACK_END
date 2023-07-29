@@ -324,7 +324,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void sendAuthEmailLink(String email) throws Exception {
+    public Token sendAuthEmailLink(String email) throws Exception {
 
         UserEntity user = getLocalUserByEmail(email);
         String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
@@ -335,8 +335,11 @@ public class UserServiceImpl implements UserService {
         }
 
         String accessToken = jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType());
+        Token token = new Token(accessToken, existToken);
 
-        emailService.sendAuthEmailLink(user, new Token(accessToken, existToken));
+        emailService.sendAuthEmailLink(user, token);
+
+        return token;
     }
 
     @Override

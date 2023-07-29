@@ -287,10 +287,9 @@ public class UserController {
                     message = "OK")
     })
     @PostMapping("/user/authenticate")
-    public ResponseEntity<String> sendAuthEmailLink(@Email(message = "이메일은 형식을 지켜야 합니다.")
+    public ResponseEntity<Token> sendAuthEmailLink(@Email(message = "이메일은 형식을 지켜야 합니다.")
                                                     @RequestParam String email) throws Exception {
-        userService.sendAuthEmailLink(email);
-        return new ResponseEntity<>("OK", HttpStatus.OK);
+        return new ResponseEntity<>(userService.sendAuthEmailLink(email), HttpStatus.OK);
     }
 
 
