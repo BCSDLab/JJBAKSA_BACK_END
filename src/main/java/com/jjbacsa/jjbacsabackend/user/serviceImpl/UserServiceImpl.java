@@ -306,20 +306,37 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void sendAuthEmailCode(String email) throws Exception {
-        emailService.sendAuthEmailCode(email);
+        UserEntity user = getLocalUserByEmail(email);
+        emailService.sendAuthEmailCode(user);
     }
 
     @Override
     @Transactional
     public void sendAuthEmailCode(String account, String email) throws Exception {
-        validateUserInfo(account, email);
-        emailService.sendAuthEmailCode(email);
+        UserEntity user = getLocalUserByEmail(email);
+
+        if (!user.getAccount().equals(account)) {
+            throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
+        }
+
+        emailService.sendAuthEmailCode(user);
     }
 
     @Override
     @Transactional
     public void sendAuthEmailLink(String email) throws Exception {
-        emailService.sendAuthEmailLink(email);
+
+        UserEntity user = getLocalUserByEmail(email);
+        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
+
+        if (existToken == null) {
+            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH, user.getUserType().getUserType());
+            redisUtil.setToken(String.valueOf(user.getId()), existToken);
+        }
+
+        String accessToken = jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType());
+
+        emailService.sendAuthEmailLink(user, new Token(accessToken, existToken));
     }
 
     @Override
@@ -365,6 +382,17 @@ public class UserServiceImpl implements UserService {
         }
 
         return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    private UserEntity getLocalUserByEmail(String email) throws Exception {
+
+        UserEntity user = userService.getLocalUserByEmail(email);
+
+        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
+
+        return user;
     }
 
     private void validateExistAccount(String account) {
