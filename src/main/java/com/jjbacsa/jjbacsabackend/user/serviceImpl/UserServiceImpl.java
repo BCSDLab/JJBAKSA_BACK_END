@@ -335,7 +335,7 @@ public class UserServiceImpl implements UserService {
         }
 
         String accessToken = jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType());
-        Token token = new Token(accessToken, existToken);
+        Token token = new Token(accessToken, null);
 
         emailService.sendAuthEmailLink(user, token);
 
