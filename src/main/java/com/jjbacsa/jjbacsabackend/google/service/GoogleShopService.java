@@ -1,7 +1,7 @@
 package com.jjbacsa.jjbacsabackend.google.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
@@ -26,4 +26,7 @@ public interface GoogleShopService {
 
     //메인페이지
     List<ShopSimpleResponse> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception;
+
+    //검색어 상점 자동완성
+    List<String> getAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException;
 }

@@ -10,11 +10,10 @@ import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
-import com.jjbacsa.jjbacsabackend.google.dto.ShopApiDto;
-import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryApiDto;
-import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryDto;
-import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.*;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
+import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopCount;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
@@ -63,7 +62,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     private final String[] placeDetailsField = {"formatted_address", "formatted_phone_number", "name", "geometry/location/lat", "geometry/location/lng", "types", "place_id", "opening_hours/open_now", "opening_hours/weekday_text", "photos/photo_reference"};
     private final String[] pinFields = {"name", "types", "place_id", "photos/photo_reference"};
     private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference"};
-
+    private final String[] scrapFields = {"name", "types", "place_id", "photos/photo_reference", "formatted_address"};
     public GoogleShopServiceImpl(ObjectMapper objectMapper, @Value("${external.api.key}") String key, GoogleShopRepository googleShopRepository, InternalFollowService internalFollowService, InternalReviewService internalReviewService, InternalScrapService internalScrapService) {
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -228,7 +227,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 failCnt++;
             }
 
-            if (failCnt >= simpleShopDtos.size() / 2) {
+            if (failCnt >= simpleShopDtos.size() / 2 && failCnt!=0) {
                 throw new ApiException(ErrorMessage.OVER_QUERY_LIMIT_EXCEPTION);
             }
         }
@@ -237,9 +236,38 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     }
 
     @Override
+    public List<String> getAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException {
+        List<String> autoCompleteResult = new ArrayList<>();
+
+        String autoCompleteStr = this.callGoogleAutoComplete(query, autoCompleteRequest);
+
+        Map<String, Object> map = null;
+        try {
+            map = this.checkApiReturn(autoCompleteStr);
+        } catch (ApiException e) {
+            if (e.getErrorMessage().equals(ErrorMessage.ZERO_RESULTS_EXCEPTION.getErrorMessage())) {
+                return autoCompleteResult;
+            }
+        }
+
+        String reusltStr = objectMapper.writeValueAsString(map.get("predictions"));
+        Prediction[] autoCompleteApiDto = objectMapper.readValue(reusltStr, Prediction[].class);
+
+        for (Prediction p : autoCompleteApiDto) {
+            String pStr = p.getStructuredFormatting().getMainText();
+
+            if (!autoCompleteResult.contains(pStr)) {
+                autoCompleteResult.add(pStr);
+            }
+        }
+
+        return autoCompleteResult;
+    }
+
+    @Override
     public ShopScrapResponse getShopScrap(String placeId, Long scrapId) throws JsonProcessingException {
 
-        String requestField=toFieldString(pinFields);
+        String requestField=toFieldString(scrapFields);
         String shopStr=this.callGoogleApi(placeId, requestField);
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
         Category category = getCategory(shopApiDto.getTypes());
@@ -257,6 +285,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 .category(category.name())
                 .photo(photoToken)
                 .scrapId(scrapId)
+                .address(shopApiDto.getFormattedAddress())
                 .build();
 
         Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopScrapResponse.getPlaceId());
@@ -529,6 +558,28 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         ).retrieve().bodyToMono(String.class).block();
 
         return shopStr;
+    }
+
+
+    /**
+     * 자동완성 요청을 위한 내부 메소드
+     */
+    private String callGoogleAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) {
+        String locationQuery = String.valueOf(autoCompleteRequest.getLat()) + ", " + String.valueOf(autoCompleteRequest.getLng());
+
+        String autoCompleteStr = webClient.get().uri(uriBuilder ->
+                uriBuilder.path("/autocomplete/json")
+                        .queryParam("input", query)
+                        .queryParam("components", "country:kr")
+                        .queryParam("language", "ko")
+                        .queryParam("location", locationQuery)
+                        .queryParam("radius", 500)
+                        .queryParam("types", "restaurant|cafe")
+                        .queryParam("key", API_KEY)
+                        .build()
+        ).retrieve().bodyToMono(String.class).block();
+
+        return autoCompleteStr;
     }
 
     /**

@@ -2,10 +2,9 @@ package com.jjbacsa.jjbacsabackend.google.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
-import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.repository.FollowRepository;
-import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
@@ -200,7 +199,7 @@ public class GoogleShopServiceTest {
 
     @Transactional
     @Test
-    public void 상점_메인페이지_친구북마크필터() throws Exception {
+    public void  상점_메인페이지_친구북마크필터() throws Exception {
         //user 회원가입, 로그인
         userRepository.save(user);
         this.tempLoginForTest(user);
@@ -269,6 +268,19 @@ public class GoogleShopServiceTest {
         ShopResponse shopResponse2 = googleShopService.getShopDetails(googleShop2.getPlaceId(), true);
         Assertions.assertEquals(shopResponse2.isScrap(), false);
     }
+
+    @Test
+    public void 자동완성() throws JsonProcessingException {
+        AutoCompleteRequest autoCompleteRequest = AutoCompleteRequest.builder()
+                .lat(36.3504119)
+                .lng(127.3845475).build();
+
+        String query = "순";
+
+        List<String> result = googleShopService.getAutoComplete("순대", autoCompleteRequest);
+        Assertions.assertNotEquals(result.size(),0);
+    }
+
 
     private void saveAllShops() {
         googleShopRepository.save(googleShop1);

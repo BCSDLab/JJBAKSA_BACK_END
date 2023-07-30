@@ -194,6 +194,13 @@ public class ScrapServiceImpl implements ScrapService {
         deleteScrap(scrap);
     }
 
+    @Override
+    public ShopScrapResponse getScrapShop(Long scrapId) throws Exception {
+
+        ScrapEntity scrap = scrapRepository.findById(scrapId).orElseThrow(() -> new BaseException(ErrorMessage.SCRAP_NOT_EXISTS_EXCEPTION));
+        return shopService.formattedToShopResponse(scrap);
+    }
+
     private ScrapDirectoryEntity getDirectoryOrNull(Long directoryId) {
 
         if (directoryId == 0L)
@@ -268,4 +275,6 @@ public class ScrapServiceImpl implements ScrapService {
 
         scrap.setIsDeleted(1);
     }
+
+
 }
