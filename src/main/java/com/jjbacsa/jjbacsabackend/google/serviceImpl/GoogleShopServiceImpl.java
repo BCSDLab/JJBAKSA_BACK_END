@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
-import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.google.dto.ShopApiDto;
 import com.jjbacsa.jjbacsabackend.google.dto.ShopQueryApiDto;
@@ -27,7 +26,6 @@ import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.JSONArray;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -64,6 +62,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     private final String[] pinFields = {"name", "types", "place_id", "photos/photo_reference"};
     private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference"};
     private final String[] scrapFields = {"name", "types", "place_id", "photos/photo_reference", "formatted_address"};
+    private final String[] addressLevels={"읍", "면", "동", "가", "로", "길"};
     public GoogleShopServiceImpl(ObjectMapper objectMapper, @Value("${external.api.key}") String key, GoogleShopRepository googleShopRepository, InternalFollowService internalFollowService, InternalReviewService internalReviewService, InternalScrapService internalScrapService) {
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -142,18 +141,15 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         }
 
         if (isDetail) {
-            String businessDay;
+            List<String> businessDay=new ArrayList<>();
             String todayBusinessHour;
             try {
                 LocalDate today = LocalDate.now();
                 int dayOfWeek = today.getDayOfWeek().getValue() - 1;
 
-                JSONArray jsonArray = new JSONArray();
                 for (String weekday : shopApiDto.getOpeningHours().getWeekdayText()) {
-                    jsonArray.add(weekday);
+                    businessDay.add(weekday.substring(5));
                 }
-                businessDay = jsonArray.toJSONString();
-
                 todayBusinessHour = shopApiDto.getOpeningHours().getWeekdayText().get(dayOfWeek);
                 todayBusinessHour = todayBusinessHour.substring(5);
 
@@ -382,8 +378,11 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             }
 
             Category category = getCategory(dto.getTypes());
-
             Double distFromUser = this.getMeter(dto.getGeometry(), shopRequest);
+
+
+            if(dto.getFormattedAddress()!=null)
+                dto.setFormattedAddress(this.formattedAddressFormatting(dto.getFormattedAddress()));
 
             ShopQueryResponse shopQueryResponse = ShopQueryResponse.builder()
                     .placeId(dto.getPlaceId())
@@ -409,6 +408,42 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
         ShopQueryResponses shopQueryResponses = new ShopQueryResponses(shopQueryDto.getNextPageToken(), shopQueryResponseList);
         return shopQueryResponses;
+    }
+
+    /**
+     * 상점 미리보기에서 제공하는 것과 같이 법정구역상 ~동 ~읍 ~면 / 행정구역상 ~구로
+     * 상점 위치정보를 반환하기 위한 메소드
+     * */
+    private String formattedAddressFormatting(String address){
+        String[] addressArr=address.split(" ");
+
+        int formattedIdx=-1;
+        for(int i=0;i<addressArr.length;i++){
+            String addressBlock=addressArr[i];
+
+            String lastWord = addressBlock.substring(addressBlock.length()-1);
+            for(String addressLevel:addressLevels){
+                if (addressLevel.equals(lastWord)) {
+                    formattedIdx = i;
+                    break;
+                }
+            }
+
+            if (formattedIdx>=0)
+                break;
+        }
+
+        if(formattedIdx<0)
+            return address;
+
+        StringBuilder sb=new StringBuilder();
+        for(int i=0;i<=formattedIdx;i++){
+            sb.append(addressArr[i]);
+            sb.append(" ");
+        }
+
+        sb.deleteCharAt(sb.length()-1);
+        return sb.toString();
     }
 
     /**

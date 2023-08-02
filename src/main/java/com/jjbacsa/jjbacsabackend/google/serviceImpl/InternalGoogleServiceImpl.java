@@ -75,7 +75,7 @@ public class InternalGoogleServiceImpl implements InternalGoogleService {
     }
 
     private GoogleShopEntity saveGoogleShop(String placeId) throws Exception {
-        ShopResponse shopResponse = googleService.getShopDetails(placeId, true);
+        ShopResponse shopResponse = googleService.getShopDetails(placeId, false);
         GoogleShopEntity googleShopEntity = GoogleShopEntity.builder()
                 .placeId(shopResponse.getPlaceId())
                 .build();

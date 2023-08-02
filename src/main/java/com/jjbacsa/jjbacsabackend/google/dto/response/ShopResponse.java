@@ -22,7 +22,7 @@ public class ShopResponse {
     private Double lng;
     private String formattedPhoneNumber;
     private Boolean openNow;
-    private String businessDay;
+    private List<String> businessDay;
     private Integer totalRating;
     private Integer ratingCount;
     private String category;
