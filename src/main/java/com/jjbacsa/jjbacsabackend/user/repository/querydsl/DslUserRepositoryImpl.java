@@ -101,7 +101,7 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
                 .leftJoin(qFollow).on(qFollow.user.eq(user), qFollow.follower.eq(qUser), qFollow.isDeleted.eq(0))
                 .where(qUser.in(users))
                 .fetch();
-        map = getFollowedType(map, tuples, FollowedType.FOLLOWED);
+        updateFollowedTypeMap(map, tuples, FollowedType.FOLLOWED);
 
         // Follow request check
         tuples = from(qUser)
@@ -109,7 +109,7 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
                 .leftJoin(qFollowRequest).on(qFollowRequest.user.eq(user), qFollowRequest.follower.eq(qUser), qFollowRequest.isDeleted.eq(0))
                 .where(qUser.in(users))
                 .fetch();
-        map = getFollowedType(map, tuples, FollowedType.REQUEST_SENT);
+        updateFollowedTypeMap(map, tuples, FollowedType.REQUEST_SENT);
 
         // Follow request receive check
         tuples = from(qUser)
@@ -117,7 +117,7 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
                 .leftJoin(qFollowRequest).on(qFollowRequest.follower.eq(user), qFollowRequest.user.eq(qUser), qFollowRequest.isDeleted.eq(0))
                 .where(qUser.in(users))
                 .fetch();
-        map = getFollowedType(map, tuples, FollowedType.REQUEST_RECEIVED);
+        updateFollowedTypeMap(map, tuples, FollowedType.REQUEST_RECEIVED);
 
         return map;
     }
@@ -126,14 +126,13 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
         return tuple.get(0, Long.class);
     }
 
-    private Map<Long, FollowedType> getFollowedType(Map<Long, FollowedType> map, List<Tuple> tuples, FollowedType type) {
+    private void updateFollowedTypeMap(Map<Long, FollowedType> map, List<Tuple> tuples, FollowedType type) {
         for(Tuple tuple : tuples) {
             Long userId = getId(tuple);
             if (itemIsTrue(tuple, 1)) {
                 map.put(userId, type);
             } else if (!map.containsKey(userId)) map.put(userId, FollowedType.NONE);
         }
-        return map;
     }
 
     private boolean itemIsTrue(Tuple tuple, int index) {
