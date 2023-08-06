@@ -7,6 +7,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopScrapResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
+import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleApiService;
 import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryRequest;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryResponse;
@@ -38,6 +39,7 @@ public class ScrapServiceImpl implements ScrapService {
 
     private final InternalUserService userService;
     private final InternalGoogleService shopService;
+    private final InternalGoogleApiService googleApiService;
 
     private final InternalScrapService scrapService;
 
@@ -97,7 +99,7 @@ public class ScrapServiceImpl implements ScrapService {
     public ScrapResponse create(ScrapRequest request) throws Exception {
 
         UserEntity user = userService.getLoginUser();
-        GoogleShopEntity shop = shopService.getGoogleShopByPlaceId(request.getPlaceId());
+        GoogleShopEntity shop = googleApiService.getGoogleShopByPlaceId(request.getPlaceId());
         ScrapDirectoryEntity directory = getDirectoryOrNull(request.getDirectoryId());
 
         if (directory != null)
@@ -143,7 +145,7 @@ public class ScrapServiceImpl implements ScrapService {
             @Override
             public ShopScrapResponse apply(ScrapEntity input) {
                 try {
-                    return shopService.formattedToShopResponse(input);
+                    return googleApiService.formattedToShopResponse(input);
                 } catch (Exception e) {
                     throw new BaseException(ErrorMessage.INTERNAL_SHOP_EXCEPTION);
                 }

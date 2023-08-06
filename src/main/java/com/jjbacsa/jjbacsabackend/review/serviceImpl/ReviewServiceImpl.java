@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
+import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleApiService;
 import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
 import com.jjbacsa.jjbacsabackend.review.dto.request.*;
 import com.jjbacsa.jjbacsabackend.review.dto.response.ReviewCountResponse;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 public class ReviewServiceImpl implements ReviewService {
     private final InternalUserService userService;
     private final InternalGoogleService shopService;
+    private final InternalGoogleApiService googleApiService;
     private final InternalFollowService followService;
     private final InternalReviewImageService reviewImageService;
 
@@ -185,7 +187,7 @@ public class ReviewServiceImpl implements ReviewService {
     private ReviewEntity createReviewEntity(ReviewRequest reviewRequest) throws Exception {
         UserEntity userEntity = userService.getLoginUser();
         log.info(reviewRequest.getPlaceId());
-        GoogleShopEntity shopEntity = shopService.getGoogleShopByPlaceId(reviewRequest.getPlaceId());
+        GoogleShopEntity shopEntity = googleApiService.getGoogleShopByPlaceId(reviewRequest.getPlaceId());
         ReviewEntity reviewEntity = ReviewEntity.builder()
                 .writer(userEntity)
                 .shop(shopEntity)
@@ -235,7 +237,7 @@ public class ReviewServiceImpl implements ReviewService {
         return shopPlaceIds.stream()
                 .map(placeId -> {
                     try {
-                        return shopService.getShopDetails(placeId);
+                        return googleApiService.getShopDetails(placeId);
                     } catch (Exception e) {
                         return null;
                     }
