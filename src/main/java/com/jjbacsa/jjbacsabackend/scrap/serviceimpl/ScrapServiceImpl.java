@@ -4,7 +4,6 @@ import com.google.common.base.Function;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopScrapResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleApiService;
@@ -38,7 +37,6 @@ import java.util.Objects;
 public class ScrapServiceImpl implements ScrapService {
 
     private final InternalUserService userService;
-    private final InternalGoogleService shopService;
     private final InternalGoogleApiService googleApiService;
 
     private final InternalScrapService scrapService;
@@ -200,7 +198,7 @@ public class ScrapServiceImpl implements ScrapService {
     public ShopScrapResponse getScrapShop(Long scrapId) throws Exception {
 
         ScrapEntity scrap = scrapRepository.findById(scrapId).orElseThrow(() -> new BaseException(ErrorMessage.SCRAP_NOT_EXISTS_EXCEPTION));
-        return shopService.formattedToShopResponse(scrap);
+        return googleApiService.formattedToShopResponse(scrap);
     }
 
     private ScrapDirectoryEntity getDirectoryOrNull(Long directoryId) {
