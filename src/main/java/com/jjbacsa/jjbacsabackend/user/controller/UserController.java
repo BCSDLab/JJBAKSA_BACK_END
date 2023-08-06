@@ -79,7 +79,7 @@ public class UserController {
     })
     @GetMapping(value = "/user/exists")
     public ResponseEntity<String> checkDuplicateAccount(
-            @Pattern(regexp = "^[a-zA-z가-힣0-9]{1,20}$", message = "닉네임에 특수문자와 초성은 불가능합니다.")
+            @Pattern(regexp = "^[a-zA-Z0-9]{1,20}$", message = "올바른 형식의 아이디가 아닙니다.")
             @RequestParam String account) throws Exception {
         return new ResponseEntity<>(userService.checkDuplicateAccount(account), HttpStatus.OK);
     }
@@ -269,7 +269,9 @@ public class UserController {
                     message = "OK")
     })
     @PostMapping("/user/email/password")
-    public ResponseEntity<String> sendAuthEmailPassword(@RequestParam String account,
+    public ResponseEntity<String> sendAuthEmailPassword(
+                                                        @Pattern(regexp = "^[a-zA-Z0-9]{1,20}$", message = "올바른 형식의 아이디가 아닙니다.")
+                                                        @RequestParam String account,
                                                         @Email(message = "이메일은 형식을 지켜야 합니다.")
                                                         @RequestParam String email) throws Exception {
         userService.sendAuthEmailCode(account, email);
