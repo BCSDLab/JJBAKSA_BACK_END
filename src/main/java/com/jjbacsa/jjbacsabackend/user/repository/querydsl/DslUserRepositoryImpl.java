@@ -16,10 +16,12 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.core.types.dsl.StringExpressions;
 import com.querydsl.jpa.JPQLQuery;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
@@ -90,28 +92,48 @@ public class DslUserRepositoryImpl extends QuerydslRepositorySupport implements 
 
     @Override
     public Map<Long, FollowedType> getFollowedTypesByUserAndUsers(UserEntity user, List<UserEntity> users) {
-        return from(qUser)
-                .select(qUser.id, qFollow.isNotNull(), qFollowRequest.isNotNull())
-                .leftJoin(qFollow).on(qFollow.user.eq(user), qFollow.follower.eq(qUser))
-                .leftJoin(qFollowRequest).on(qFollowRequest.user.eq(user), qFollowRequest.follower.eq(qUser))
+
+        Map<Long, FollowedType> map = new HashMap<>();
+
+        // Follower check
+        List<Tuple> tuples = from(qUser)
+                .select(qUser.id, qFollow.isNotNull())
+                .leftJoin(qFollow).on(qFollow.user.eq(user), qFollow.follower.eq(qUser), qFollow.isDeleted.eq(0))
                 .where(qUser.in(users))
-                .fetch()
-                .stream()
-                .collect(Collectors.toMap(this::getId, this::getFollowedType));
+                .fetch();
+        map = getFollowedType(map, tuples, FollowedType.FOLLOWED);
+
+        // Follow request check
+        tuples = from(qUser)
+                .select(qUser.id, qFollowRequest.isNotNull())
+                .leftJoin(qFollowRequest).on(qFollowRequest.user.eq(user), qFollowRequest.follower.eq(qUser), qFollowRequest.isDeleted.eq(0))
+                .where(qUser.in(users))
+                .fetch();
+        map = getFollowedType(map, tuples, FollowedType.REQUEST_SENT);
+
+        // Follow request receive check
+        tuples = from(qUser)
+                .select(qUser.id, qFollowRequest.isNotNull())
+                .leftJoin(qFollowRequest).on(qFollowRequest.follower.eq(user), qFollowRequest.user.eq(qUser), qFollowRequest.isDeleted.eq(0))
+                .where(qUser.in(users))
+                .fetch();
+        map = getFollowedType(map, tuples, FollowedType.REQUEST_RECEIVED);
+
+        return map;
     }
 
     private Long getId(Tuple tuple) {
         return tuple.get(0, Long.class);
     }
 
-    private FollowedType getFollowedType(Tuple tuple) {
-        if (itemIsTrue(tuple, 1)) {
-            return FollowedType.FOLLOWED;
+    private Map<Long, FollowedType> getFollowedType(Map<Long, FollowedType> map, List<Tuple> tuples, FollowedType type) {
+        for(Tuple tuple : tuples) {
+            Long userId = getId(tuple);
+            if (itemIsTrue(tuple, 1)) {
+                map.put(userId, type);
+            } else if (!map.containsKey(userId)) map.put(userId, FollowedType.NONE);
         }
-        if (itemIsTrue(tuple, 2)) {
-            return FollowedType.REQUESTED;
-        }
-        return FollowedType.NONE;
+        return map;
     }
 
     private boolean itemIsTrue(Tuple tuple, int index) {
