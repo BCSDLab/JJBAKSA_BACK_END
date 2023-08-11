@@ -64,13 +64,12 @@ public class InternalScrapServiceImpl implements InternalScrapService {
     //상점 id와 사용자 id 비교해서 현재 사용자가 북마크 하는지 여부 반환
     @Override
     public boolean isUserScrapShop(GoogleShopEntity googleShop) throws Exception {
-        UserEntity user;
-        try {
-            user = internalUserService.getLoginUser();
-        } catch (RequestInputException e) {
-            return false;
-        }
 
+        //사용자가 로그아웃 된 상태이면
+        if(!internalUserService.isUserLogin())
+            return false;
+
+        UserEntity user=internalUserService.getLoginUser();
         return scrapRepository.existsByUserAndShop(user, googleShop);
     }
 }
