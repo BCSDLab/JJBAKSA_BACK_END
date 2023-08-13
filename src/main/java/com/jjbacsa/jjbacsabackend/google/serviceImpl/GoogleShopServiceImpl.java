@@ -58,7 +58,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     private final InternalReviewService reviewService;
     private final InternalScrapService scrapService;
 
-    private final String[] placeDetailsField = {"formatted_address", "formatted_phone_number", "name", "geometry/location/lat", "geometry/location/lng", "types", "place_id", "opening_hours/open_now", "opening_hours/weekday_text", "photos/photo_reference"};
+    private final String[] placeDetailsField = {"formatted_address", "formatted_phone_number", "name", "geometry/location/lat", "geometry/location/lng", "types", "place_id", "opening_hours/open_now", "opening_hours/weekday_text", "opening_hours/periods", "photos/photo_reference"};
     private final String[] pinFields = {"name", "types", "place_id", "photos/photo_reference"};
     private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference"};
     private final String[] scrapFields = {"name", "types", "place_id", "photos/photo_reference", "formatted_address"};
@@ -144,24 +144,28 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             List<String> businessDay=new ArrayList<>();
             String todayBusinessHour;
             try {
-                LocalDate today = LocalDate.now();
-                int dayOfWeek = today.getDayOfWeek().getValue() - 1;
 
-                for (String weekday : shopApiDto.getOpeningHours().getWeekdayText()) {
+                for (String weekday : shopApiDto.getOpeningHours().getWeekdayText())
                     businessDay.add(weekday.substring(5));
-                }
-                todayBusinessHour = shopApiDto.getOpeningHours().getWeekdayText().get(dayOfWeek);
-                todayBusinessHour = todayBusinessHour.substring(5);
 
-            } catch (NullPointerException e) {
+            } catch (Exception e) {
                 businessDay = null;
-                todayBusinessHour = null;
+            }
+
+            try{
+                LocalDate today = LocalDate.now();
+                int dayOfWeek = today.getDayOfWeek().getValue() -1; //0:월 6:일
+
+                todayBusinessHour=shopApiDto.getOpeningHours().getWeekdayText().get(dayOfWeek);
+                todayBusinessHour = todayBusinessHour.substring(5);
+            } catch (Exception e){
+                todayBusinessHour=null;
             }
 
             Boolean openNow;
             try {
                 openNow = (shopApiDto.getOpeningHours().getOpenNow() == "true") ? true : false;
-            } catch (NullPointerException e) {
+            } catch (Exception e) {
                 openNow = null;
             }
 
