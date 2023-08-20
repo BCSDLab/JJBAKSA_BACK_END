@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * shopDto(단일 상점 자세한 정보) 반환되는 클래스
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+//@JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 @Getter
 public class ShopResponse {
@@ -27,17 +27,16 @@ public class ShopResponse {
     private Integer ratingCount;
     private String category;
     private String todayBusinessHour; //오늘 영업시간
-    private boolean isScrap;
+    private Long scrap;
     private List<String> photos;
-    private LocalDateTime lastReviewDate;
 
     public void setShopCount(Integer totalRating, Integer ratingCount) {
         this.totalRating = totalRating;
         this.ratingCount = ratingCount;
     }
 
-    public void setIsScrap(boolean isScrap) {
-        this.isScrap = isScrap;
+    public void setScrap(Long scrap) {
+        this.scrap = scrap;
     }
 
     public void setShopId(Long shopId) {

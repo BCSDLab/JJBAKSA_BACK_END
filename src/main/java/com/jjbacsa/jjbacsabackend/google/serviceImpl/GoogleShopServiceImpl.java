@@ -192,15 +192,15 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         }
 
         Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopResponse.getPlaceId());
-        boolean isScrap = false;
+        Long scrapId = null;
         if (shop.isPresent()) {
             GoogleShopCount shopCount = shop.get().getShopCount();
             shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
             shopResponse.setShopId(shop.get().getId());
-            isScrap = scrapService.isUserScrapShop(shop.get());
+            scrapId = scrapService.getUserScrapShop(shop.get());
         }
 
-        shopResponse.setIsScrap(isScrap);
+        shopResponse.setScrap(scrapId);
 
         return shopResponse;
     }
