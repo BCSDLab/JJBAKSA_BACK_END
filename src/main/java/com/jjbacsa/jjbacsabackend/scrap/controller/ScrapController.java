@@ -113,7 +113,7 @@ public class ScrapController {
             authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
     @GetMapping(value = "/scraps/directories/{directory_id}")
-    public ResponseEntity<Page<ScrapResponse>> getScraps(
+    public ResponseEntity<Page<ShopScrapResponse>> getScraps(
             @ApiParam("조회할 디렉토리 ID") @PathVariable(value = "directory_id", required = false) Long directoryId,
             @RequestParam(required = false) Long cursor,
             @ApiParam("가져올 데이터 수(1~100)") @Range(min = 1, max = 100) @RequestParam(required = false, defaultValue = "10") Integer pageSize) throws Exception {
