@@ -1,9 +1,12 @@
 package com.jjbacsa.jjbacsabackend.user.service;
 
-public interface InternalEmailService {
-    void sendAuthEmailCode(String email) throws Exception;
+import com.jjbacsa.jjbacsabackend.etc.dto.Token;
+import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 
-    void sendAuthEmailLink(String email) throws Exception;
+public interface InternalEmailService {
+    void sendAuthEmailCode(UserEntity user) throws Exception;
+
+    void sendAuthEmailLink(UserEntity user, Token token) throws Exception;
 
     Boolean codeCertification(String email, String code) throws Exception;
 
