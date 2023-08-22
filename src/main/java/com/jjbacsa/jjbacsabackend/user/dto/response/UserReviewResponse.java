@@ -1,14 +1,16 @@
 package com.jjbacsa.jjbacsabackend.user.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.jjbacsa.jjbacsabackend.image.dto.response.ImageResponse;
+import lombok.*;
 
-@Data
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@Getter
+@Builder
 @AllArgsConstructor
-@NoArgsConstructor
 public class UserReviewResponse {
     private Long id;
     private String account;
     private String nickname;
+    private ImageResponse profileImage;
 }

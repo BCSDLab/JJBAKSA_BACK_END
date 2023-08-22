@@ -18,22 +18,22 @@ public class SearchController {
     private final SearchService searchService;
     private final String KEY = "RANKING";
 
-    @GetMapping(value = "/auto-complete/{word}")
-    @ApiOperation(
-            value = "검색어 자동 완성",
-            notes = "현재 검색어의 자동 완성 검색어를 조회한다."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    code = 200,
-                    message = "검색어 자동 완성 결과",
-                    response = AutoCompleteResponse.class
-            )
-    })
-    @ApiImplicitParam(name = "word", value = "검색어", dataType = "String", dataTypeClass = String.class, paramType = "path")
-    public ResponseEntity<AutoCompleteResponse> getAutoCompletes(@PathVariable("word") String word) {
-        return new ResponseEntity<>(searchService.getAutoCompletes(word), HttpStatus.OK);
-    }
+//    @GetMapping(value = "/auto-complete/{word}")
+//    @ApiOperation(
+//            value = "검색어 자동 완성",
+//            notes = "현재 검색어의 자동 완성 검색어를 조회한다."
+//    )
+//    @ApiResponses({
+//            @ApiResponse(
+//                    code = 200,
+//                    message = "검색어 자동 완성 결과",
+//                    response = AutoCompleteResponse.class
+//            )
+//    })
+//    @ApiImplicitParam(name = "word", value = "검색어", dataType = "String", dataTypeClass = String.class, paramType = "path")
+//    public ResponseEntity<AutoCompleteResponse> getAutoCompletes(@PathVariable("word") String word) {
+//        return new ResponseEntity<>(searchService.getAutoCompletes(word), HttpStatus.OK);
+//    }
 
 
     @GetMapping(value = "/trending")

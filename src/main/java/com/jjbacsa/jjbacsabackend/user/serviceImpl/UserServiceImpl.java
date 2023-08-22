@@ -244,22 +244,9 @@ public class UserServiceImpl implements UserService {
         followService.deleteFollowRequestWithUser(user);
 
         // 작성한 리뷰 및 리뷰 내 사진, 별점 삭제
-        List<ReviewEntity> reviews = reviewService.findReviewsByWriter(user);
-
-        for (ReviewEntity review : reviews) {
-
-            for (ReviewImageEntity reviewImage : review.getReviewImages()) { // 리뷰 이미지를 버킷에서 삭제
-                reviewImageService.delete(reviewImage);
-            }
-            review.setIsDeleted(1);
-
-            // 리뷰 수, 별점 처리
-            Long shopId = review.getShop().getId();
-            shopService.addTotalRating(shopId, -review.getRate());
-            shopService.decreaseRatingCount(shopId);
-        }
-
+        reviewService.deleteReviewsWithUser(user);
         user.getUserCount().setReviewCount(0);
+
         user.setIsDeleted(1);
 
         //회원 탈퇴에 따른 리프레시 토큰 삭제
@@ -306,20 +293,40 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void sendAuthEmailCode(String email) throws Exception {
-        emailService.sendAuthEmailCode(email);
+        UserEntity user = getLocalUserByEmail(email);
+        emailService.sendAuthEmailCode(user);
     }
 
     @Override
     @Transactional
     public void sendAuthEmailCode(String account, String email) throws Exception {
-        validateUserInfo(account, email);
-        emailService.sendAuthEmailCode(email);
+        UserEntity user = getLocalUserByEmail(email);
+
+        if (!user.getAccount().equals(account)) {
+            throw new RequestInputException(ErrorMessage.INVALID_EMAIL_EXCEPTION);
+        }
+
+        emailService.sendAuthEmailCode(user);
     }
 
     @Override
     @Transactional
-    public void sendAuthEmailLink(String email) throws Exception {
-        emailService.sendAuthEmailLink(email);
+    public Token sendAuthEmailLink(String email) throws Exception {
+
+        UserEntity user = getLocalUserByEmail(email);
+        String existToken = redisUtil.getStringValue(String.valueOf(user.getId()));
+
+        if (existToken == null) {
+            existToken = jwtUtil.generateToken(user.getId(), TokenType.REFRESH, user.getUserType().getUserType());
+            redisUtil.setToken(String.valueOf(user.getId()), existToken);
+        }
+
+        String accessToken = jwtUtil.generateToken(user.getId(), TokenType.ACCESS, user.getUserType().getUserType());
+        Token token = new Token(accessToken, null);
+
+        emailService.sendAuthEmailLink(user, token);
+
+        return token;
     }
 
     @Override
@@ -365,6 +372,17 @@ public class UserServiceImpl implements UserService {
         }
 
         return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    private UserEntity getLocalUserByEmail(String email) throws Exception {
+
+        UserEntity user = userService.getLocalUserByEmail(email);
+
+        if(oAuthInfoRepository.findByUserId(user.getId()).isPresent()) {
+            throw new RequestInputException(ErrorMessage.SOCIAL_ACCOUNT_EXCEPTION);
+        }
+
+        return user;
     }
 
     private void validateExistAccount(String account) {

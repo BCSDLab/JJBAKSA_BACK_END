@@ -39,7 +39,7 @@ public interface UserService {
 
     void sendAuthEmailCode(String account, String email) throws Exception;
 
-    void sendAuthEmailLink(String email) throws Exception;
+    Token sendAuthEmailLink(String email) throws Exception;
 
     UserResponse findAccount(String email, String code) throws Exception;
 
