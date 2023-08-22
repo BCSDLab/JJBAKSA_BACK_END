@@ -23,6 +23,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.HandlerMethod;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 import java.io.IOException;
 import java.util.List;
@@ -58,9 +60,7 @@ public class GlobalExceptionHandler {
         else if (e instanceof BindException) {
             baseException = convertBindToBase((BindException) e);
         } else if (e instanceof ValidationException) {
-            baseException = new BaseException(e.getClass().getSimpleName(), ErrorMessage.VALIDATION_FAIL_EXCEPTION);
-            baseException.setErrorMessage(e.getMessage());
-            baseException.setErrorTrace(e.getStackTrace()[0].toString());
+            baseException = convertValidationToBase((ValidationException) e);
         }
         //Method Security 예외인 경우
         else if (e instanceof AccessDeniedException) {
@@ -85,6 +85,19 @@ public class GlobalExceptionHandler {
         log.error(baseException.getErrorMessage(), e);
 
         return new ResponseEntity<>(baseException, baseException.getHttpStatus());
+    }
+
+    private BaseException convertValidationToBase(ValidationException e) {
+        ConstraintViolationException err = (ConstraintViolationException) e;
+
+        ConstraintViolation<?> constraintViolation = err.getConstraintViolations().stream().findFirst().get();
+        String message = constraintViolation.getMessageTemplate();
+
+        BaseException baseException = new BaseException(e.getClass().getSimpleName(), ErrorMessage.VALIDATION_FAIL_EXCEPTION);
+        baseException.setErrorMessage(message);
+        baseException.setErrorTrace(e.getStackTrace()[0].toString());
+
+        return baseException;
     }
 
     private BaseException convertBindToBase(BindException e) {

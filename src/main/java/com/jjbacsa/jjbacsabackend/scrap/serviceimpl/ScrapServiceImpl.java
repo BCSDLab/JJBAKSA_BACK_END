@@ -6,6 +6,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopScrapResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
+import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleApiService;
 import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryRequest;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryResponse;
@@ -37,7 +38,7 @@ import java.util.Objects;
 public class ScrapServiceImpl implements ScrapService {
 
     private final InternalUserService userService;
-    private final InternalGoogleService shopService;
+    private final InternalGoogleApiService googleApiService;
 
     private final InternalScrapService scrapService;
 
@@ -97,7 +98,7 @@ public class ScrapServiceImpl implements ScrapService {
     public ScrapResponse create(ScrapRequest request) throws Exception {
 
         UserEntity user = userService.getLoginUser();
-        GoogleShopEntity shop = shopService.getGoogleShopByPlaceId(request.getPlaceId());
+        GoogleShopEntity shop = googleApiService.getGoogleShopByPlaceId(request.getPlaceId());
         ScrapDirectoryEntity directory = getDirectoryOrNull(request.getDirectoryId());
 
         if (directory != null)
@@ -142,7 +143,7 @@ public class ScrapServiceImpl implements ScrapService {
             @Override
             public ShopScrapResponse apply(ScrapEntity input) {
                 try {
-                    ShopScrapResponse shopScrapResponse=shopService.formattedToShopResponse(input);
+                    ShopScrapResponse shopScrapResponse=googleApiService.formattedToShopResponse(input);
                     shopScrapResponse.setScrapInfo(input.getId(), input.getCreatedAt(), input.getUpdatedAt());
 
                     if(directory==null){
@@ -213,7 +214,7 @@ public class ScrapServiceImpl implements ScrapService {
     public ShopScrapResponse getScrapShop(Long scrapId) throws Exception {
 
         ScrapEntity scrap = scrapRepository.findById(scrapId).orElseThrow(() -> new BaseException(ErrorMessage.SCRAP_NOT_EXISTS_EXCEPTION));
-        return shopService.formattedToShopResponse(scrap);
+        return googleApiService.formattedToShopResponse(scrap);
     }
 
     private ScrapDirectoryEntity getDirectoryOrNull(Long directoryId) {
