@@ -112,7 +112,7 @@ public class ScrapServiceImpl implements ScrapService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<ScrapResponse> getScraps(Long directoryId, Long cursor, Integer pageSize) throws Exception {
+    public Page<ShopScrapResponse> getScraps(Long directoryId, Long cursor, Integer pageSize) throws Exception {
 
         UserEntity user = userService.getLoginUser();
         ScrapDirectoryEntity directory = getDirectoryOrNull(directoryId);
@@ -122,7 +122,7 @@ public class ScrapServiceImpl implements ScrapService {
 
         Page<ScrapEntity> scraps = scrapRepository.findAllByUserAndDirectoryWithCursor(user, directory, cursor, PageRequest.of(0, pageSize));
 
-        return scraps.map(ScrapMapper.INSTANCE::toScrapResponse);
+        return scrapToShopScrapResponse(scraps,directory);
     }
 
     @Override
@@ -143,7 +143,7 @@ public class ScrapServiceImpl implements ScrapService {
             @Override
             public ShopScrapResponse apply(ScrapEntity input) {
                 try {
-                    ShopScrapResponse shopScrapResponse=shopService.formattedToShopResponse(input);
+                    ShopScrapResponse shopScrapResponse=googleApiService.formattedToShopResponse(input);
                     shopScrapResponse.setScrapInfo(input.getId(), input.getCreatedAt(), input.getUpdatedAt());
 
                     if(directory==null){
