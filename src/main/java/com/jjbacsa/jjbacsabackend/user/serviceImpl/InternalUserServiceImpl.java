@@ -50,6 +50,19 @@ public class InternalUserServiceImpl implements InternalUserService {
     }
 
     @Override
+    public boolean isUserLogin(){
+        Object principal = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        if (principal == null || principal.toString().equals("anonymousUser"))
+            return false;
+
+        return true;
+    }
+
+    @Override
     public UserEntity getUserByEmail(String email) throws RequestInputException {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RequestInputException(ErrorMessage.USER_NOT_EXISTS_EXCEPTION));

@@ -144,12 +144,12 @@ public class GoogleShopController {
             )
     })
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "options_nearby", required = true, dataType = "Integer", value = "가까운 음식점 필터 여부"),
-            @ApiImplicitParam(name = "options_friend", required = true, dataType = "Integer", value = "친구 음식점 필터 여부"),
-            @ApiImplicitParam(name = "options_scrap", required = true, dataType = "Integer", value = "스크랩 음식점 필터 여부")
+            @ApiImplicitParam(name = "options_nearby", required = false, dataType = "Integer", value = "가까운 음식점 필터 여부"),
+            @ApiImplicitParam(name = "options_friend", required = false, dataType = "Integer", value = "친구 음식점 필터 여부"),
+            @ApiImplicitParam(name = "options_scrap", required = false, dataType = "Integer", value = "스크랩 음식점 필터 여부")
     })
     @PostMapping("/shops/maps")
-    public ResponseEntity<List<ShopSimpleResponse>> getGoogleShops(@RequestParam(name = "options_nearby", required = false, defaultValue = "0") Integer nearBy,
+    public ResponseEntity<List<ShopSimpleResponse>> getGoogleShops(@RequestParam(name = "options_nearby", required = false, defaultValue = "1") Integer nearBy,
                                                                    @RequestParam(name = "options_friend", required = false, defaultValue = "0") Integer friend,
                                                                    @RequestParam(name = "options_scrap", required = false, defaultValue = "0") Integer scrap,
                                                                    @RequestBody @Valid ShopRequest shopRequest) throws Exception {
