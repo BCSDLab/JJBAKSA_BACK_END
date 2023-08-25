@@ -20,5 +20,5 @@ public class SimpleShopDto {
 
     private String name;
     private Geometry geometry;
-    private List<Photos> photo;
+    private List<Photos> photos;
 }

@@ -518,7 +518,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
                 String photoToken;
                 try {
-                    photoToken = getPhotoUrl(simpleShopDto.getPhoto().get(0).getPhotoReference());
+                    photoToken = getPhotoUrl(simpleShopDto.getPhotos().get(0).getPhotoReference());
                 } catch (NullPointerException e) {
                     photoToken = null;
                 }
