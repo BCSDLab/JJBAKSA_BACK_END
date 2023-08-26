@@ -116,10 +116,12 @@ public class GoogleShopServiceTest {
     @Transactional
     @Test
     public void 상점_메인페이지_가까운필터() throws Exception {
-        saveAllShops();
+        int alreadyStored=googleShopRepository.findAll().size();
 
+        saveAllShops();
         List<ShopSimpleResponse> shops = googleShopService.getShops(1, 0, 0, shopRequest);
-        Assertions.assertEquals(4, shops.size());
+
+        Assertions.assertEquals(4+alreadyStored, shops.size());
 
         shops.stream().forEach(s -> {
             Assertions.assertEquals(s.getPlaceId(), googleShopRepository.findByPlaceId(s.getPlaceId()).get().getPlaceId());
@@ -127,7 +129,6 @@ public class GoogleShopServiceTest {
 
     }
 
-    //todo: 필터 테스트
     @Transactional
     @Test
     public void 상점_메인페이지_친구필터() throws Exception {
@@ -163,9 +164,6 @@ public class GoogleShopServiceTest {
         reviewRepository.save(reviewEntity1);
         reviewRepository.save(reviewEntity2);
         reviewRepository.save(reviewEntity3);
-
-//        List<ShopSimpleResponse> results=this.googleShopService.getShops(0,0,0,shopRequest);
-//        Assertions.assertEquals(results.size(),0);
 
         List<ShopSimpleResponse> results2 = this.googleShopService.getShops(0, 1, 0, shopRequest);
         Assertions.assertEquals(2, results2.size());
@@ -263,10 +261,10 @@ public class GoogleShopServiceTest {
         scrapRepository.save(scrap1);
 
         ShopResponse shopResponse = googleShopService.getShopDetails(googleShop1.getPlaceId(), true);
-        Assertions.assertEquals(shopResponse.isScrap(), true);
+        Assertions.assertNotNull(shopResponse.getScrap());
 
         ShopResponse shopResponse2 = googleShopService.getShopDetails(googleShop2.getPlaceId(), true);
-        Assertions.assertEquals(shopResponse2.isScrap(), false);
+        Assertions.assertNull(shopResponse2.getScrap());
     }
 
     @Test
@@ -280,7 +278,6 @@ public class GoogleShopServiceTest {
         List<String> result = googleShopService.getAutoComplete("순대", autoCompleteRequest);
         Assertions.assertNotEquals(result.size(),0);
     }
-
 
     private void saveAllShops() {
         googleShopRepository.save(googleShop1);
