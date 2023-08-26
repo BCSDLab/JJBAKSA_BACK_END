@@ -279,6 +279,28 @@ public class GoogleShopServiceTest {
         Assertions.assertNotEquals(result.size(),0);
     }
 
+    @Transactional
+    @Test
+    public void 갯수제한지도검색() throws Exception {
+        /** 상점 8개->결과 5개의 상점
+        반경 제한이 있으므로 request 근처의 상점 저장
+         */
+
+        String[] placeIds={"ChIJe9073fyefDUR4FggnKorNT4", "ChIJ2VpIAuOefDURiSzLpLD7OxI", "ChIJ3dyD-uKefDURvS4uxk4WFK4",
+                "ChIJW3qxgvuefDURVsRM2EnFCz4", "ChIJj6rxJyCffDURkVhCG8vD3i4", "ChIJIT3KvvuefDURlP-mhml8T6A",
+                "ChIJp6SCj_uefDURuP72bKM72O8", "ChIJfeRTqv6efDURoL4B-l4wrsA"};
+
+        for(String id:placeIds){
+            GoogleShopEntity googleShop=GoogleShopEntity.builder()
+                    .placeId(id).build();
+
+            googleShopRepository.save(googleShop);
+        }
+
+        List<ShopSimpleResponse> responses=googleShopService.getShops(1, 0, 0, shopRequest);
+        Assertions.assertEquals(5, responses.size());
+    }
+
     private void saveAllShops() {
         googleShopRepository.save(googleShop1);
         googleShopRepository.save(googleShop2);
