@@ -298,7 +298,7 @@ public class GoogleShopServiceTest {
         }
 
         List<ShopSimpleResponse> responses=googleShopService.getShops(1, 0, 0, shopRequest);
-        Assertions.assertEquals(5, responses.size());
+        Assertions.assertEquals(3, responses.size());
     }
 
     private void saveAllShops() {
