@@ -28,4 +28,5 @@ public interface InternalUserService {
     void decreaseFriendCount(Long userId);
 
     void addScrapCount(Long userId, int delta);
+    boolean isUserLogin();
 }

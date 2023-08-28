@@ -20,7 +20,7 @@ public interface ScrapService {
 
     ScrapResponse create(ScrapRequest request) throws Exception;
 
-    Page<ScrapResponse> getScraps(Long directoryId, Long cursor, Integer pageSize) throws Exception;
+    Page<ShopScrapResponse> getScraps(Long directoryId, Long cursor, Integer pageSize) throws Exception;
 
     ScrapResponse move(Long scrapId, ScrapRequest request) throws Exception;
 

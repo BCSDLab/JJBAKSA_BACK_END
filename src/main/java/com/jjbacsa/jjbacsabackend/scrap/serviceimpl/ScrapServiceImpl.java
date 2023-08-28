@@ -12,6 +12,7 @@ import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryRequest;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapDirectoryResponse;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapRequest;
 import com.jjbacsa.jjbacsabackend.scrap.dto.ScrapResponse;
+import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapDirectoryCount;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapDirectoryEntity;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapEntity;
 import com.jjbacsa.jjbacsabackend.scrap.mapper.ScrapDirectoryMapper;
@@ -111,7 +112,7 @@ public class ScrapServiceImpl implements ScrapService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<ScrapResponse> getScraps(Long directoryId, Long cursor, Integer pageSize) throws Exception {
+    public Page<ShopScrapResponse> getScraps(Long directoryId, Long cursor, Integer pageSize) throws Exception {
 
         UserEntity user = userService.getLoginUser();
         ScrapDirectoryEntity directory = getDirectoryOrNull(directoryId);
@@ -121,7 +122,7 @@ public class ScrapServiceImpl implements ScrapService {
 
         Page<ScrapEntity> scraps = scrapRepository.findAllByUserAndDirectoryWithCursor(user, directory, cursor, PageRequest.of(0, pageSize));
 
-        return scraps.map(ScrapMapper.INSTANCE::toScrapResponse);
+        return scrapToShopScrapResponse(scraps,directory);
     }
 
     @Override
@@ -133,17 +134,32 @@ public class ScrapServiceImpl implements ScrapService {
         else
             user = userService.getUserById(userId);
 
-        return scrapToShopScrapResponse(user, cursor, pageSize);
+        Page<ScrapEntity> scraps = scrapRepository.findAllByUserWithCursor(user,  cursor, PageRequest.of(0, pageSize));
+        return scrapToShopScrapResponse(scraps, null);
     }
 
-    private Page<ShopScrapResponse> scrapToShopScrapResponse(UserEntity user, Long cursor, Integer pageSize) {
-        Page<ScrapEntity> scraps = scrapRepository.findAllByUserWithCursor(user, cursor, PageRequest.of(0, pageSize));
-
+    private Page<ShopScrapResponse> scrapToShopScrapResponse(Page<ScrapEntity> scraps, ScrapDirectoryEntity directory) {
         Page<ShopScrapResponse> formattedScrapedShops = scraps.map(new Function<ScrapEntity, ShopScrapResponse>() {
             @Override
             public ShopScrapResponse apply(ScrapEntity input) {
                 try {
-                    return googleApiService.formattedToShopResponse(input);
+                    ShopScrapResponse shopScrapResponse=googleApiService.formattedToShopResponse(input);
+                    shopScrapResponse.setScrapInfo(input.getId(), input.getCreatedAt(), input.getUpdatedAt());
+
+                    if(directory==null){
+                        return shopScrapResponse;
+                    }
+
+                    ScrapDirectoryResponse.ScrapDirectoryResponseBuilder scrapDirectoryResponse=ScrapDirectoryResponse.builder();
+                    scrapDirectoryResponse.id(directory.getId());
+                    scrapDirectoryResponse.createdAt(directory.getCreatedAt());
+                    scrapDirectoryResponse.updatedAt(directory.getUpdatedAt());
+                    scrapDirectoryResponse.name(directory.getName());
+                    scrapDirectoryResponse.scrapCount(directory.getScrapDirectoryCount().getScrapCount());
+
+                    shopScrapResponse.setDirectory(scrapDirectoryResponse.build());
+
+                    return shopScrapResponse;
                 } catch (Exception e) {
                     throw new BaseException(ErrorMessage.INTERNAL_SHOP_EXCEPTION);
                 }

@@ -17,7 +17,7 @@ public interface InternalScrapService {
 
     List<Long> getShopIdsForUserScrap() throws Exception;
 
-    boolean isUserScrapShop(GoogleShopEntity googleShop) throws Exception;
+    Long getUserScrapShop(GoogleShopEntity googleShop) throws Exception;
 }
 
 

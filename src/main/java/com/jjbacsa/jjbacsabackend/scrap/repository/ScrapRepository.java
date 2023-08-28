@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ScrapRepository extends JpaRepository<ScrapEntity, Long>, DslScrapRepository {
@@ -16,4 +17,6 @@ public interface ScrapRepository extends JpaRepository<ScrapEntity, Long>, DslSc
     boolean existsByUserAndShop(UserEntity user, GoogleShopEntity shop);
 
     List<ScrapEntity> findAllByUser(UserEntity user);
+
+    Optional<ScrapEntity> findByUserAndShop(UserEntity user, GoogleShopEntity shop);
 }
