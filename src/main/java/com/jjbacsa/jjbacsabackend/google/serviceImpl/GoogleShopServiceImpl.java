@@ -209,6 +209,12 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     public List<ShopSimpleResponse> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception {
 
         List<Long> shopIds = getShopId(nearBy, friend, scrap);
+
+        //현재 DB에 5개 이상 있으면 id 처음~5번째까지로 제한
+        int shopsSize= shopIds.size();
+        if(shopsSize>=5)
+            shopIds=shopIds.subList(shopsSize-5, shopsSize);
+
         List<String> placeIDs = getPlaceIds(shopIds);
 
         // 2000m(2km) 이내
