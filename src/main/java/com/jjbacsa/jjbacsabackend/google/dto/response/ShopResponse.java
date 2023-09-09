@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.google.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.jjbacsa.jjbacsabackend.google.dto.inner.openingHours;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -22,11 +23,11 @@ public class ShopResponse {
     private Double lng;
     private String formattedPhoneNumber;
     private Boolean openNow;
-    private List<String> businessDay;
     private Integer totalRating;
     private Integer ratingCount;
     private String category;
-    private String todayBusinessHour; //오늘 영업시간
+    private int[] todayPeriod; //오늘 영업시간
+    private openingHours.Period[] periods; //0:일 6:토
     private Long scrap;
     private List<String> photos;
 

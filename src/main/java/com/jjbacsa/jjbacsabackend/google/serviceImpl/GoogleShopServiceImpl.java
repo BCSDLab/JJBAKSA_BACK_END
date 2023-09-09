@@ -11,6 +11,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.google.dto.*;
 import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.inner.openingHours;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.*;
@@ -140,25 +141,29 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         }
 
         if (isDetail) {
-            List<String> businessDay=new ArrayList<>();
-            String todayBusinessHour;
-            try {
+            //영업시간 객체화
+            openingHours.Period[] periods=new openingHours.Period[7]; //0:일 6:토
+            int[] todayPeriod=null;
 
-                for (String weekday : shopApiDto.getOpeningHours().getWeekdayText())
-                    businessDay.add(weekday.substring(5));
+            //periods 배열 초기화
+            List<openingHours.Period> apiPeriods=shopApiDto.getOpeningHours().getPeriods();
+            if(apiPeriods!=null) {
 
-            } catch (Exception e) {
-                businessDay = null;
-            }
-
-            try{
                 LocalDate today = LocalDate.now();
-                int dayOfWeek = today.getDayOfWeek().getValue() -1; //0:월 6:일
+                int dayOfWeek = today.getDayOfWeek().getValue() % 7;
 
-                todayBusinessHour=shopApiDto.getOpeningHours().getWeekdayText().get(dayOfWeek);
-                todayBusinessHour = todayBusinessHour.substring(5);
-            } catch (Exception e){
-                todayBusinessHour=null;
+                for (openingHours.Period period : shopApiDto.getOpeningHours().getPeriods()) {
+                    int day = period.getOpen().getDay();
+                    periods[day] = period;
+
+                    if(dayOfWeek==day){
+                        openingHours.Period.PeriodTime open=period.getOpen();
+                        openingHours.Period.PeriodTime close=period.getClose();
+
+                        todayPeriod= new int[]{open.getTime(), close.getTime()};
+                    }
+
+                }
             }
 
             Boolean openNow;
@@ -177,9 +182,9 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .lng(shopApiDto.getGeometry().getLocation().getLng())
                     .openNow(openNow)
                     .photos(photoTokens)
-                    .businessDay(businessDay)
                     .category(category.name())
-                    .todayBusinessHour(todayBusinessHour)
+                    .todayPeriod(todayPeriod)
+                    .periods(periods)
                     .build();
         } else {
             shopResponse = ShopResponse.builder()
