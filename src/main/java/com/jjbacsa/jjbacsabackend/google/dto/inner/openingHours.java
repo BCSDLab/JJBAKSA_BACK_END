@@ -11,6 +11,18 @@ public class openingHours {
     @JsonProperty("open_now")
     String openNow; //현재 open 여부
 
-    @JsonProperty("weekday_text")
-    List<String> weekdayText; //영업시간 정보 (쿼리 다중 검색에서는 제공하지 않음)
+    @JsonProperty("periods")
+    List<Period> periods; //영업시간 정보 객체화
+
+    @Data
+    public static class Period{
+        PeriodTime open;
+        PeriodTime close;
+
+        @Data
+        public static class PeriodTime{
+            int day; //일요일(0)~토요일(6)
+            int time; //0000-2359
+        }
+    }
 }
