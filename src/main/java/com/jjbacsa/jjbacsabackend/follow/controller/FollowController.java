@@ -154,4 +154,15 @@ public class FollowController {
         return new ResponseEntity<>(service.getRecentlyActiveFollowers(cursor, pageSize), HttpStatus.OK);
     }
 
+    @ApiOperation(
+            value = "24시간 이내 팔로워 요청 확인",
+            authorizations = @Authorization(value = "Bearer + accessToken"),
+            notes = "24시간 내 팔로워 요청이 존재하는 지 확인\n\n\t"
+    )
+    @PreAuthorize("hasRole('NORMAL')")
+    @GetMapping(value = "/follow/requests/in-last-24-hours")
+    public ResponseEntity<Boolean> getFollowRequestsInLast24Hours() throws Exception {
+        return new ResponseEntity<>(service.getFollowRequestsInLast24Hours(), HttpStatus.OK);
+    }
+
 }

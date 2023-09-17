@@ -12,4 +12,6 @@ public interface DslFollowRequestRepository {
     Page<FollowRequestEntity> findAllByFollower(UserEntity follower, Pageable pageable);
 
     Long deleteFollowRequestWithUser(UserEntity user);
+
+    Boolean existsFollowReqeustsInLast24Hours(Long userId);
 }
