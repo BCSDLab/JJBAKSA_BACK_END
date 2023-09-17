@@ -130,6 +130,13 @@ public class FollowServiceImpl implements FollowService {
                 .map(follow -> UserMapper.INSTANCE.toUserResponse(follow.getFollower()));
     }
 
+    @Override
+    public Boolean getFollowRequestsInLast24Hours() throws Exception {
+        UserEntity user = userService.getLoginUser();
+
+        return followRequestRepository.existsFollowReqeustsInLast24Hours(user.getId());
+    }
+
     private void checkValidFollowRequest(UserEntity user, UserEntity follower) throws RequestInputException {
 
         if (user.equals(follower))
