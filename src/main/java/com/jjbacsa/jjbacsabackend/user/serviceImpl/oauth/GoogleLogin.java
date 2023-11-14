@@ -26,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +50,7 @@ public class GoogleLogin implements SnsLogin {
                 oAuthInfoRepository.findByApiKeyAndOauthType(String.valueOf(claims.getPayload().get("sub")), this.getOAuthType());
 
         UserEntity googleUser = UserEntity.builder()
+                .account("sns-" + UUID.randomUUID())
                 .email(String.valueOf(claims.getPayload().get("email")))
                 .nickname(String.valueOf(claims.getPayload().get("name")))
                 .userType(UserType.NORMAL)

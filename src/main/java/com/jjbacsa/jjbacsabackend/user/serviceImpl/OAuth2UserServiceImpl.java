@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -105,6 +106,7 @@ public class OAuth2UserServiceImpl extends DefaultOAuth2UserService {
                 oAuthInfoRepository.findByApiKeyAndOauthType(oAuth2UserInfo.getApiKey(), oAuth2UserInfo.getOAuthType());
 
         UserEntity user = UserEntity.builder()
+                .account("sns-" + UUID.randomUUID())
                 .email(oAuth2UserInfo.getEmail())
                 .nickname(oAuth2UserInfo.getName())
                 .userType(UserType.NORMAL)
