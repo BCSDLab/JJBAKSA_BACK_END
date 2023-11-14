@@ -77,6 +77,7 @@ public class AppleLogin implements SnsLogin {
                 oAuthInfoRepository.findByApiKeyAndOauthType(String.valueOf(claims.get("sub")), this.getOAuthType());
 
         UserEntity appleUser = UserEntity.builder()
+                .account("sns-" + UUID.randomUUID())
                 .email(String.valueOf(claims.get("email")))
                 .nickname(this.getOAuthType() + "_" + String.valueOf(claims.get("sub")).substring(15, 20))
                 .userType(UserType.NORMAL)

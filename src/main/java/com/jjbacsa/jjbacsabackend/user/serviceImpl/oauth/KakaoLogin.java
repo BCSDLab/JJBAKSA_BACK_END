@@ -20,6 +20,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -70,6 +71,7 @@ public class KakaoLogin extends TokenSnsLogin {
                 oAuthInfoRepository.findByApiKeyAndOauthType(apiKey, this.getOAuthType());
 
         UserEntity kakaoUser = UserEntity.builder()
+                .account("sns-" + UUID.randomUUID())
                 .email(kakaoAccount.get("email").toString())
                 .nickname(properties.get("nickname").toString())
                 .userType(UserType.NORMAL)

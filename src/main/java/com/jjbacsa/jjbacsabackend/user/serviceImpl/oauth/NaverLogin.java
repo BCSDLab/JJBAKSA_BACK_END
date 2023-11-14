@@ -19,6 +19,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -76,6 +77,7 @@ public class NaverLogin extends TokenSnsLogin {
                 oAuthInfoRepository.findByApiKeyAndOauthType(apiKey, this.getOAuthType());
 
         UserEntity naverUser = UserEntity.builder()
+                .account("sns-" + UUID.randomUUID())
                 .email(obj.get("email").toString())
                 .nickname(obj.get("nickname").toString())
                 .userType(UserType.NORMAL)
