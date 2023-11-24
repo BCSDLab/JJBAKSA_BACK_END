@@ -12,7 +12,6 @@ import com.jjbacsa.jjbacsabackend.search.service.SearchService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -24,7 +23,6 @@ public class GoogleShopController {
 
     private final GoogleShopService googleShopService;
     private final SearchService searchService;
-    private final String KEY = "RANKING";
 
     /**
      * 각 상점마다 검색시 상세조회 수행 (각각에 대해 상세조회 가격이 들어감<- 1000회 17달러)
@@ -55,8 +53,7 @@ public class GoogleShopController {
     )
     @PostMapping("/shops")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name = "keyword") String keyword) throws JsonProcessingException {
-        searchService.saveForAutoComplete(keyword);
-        searchService.saveRedis(keyword, KEY);
+        searchService.saveTrending(keyword);
 
         return ResponseEntity.ok()
                 .body(googleShopService.searchShopQuery(keyword, shopRequest));
