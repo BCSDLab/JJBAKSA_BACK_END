@@ -18,14 +18,14 @@ public enum ErrorMessage {
     INVALID_TOKEN(12, "유효하지 않은 토큰입니다.", HttpStatus.UNAUTHORIZED),
     INVALID_ACCESS(13, "유효하지 않은 접근입니다.", HttpStatus.CONFLICT),
     EXPIRED_TOKEN(14, "만료된 토큰입니다.", HttpStatus.UNAUTHORIZED),
-    INVALID_TOKEN_TYPE(15,  "잘못된 토큰 타입입니다.", HttpStatus.BAD_REQUEST),
-    ZERO_RESULTS_EXCEPTION(16,"구글 API 검색 결과가 없습니다.",HttpStatus.NOT_FOUND),
-    NOT_FOUND_EXCEPTION(17,"정보를 가져올 수 없습니다.",HttpStatus.NOT_FOUND),
-    INVALID_REQUEST_EXCEPTION(18,"API 요쳥 형식이 올바르지 않습니다.",HttpStatus.BAD_REQUEST),
-    OVER_QUERY_LIMIT_EXCEPTION(19,"API 요청을 수행할 수 없습니다.",HttpStatus.FORBIDDEN),
-    REQUEST_DENIEDE_EXCEPTION(20,"API 요청이 거절됩니다.",HttpStatus.UNAUTHORIZED),
-    JSON_PROCESSING_EXCEPTION(21,"JSON 변환 과정에서 에러가 발생합니다.",HttpStatus.INTERNAL_SERVER_ERROR),
-    REQUIRED_ATTRIBUTE_MISSING_EXCEPTION(22,"API 필수 속성이 없습니다.",HttpStatus.NOT_FOUND),
+    INVALID_TOKEN_TYPE(15, "잘못된 토큰 타입입니다.", HttpStatus.BAD_REQUEST),
+    ZERO_RESULTS_EXCEPTION(16, "구글 API 검색 결과가 없습니다.", HttpStatus.NOT_FOUND),
+    NOT_FOUND_EXCEPTION(17, "정보를 가져올 수 없습니다.", HttpStatus.NOT_FOUND),
+    INVALID_REQUEST_EXCEPTION(18, "API 요쳥 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    OVER_QUERY_LIMIT_EXCEPTION(19, "API 요청을 수행할 수 없습니다.", HttpStatus.FORBIDDEN),
+    REQUEST_DENIEDE_EXCEPTION(20, "API 요청이 거절됩니다.", HttpStatus.UNAUTHORIZED),
+    JSON_PROCESSING_EXCEPTION(21, "JSON 변환 과정에서 에러가 발생합니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    REQUIRED_ATTRIBUTE_MISSING_EXCEPTION(22, "API 필수 속성이 없습니다.", HttpStatus.NOT_FOUND),
     SHOP_NOT_EXISTS_EXCEPTION(23, "상점이 존재하지 않습니다.", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_EXISTS_EXCEPTION(24, "리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND),
     INVALID_PERMISSION_REVIEW(25, "리뷰 작성자가 아닙니다.", HttpStatus.BAD_REQUEST),
@@ -54,8 +54,8 @@ public enum ErrorMessage {
     INVALID_PERMISSION_INQUIRY(48, "문의글 작성자가 아닙니다.", HttpStatus.BAD_REQUEST),
     CONTINUAL_API_EXCEPTION(49, "연속적으로 외부 API 요청에 실패합니다.", HttpStatus.BAD_REQUEST),
     INTERNAL_SHOP_EXCEPTION(50, "상점 정보 조회에 실패합니다.", HttpStatus.INTERNAL_SERVER_ERROR),
-    PASSWORD_INCORRECT_EXCEPTION(51, "현재 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST)
-    ;
+    PASSWORD_INCORRECT_EXCEPTION(51, "현재 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
+    WEEK_DAY_EXCEPTION(52, "요일이 유효하지 않습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     Integer code;
     String errorMessage;

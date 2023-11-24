@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.enums.WeekType;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
@@ -22,6 +23,7 @@ import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.scrap.service.InternalScrapService;
+import com.jjbacsa.jjbacsabackend.shop.dto.shopInner.Opening_hours;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -62,7 +64,8 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     private final String[] pinFields = {"name", "types", "place_id", "photos/photo_reference"};
     private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference"};
     private final String[] scrapFields = {"name", "types", "place_id", "photos/photo_reference", "formatted_address"};
-    private final String[] addressLevels={"읍", "면", "동", "가", "로", "길"};
+    private final String[] addressLevels = {"읍", "면", "동", "가", "로", "길"};
+
     public GoogleShopServiceImpl(ObjectMapper objectMapper, @Value("${external.api.key}") String key, GoogleShopRepository googleShopRepository, InternalFollowService internalFollowService, InternalReviewService internalReviewService, InternalScrapService internalScrapService) {
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -141,30 +144,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         }
 
         if (isDetail) {
-            //영업시간 객체화
-            openingHours.Period[] periods=new openingHours.Period[7]; //0:일 6:토
-            int[] todayPeriod=null;
-
-            //periods 배열 초기화
-            List<openingHours.Period> apiPeriods=shopApiDto.getOpeningHours().getPeriods();
-            if(apiPeriods!=null) {
-
-                LocalDate today = LocalDate.now();
-                int dayOfWeek = today.getDayOfWeek().getValue() % 7;
-
-                for (openingHours.Period period : shopApiDto.getOpeningHours().getPeriods()) {
-                    int day = period.getOpen().getDay();
-                    periods[day] = period;
-
-                    if(dayOfWeek==day){
-                        openingHours.Period.PeriodTime open=period.getOpen();
-                        openingHours.Period.PeriodTime close=period.getClose();
-
-                        todayPeriod= new int[]{open.getTime(), close.getTime()};
-                    }
-
-                }
-            }
+            Periods periods = getPeriods(shopApiDto);
 
             Boolean openNow;
             try {
@@ -183,7 +163,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .openNow(openNow)
                     .photos(photoTokens)
                     .category(category.name())
-                    .todayPeriod(todayPeriod)
                     .periods(periods)
                     .build();
         } else {
@@ -209,6 +188,28 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return shopResponse;
     }
 
+    private Periods getPeriods(ShopApiDto shopApiDto) {
+        List<openingHours.Period> apiPeriods;
+
+        try {
+            apiPeriods = shopApiDto.getOpeningHours().getPeriods();
+        } catch (NullPointerException e) {
+            return null;
+        }
+
+        List<Periods.Period> periods = new ArrayList<>();
+        for (openingHours.Period apiPeriod : apiPeriods) {
+            WeekType week = WeekType.getWeekType(apiPeriod.getOpen().getDay());
+            openingHours.Period.PeriodTime startTime = apiPeriod.getOpen();
+            openingHours.Period.PeriodTime endTime = apiPeriod.getClose();
+
+            Periods.Period period = new Periods.Period(week, startTime.getTime(), endTime.getTime());
+            periods.add(period);
+        }
+
+        return Periods.createPeriods(periods);
+    }
+
     @Transactional(readOnly = true)
     @Override
     public List<ShopSimpleResponse> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception {
@@ -216,9 +217,9 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         List<Long> shopIds = getShopId(nearBy, friend, scrap);
 
         //현재 DB에 5개 이상 있으면 id 처음~5번째까지로 제한
-        int shopsSize= shopIds.size();
-        if(shopsSize>=5)
-            shopIds=shopIds.subList(shopsSize-5, shopsSize);
+        int shopsSize = shopIds.size();
+        if (shopsSize >= 5)
+            shopIds = shopIds.subList(shopsSize - 5, shopsSize);
 
         List<String> placeIDs = getPlaceIds(shopIds);
 
@@ -238,7 +239,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 failCnt++;
             }
 
-            if (failCnt >= simpleShopDtos.size() / 2 && failCnt!=0) {
+            if (failCnt >= simpleShopDtos.size() / 2 && failCnt != 0) {
                 throw new ApiException(ErrorMessage.OVER_QUERY_LIMIT_EXCEPTION);
             }
         }
@@ -278,19 +279,19 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     @Override
     public ShopScrapResponse getShopScrap(String placeId, Long scrapId) throws JsonProcessingException {
 
-        String requestField=toFieldString(scrapFields);
-        String shopStr=this.callGoogleApi(placeId, requestField);
+        String requestField = toFieldString(scrapFields);
+        String shopStr = this.callGoogleApi(placeId, requestField);
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
         Category category = getCategory(shopApiDto.getTypes());
         String photoToken;
 
-        try{
-            photoToken=getPhotoUrl(shopApiDto.getPhotos().get(0).getPhotoReference());
-        } catch (NullPointerException e){
-            photoToken=null;
+        try {
+            photoToken = getPhotoUrl(shopApiDto.getPhotos().get(0).getPhotoReference());
+        } catch (NullPointerException e) {
+            photoToken = null;
         }
 
-        ShopScrapResponse shopScrapResponse=ShopScrapResponse.builder()
+        ShopScrapResponse shopScrapResponse = ShopScrapResponse.builder()
                 .placeId(shopApiDto.getPlaceId())
                 .name(shopApiDto.getName())
                 .category(category.name())
@@ -300,7 +301,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 .build();
 
         Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopScrapResponse.getPlaceId());
-        if (shop.isPresent()){
+        if (shop.isPresent()) {
             GoogleShopCount shopCount = shop.get().getShopCount();
             shopScrapResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
         }
@@ -424,7 +425,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             Double distFromUser = this.getMeter(dto.getGeometry(), shopRequest);
 
 
-            if(dto.getFormattedAddress()!=null)
+            if (dto.getFormattedAddress() != null)
                 dto.setFormattedAddress(this.formattedAddressFormatting(dto.getFormattedAddress()));
 
             ShopQueryResponse shopQueryResponse = ShopQueryResponse.builder()
@@ -456,36 +457,36 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     /**
      * 상점 미리보기에서 제공하는 것과 같이 법정구역상 ~동 ~읍 ~면 / 행정구역상 ~구로
      * 상점 위치정보를 반환하기 위한 메소드
-     * */
-    private String formattedAddressFormatting(String address){
-        String[] addressArr=address.split(" ");
+     */
+    private String formattedAddressFormatting(String address) {
+        String[] addressArr = address.split(" ");
 
-        int formattedIdx=-1;
-        for(int i=0;i<addressArr.length;i++){
-            String addressBlock=addressArr[i];
+        int formattedIdx = -1;
+        for (int i = 0; i < addressArr.length; i++) {
+            String addressBlock = addressArr[i];
 
-            String lastWord = addressBlock.substring(addressBlock.length()-1);
-            for(String addressLevel:addressLevels){
+            String lastWord = addressBlock.substring(addressBlock.length() - 1);
+            for (String addressLevel : addressLevels) {
                 if (addressLevel.equals(lastWord)) {
                     formattedIdx = i;
                     break;
                 }
             }
 
-            if (formattedIdx>=0)
+            if (formattedIdx >= 0)
                 break;
         }
 
-        if(formattedIdx<0)
+        if (formattedIdx < 0)
             return address;
 
-        StringBuilder sb=new StringBuilder();
-        for(int i=0;i<=formattedIdx;i++){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i <= formattedIdx; i++) {
             sb.append(addressArr[i]);
             sb.append(" ");
         }
 
-        sb.deleteCharAt(sb.length()-1);
+        sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
     }
 

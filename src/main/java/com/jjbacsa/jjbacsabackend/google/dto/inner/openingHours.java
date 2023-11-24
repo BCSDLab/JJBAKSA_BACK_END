@@ -21,8 +21,8 @@ public class openingHours {
 
         @Data
         public static class PeriodTime{
-            int day; //일요일(0)~토요일(6)
-            int time; //0000-2359
+            Integer day; //일요일(0)~토요일(6)
+            Integer time; //0000-2359
         }
     }
 }
