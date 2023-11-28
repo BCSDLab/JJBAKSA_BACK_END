@@ -5,6 +5,7 @@ import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopRateResponse;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
@@ -175,10 +176,18 @@ public class GoogleShopController {
     @ApiImplicitParam(
             name = "query", value = "자동완성 검색어", required = true, dataType = "string", paramType = "query"
     )
-    @PostMapping ("/shops/auto-complete")
+    @PostMapping("/shops/auto-complete")
     public ResponseEntity<List<String>> getAutoComplete(@RequestParam(name = "query") String query,
                                                         @RequestBody @Valid AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException {
         return ResponseEntity.ok()
                 .body(googleShopService.getAutoComplete(query, autoCompleteRequest));
     }
+
+    @GetMapping("/shops/rates/{place_id}")
+    public ResponseEntity<ShopRateResponse> getShopRate(@PathVariable("place_id") String placeId) {
+        return ResponseEntity.ok()
+                .body(googleShopService.getShopRate(placeId));
+    }
+
+    //todo: 별점
 }

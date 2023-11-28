@@ -3,10 +3,7 @@ package com.jjbacsa.jjbacsabackend.google.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopScrapResponse;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
+import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 
 import java.util.List;
 
@@ -29,4 +26,9 @@ public interface GoogleShopService {
 
     //검색어 상점 자동완성
     List<String> getAutoComplete(String query, AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException;
+
+    ShopRateResponse getShopRate(String placeId);
+
+    //todo: 스크랩 여부 반환
+
 }

@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface GoogleShopRepository extends JpaRepository<GoogleShopEntity, Long> {
     Optional<GoogleShopEntity> findByPlaceId(String placeId);
 
+    GoogleShopEntity getByPlaceId(String placeId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select sc.totalRating from GoogleShopCount sc " +
             "where sc.id = :shopId")
@@ -23,4 +25,6 @@ public interface GoogleShopRepository extends JpaRepository<GoogleShopEntity, Lo
     @Query("select sc.ratingCount from GoogleShopCount sc " +
             "where sc.id = :shopId")
     Integer getRatingCount(@Param("shopId") Long shopId);
+
+    boolean existsByPlaceId(String placeId);
 }

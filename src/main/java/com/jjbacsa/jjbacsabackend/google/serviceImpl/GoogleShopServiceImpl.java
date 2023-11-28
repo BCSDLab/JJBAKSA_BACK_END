@@ -19,11 +19,9 @@ import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopCount;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
-import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.scrap.service.InternalScrapService;
-import com.jjbacsa.jjbacsabackend.shop.dto.shopInner.Opening_hours;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -41,7 +39,6 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -307,6 +304,18 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         }
 
         return shopScrapResponse;
+    }
+
+    @Override
+    public ShopRateResponse getShopRate(String placeId) {
+        if (!googleShopRepository.existsByPlaceId(placeId)) {
+            return ShopRateResponse.createDefaultRateResponse();
+        }
+
+        GoogleShopEntity shopEntity = googleShopRepository.getByPlaceId(placeId);
+        GoogleShopCount countEntity = shopEntity.getShopCount();
+
+        return ShopRateResponse.from(countEntity);
     }
 
     private String toFieldString(String[] fields) {
