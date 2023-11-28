@@ -29,6 +29,5 @@ public interface GoogleShopService {
 
     ShopRateResponse getShopRate(String placeId);
 
-    //todo: 스크랩 여부 반환
-
+    ShopSimpleScrapResponse getSimpleShopScrap(String placeId) throws Exception;
 }

@@ -4,13 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopRateResponse;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
+import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.search.service.SearchService;
 import io.swagger.annotations.*;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -189,5 +187,9 @@ public class GoogleShopController {
                 .body(googleShopService.getShopRate(placeId));
     }
 
-    //todo: 별점
+    @GetMapping("/shops/scraps/{place_id}")
+    public ResponseEntity<ShopSimpleScrapResponse> getShopSimpleScrap(@PathVariable("place_id") String placeId) throws Exception {
+        return ResponseEntity.ok()
+                .body(googleShopService.getSimpleShopScrap(placeId));
+    }
 }

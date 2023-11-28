@@ -185,6 +185,14 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return shopResponse;
     }
 
+    @Override
+    public ShopSimpleScrapResponse getSimpleShopScrap(String placeId) throws Exception {
+        GoogleShopEntity shopEntity = googleShopRepository.getByPlaceId(placeId);
+        Long scrapId = scrapService.getUserScrapShop(shopEntity);
+
+        return ShopSimpleScrapResponse.createScrappedResponse(scrapId);
+    }
+
     private Periods getPeriods(ShopApiDto shopApiDto) {
         List<openingHours.Period> apiPeriods;
 
@@ -317,6 +325,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
         return ShopRateResponse.from(countEntity);
     }
+
 
     private String toFieldString(String[] fields) {
         StringBuilder stringBuilder = new StringBuilder();
