@@ -16,7 +16,9 @@ public interface GoogleShopService {
     ShopQueryResponses searchShopQueryNext(String pageToken, ShopRequest shopRequest) throws JsonProcessingException;
 
     //구글 상점 상세정보
-    ShopResponse getShopDetails(String placeId, boolean isDetail) throws Exception;
+    ShopResponse getShopDetails(String placeId) throws JsonProcessingException;
+
+    ShopPinResponse getPinShop(String placeId) throws JsonProcessingException;
 
     //Scrap 상점 반환(스크랩한 상점 반환 시에 사용)
     ShopScrapResponse getShopScrap(String placeId, Long scrapId) throws JsonProcessingException;

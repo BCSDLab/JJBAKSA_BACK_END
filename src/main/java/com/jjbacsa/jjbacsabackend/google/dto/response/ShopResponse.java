@@ -11,7 +11,6 @@ import java.util.List;
 @Builder
 @Getter
 public class ShopResponse {
-    private Long shopId;
     private String placeId;
     private String name;
     private String formattedAddress;
@@ -21,8 +20,4 @@ public class ShopResponse {
     private String category;
     private TodayPeriod todayPeriod;
     private List<String> photos;
-
-    public void setShopId(Long shopId) {
-        this.shopId = shopId;
-    }
 }

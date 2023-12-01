@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.google.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopPinResponse;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopScrapResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
@@ -37,7 +38,7 @@ public class InternalGoogleApiServiceImpl implements InternalGoogleApiService {
     @Override
     public ShopResponse getShopDetails(String placeId) throws Exception {
 
-        return googleShopService.getShopDetails(placeId, true);
+        return googleShopService.getShopDetails(placeId);
     }
 
     @Override
@@ -47,9 +48,10 @@ public class InternalGoogleApiServiceImpl implements InternalGoogleApiService {
         return shopScrapResponse;
     }
 
+    //todo: 이거에 맞는 메소드를 만들어서 변경하는 게 좋을거같음
     private GoogleShopEntity saveGoogleShop(String placeId) throws Exception {
 
-        ShopResponse shopResponse = googleShopService.getShopDetails(placeId, false);
+        ShopPinResponse shopResponse = googleShopService.getPinShop(placeId);
         GoogleShopEntity googleShopEntity = GoogleShopEntity.builder()
                 .placeId(shopResponse.getPlaceId())
                 .build();

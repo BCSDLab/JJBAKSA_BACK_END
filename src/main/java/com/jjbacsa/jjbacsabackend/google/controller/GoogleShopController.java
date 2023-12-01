@@ -100,7 +100,7 @@ public class GoogleShopController {
     public ResponseEntity<ShopResponse> getGoogleShopDetails(@PathVariable("place_id") String placeId) throws Exception {
 
         return ResponseEntity.ok()
-                .body(googleShopService.getShopDetails(placeId, true));
+                .body(googleShopService.getShopDetails(placeId));
     }
 
     @ApiOperation(
@@ -116,9 +116,9 @@ public class GoogleShopController {
     })
     @ApiImplicitParam(name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path")
     @GetMapping("/shops/pin/{place_id}")
-    public ResponseEntity<ShopResponse> getPinGoogleShop(@PathVariable("place_id") String placeId) throws Exception {
+    public ResponseEntity<ShopPinResponse> getPinGoogleShop(@PathVariable("place_id") String placeId) throws Exception {
         return ResponseEntity.ok()
-                .body(googleShopService.getShopDetails(placeId, false));
+                .body(googleShopService.getPinShop(placeId));
     }
 
     @ApiOperation(

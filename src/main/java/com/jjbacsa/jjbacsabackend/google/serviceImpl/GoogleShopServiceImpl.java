@@ -112,38 +112,18 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return shopQueryResponses;
     }
 
-    @Transactional(readOnly = true)
     @Override
-    public ShopResponse getShopDetails(String placeId, boolean isDetail) throws Exception {
-        ShopResponse shopResponse;
-
-        String requestField;
-        if (isDetail) {
-            requestField = toFieldString(placeDetailsField);
-        } else {
-            requestField = toFieldString(pinFields);
-        }
+    public ShopResponse getShopDetails(String placeId) throws JsonProcessingException {
+        String requestField = toFieldString(placeDetailsField);
 
         String shopStr = this.callGoogleApi(placeId, requestField);
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
 
         Category category = getCategory(shopApiDto.getTypes());
-        List<String> photoTokens = new ArrayList<>();
-        try {
-            int maxRange = shopApiDto.getPhotos().size() >= 10 ? 10 : shopApiDto.getPhotos().size();
+        List<String> photoTokens = getPhotoTokens(shopApiDto);
+        TodayPeriod todayPeriod = getPeriod(shopApiDto);
 
-            for (int p = 0; p < maxRange; p++) {
-                photoTokens.add(getPhotoUrl(shopApiDto.getPhotos().get(p).getPhotoReference()));
-            }
-
-        } catch (NullPointerException e) {
-            photoTokens = null;
-        }
-
-        if (isDetail) {
-            TodayPeriod todayPeriod = getPeriod(shopApiDto);
-
-            shopResponse = ShopResponse.builder()
+        return ShopResponse.builder()
                     .placeId(shopApiDto.getPlaceId())
                     .name(shopApiDto.getName())
                     .formattedAddress(shopApiDto.getFormattedAddress())
@@ -154,16 +134,39 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .category(category.name())
                     .todayPeriod(todayPeriod)
                     .build();
-        } else {
-            shopResponse = ShopResponse.builder()
-                    .placeId(shopApiDto.getPlaceId())
-                    .name(shopApiDto.getName())
-                    .category(category.name())
-                    .photos(photoTokens)
-                    .build();
-        }
+    }
 
-        return shopResponse;
+    @Override
+    public ShopPinResponse getPinShop(String placeId) throws JsonProcessingException {
+        String requestField = toFieldString(pinFields);
+
+        String shopStr = this.callGoogleApi(placeId, requestField);
+        ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
+
+        Category category = getCategory(shopApiDto.getTypes());
+        List<String> photoTokens = getPhotoTokens(shopApiDto);
+
+        return ShopPinResponse.builder()
+                .placeId(shopApiDto.getPlaceId())
+                .name(shopApiDto.getName())
+                .category(category.name())
+                .photos(photoTokens)
+                .build();
+    }
+
+    private List<String> getPhotoTokens(ShopApiDto shopApiDto) {
+        try {
+            List<String> photos = new ArrayList<>();
+            int maxRange = shopApiDto.getPhotos().size() >= 10 ? 10 : shopApiDto.getPhotos().size();
+
+            for (int p = 0; p < maxRange; p++) {
+                photos.add(getPhotoUrl(shopApiDto.getPhotos().get(p).getPhotoReference()));
+            }
+
+            return photos;
+        } catch (NullPointerException e) {
+            return new ArrayList<>();
+        }
     }
 
     @Override
