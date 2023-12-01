@@ -10,6 +10,10 @@ public enum WeekType {
         return WeekType.values()[week];
     }
 
+    public static WeekType getWeekTypeByCalender(int dayOfWeekNumber) {
+        return getWeekType(dayOfWeekNumber - 1);
+    }
+
     public int getWeekNumber() {
         return this.ordinal();
     }

@@ -1,14 +1,13 @@
 package com.jjbacsa.jjbacsabackend.google.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.api.SimpleShopDto;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.search.service.SearchService;
 import io.swagger.annotations.*;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;

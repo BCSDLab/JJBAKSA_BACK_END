@@ -10,9 +10,9 @@ import com.jjbacsa.jjbacsabackend.etc.enums.WeekType;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
-import com.jjbacsa.jjbacsabackend.google.dto.*;
-import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
-import com.jjbacsa.jjbacsabackend.google.dto.inner.openingHours;
+import com.jjbacsa.jjbacsabackend.google.dto.api.*;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.openingHours;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.*;
@@ -141,7 +141,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         }
 
         if (isDetail) {
-            Periods periods = getPeriods(shopApiDto);
+            TodayPeriod todayPeriod = getPeriod(shopApiDto);
 
             Boolean openNow;
             try {
@@ -160,7 +160,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .openNow(openNow)
                     .photos(photoTokens)
                     .category(category.name())
-                    .periods(periods)
+                    .todayPeriod(todayPeriod)
                     .build();
         } else {
             shopResponse = ShopResponse.builder()
@@ -170,17 +170,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .photos(photoTokens)
                     .build();
         }
-
-        Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopResponse.getPlaceId());
-        Long scrapId = null;
-        if (shop.isPresent()) {
-            GoogleShopCount shopCount = shop.get().getShopCount();
-            shopResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
-            shopResponse.setShopId(shop.get().getId());
-            scrapId = scrapService.getUserScrapShop(shop.get());
-        }
-
-        shopResponse.setScrap(scrapId);
 
         return shopResponse;
     }
@@ -193,7 +182,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return ShopSimpleScrapResponse.createScrappedResponse(scrapId);
     }
 
-    private Periods getPeriods(ShopApiDto shopApiDto) {
+    private TodayPeriod getPeriod(ShopApiDto shopApiDto) {
         List<openingHours.Period> apiPeriods;
 
         try {
@@ -202,17 +191,29 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             return null;
         }
 
-        List<Periods.Period> periods = new ArrayList<>();
+        WeekType todayWeekType = getTodayWeekType();
+        TodayPeriod todayPeriod = null;
         for (openingHours.Period apiPeriod : apiPeriods) {
-            WeekType week = WeekType.getWeekType(apiPeriod.getOpen().getDay());
-            openingHours.Period.PeriodTime startTime = apiPeriod.getOpen();
-            openingHours.Period.PeriodTime endTime = apiPeriod.getClose();
+            WeekType weekType = WeekType.getWeekType(apiPeriod.getOpen().getDay());
 
-            Periods.Period period = new Periods.Period(week, startTime.getTime(), endTime.getTime());
-            periods.add(period);
+            if (weekType != todayWeekType) {
+                continue;
+            }
+
+            todayPeriod = TodayPeriod.createPeriod(apiPeriod);
         }
 
-        return Periods.createPeriods(periods);
+        return todayPeriod;
+    }
+
+    private WeekType getTodayWeekType() {
+        Date today = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(today);
+
+        int dayOfWeekNumber = calendar.get(Calendar.DAY_OF_WEEK);
+
+        return WeekType.getWeekTypeByCalender(dayOfWeekNumber);
     }
 
     @Transactional(readOnly = true)
@@ -457,13 +458,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .category(category.name())
                     .dist(distFromUser)
                     .build();
-
-            Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(dto.getPlaceId());
-
-            if (shop.isPresent()) {
-                GoogleShopCount shopCount = shop.get().getShopCount();
-                shopQueryResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
-            }
 
             shopQueryResponseList.add(shopQueryResponse);
         }
