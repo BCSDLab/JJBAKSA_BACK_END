@@ -18,8 +18,6 @@ public class ShopResponse {
     private Double lat;
     private Double lng;
     private String formattedPhoneNumber;
-    //todo: openNow deprecated
-    private Boolean openNow;
     private String category;
     private TodayPeriod todayPeriod;
     private List<String> photos;

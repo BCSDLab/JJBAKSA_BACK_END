@@ -143,13 +143,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         if (isDetail) {
             TodayPeriod todayPeriod = getPeriod(shopApiDto);
 
-            Boolean openNow;
-            try {
-                openNow = (shopApiDto.getOpeningHours().getOpenNow() == "true") ? true : false;
-            } catch (Exception e) {
-                openNow = null;
-            }
-
             shopResponse = ShopResponse.builder()
                     .placeId(shopApiDto.getPlaceId())
                     .name(shopApiDto.getName())
@@ -157,7 +150,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                     .formattedPhoneNumber(shopApiDto.getFormattedPhoneNumber())
                     .lat(shopApiDto.getGeometry().getLocation().getLat())
                     .lng(shopApiDto.getGeometry().getLocation().getLng())
-                    .openNow(openNow)
                     .photos(photoTokens)
                     .category(category.name())
                     .todayPeriod(todayPeriod)
