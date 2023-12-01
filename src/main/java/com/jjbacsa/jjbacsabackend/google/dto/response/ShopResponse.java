@@ -14,8 +14,7 @@ public class ShopResponse {
     private String placeId;
     private String name;
     private String formattedAddress;
-    private Double lat;
-    private Double lng;
+    private Coordinate coordinate;
     private String formattedPhoneNumber;
     private String category;
     private TodayPeriod todayPeriod;
