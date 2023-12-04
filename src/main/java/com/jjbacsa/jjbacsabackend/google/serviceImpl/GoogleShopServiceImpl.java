@@ -12,7 +12,8 @@ import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.google.dto.api.*;
 import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Geometry;
-import com.jjbacsa.jjbacsabackend.google.dto.api.inner.openingHours;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.OpeningHours;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Photo;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.*;
@@ -91,25 +92,18 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
     @Override
     public ShopQueryResponses searchShopQuery(String query, ShopRequest shopRequest) throws JsonProcessingException {
-        String shopStr = null;
-
-        shopStr = this.callApiByQuery(query, shopRequest);
-
+        String shopStr = this.callApiByQuery(query, shopRequest);
         ShopQueryDto shopQueryDto = this.jsonToShopQueryDto(shopStr);
-        ShopQueryResponses shopQueryResponses = this.queryDtoToQueryResponses(shopQueryDto, shopRequest);
 
-        return shopQueryResponses;
+        return queryDtoToQueryResponses(shopQueryDto, shopRequest);
     }
 
     @Override
     public ShopQueryResponses searchShopQueryNext(String pageToken, ShopRequest shopRequest) throws JsonProcessingException {
-        ShopQueryDto shopQueryDto;
-
         String shopStr = this.callApiByQuery(pageToken);
-        shopQueryDto = this.jsonToShopQueryDto(shopStr);
+        ShopQueryDto shopQueryDto = this.jsonToShopQueryDto(shopStr);
 
-        ShopQueryResponses shopQueryResponses = this.queryDtoToQueryResponses(shopQueryDto, shopRequest);
-        return shopQueryResponses;
+        return queryDtoToQueryResponses(shopQueryDto, shopRequest);
     }
 
     @Override
@@ -124,15 +118,15 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         TodayPeriod todayPeriod = getPeriod(shopApiDto);
 
         return ShopResponse.builder()
-                    .placeId(shopApiDto.getPlaceId())
-                    .name(shopApiDto.getName())
-                    .formattedAddress(shopApiDto.getFormattedAddress())
-                    .formattedPhoneNumber(shopApiDto.getFormattedPhoneNumber())
-                    .coordinate(Coordinate.from(shopApiDto.getGeometry()))
-                    .photos(photoTokens)
-                    .category(category.name())
-                    .todayPeriod(todayPeriod)
-                    .build();
+                .placeId(shopApiDto.getPlaceId())
+                .name(shopApiDto.getName())
+                .formattedAddress(shopApiDto.getFormattedAddress())
+                .formattedPhoneNumber(shopApiDto.getFormattedPhoneNumber())
+                .coordinate(Coordinate.from(shopApiDto.getGeometry()))
+                .photos(photoTokens)
+                .category(category.name())
+                .todayPeriod(todayPeriod)
+                .build();
     }
 
     @Override
@@ -177,7 +171,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     }
 
     private TodayPeriod getPeriod(ShopApiDto shopApiDto) {
-        List<openingHours.Period> apiPeriods;
+        List<OpeningHours.Period> apiPeriods;
 
         try {
             apiPeriods = shopApiDto.getOpeningHours().getPeriods();
@@ -187,7 +181,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
         WeekType todayWeekType = getTodayWeekType();
         TodayPeriod todayPeriod = null;
-        for (openingHours.Period apiPeriod : apiPeriods) {
+        for (OpeningHours.Period apiPeriod : apiPeriods) {
             WeekType weekType = WeekType.getWeekType(apiPeriod.getOpen().getDay());
 
             if (weekType != todayWeekType) {
@@ -420,37 +414,23 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         List<ShopQueryResponse> shopQueryResponseList = new ArrayList<>();
 
         for (ShopQueryApiDto dto : shopQueryDto.getResults()) {
-            Boolean openNow;
-            try {
-                openNow = (dto.getOpeningHours().getOpenNow().equals("true")) ? true : false;
-            } catch (NullPointerException e) {
-                openNow = null;
-            }
-
-            String token;
-            try {
-                token = getPhotoUrl(dto.getPhotos().get(0).getPhotoReference());
-            } catch (NullPointerException e) {
-                token = null;
-            }
-
+            Boolean openNow = getOpenNow(dto.getOpeningHours());
+            String token = getSinglePhotoToken(dto.getPhotos());
             Category category = getCategory(dto.getTypes());
-            Double distFromUser = this.getMeter(dto.getGeometry(), shopRequest);
-
-
-            if (dto.getFormattedAddress() != null)
-                dto.setFormattedAddress(this.formattedAddressFormatting(dto.getFormattedAddress()));
+            Double dist = getMeter(dto.getGeometry(), shopRequest);
+            String simpleFormattedAddress = formattedAddressFormatting(dto.getFormattedAddress());
+            Coordinate coordinate = Coordinate.from(dto.getGeometry());
 
             ShopQueryResponse shopQueryResponse = ShopQueryResponse.builder()
                     .placeId(dto.getPlaceId())
                     .name(dto.getName())
                     .formattedAddress(dto.getFormattedAddress())
-                    .lat(dto.getGeometry().getLocation().getLat())
-                    .lng(dto.getGeometry().getLocation().getLng())
+                    .simpleFormattedAddress(simpleFormattedAddress)
+                    .coordinate(coordinate)
                     .openNow(openNow)
                     .photoToken(token)
                     .category(category.name())
-                    .dist(distFromUser)
+                    .dist(dist)
                     .build();
 
             shopQueryResponseList.add(shopQueryResponse);
@@ -458,6 +438,22 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
         ShopQueryResponses shopQueryResponses = new ShopQueryResponses(shopQueryDto.getNextPageToken(), shopQueryResponseList);
         return shopQueryResponses;
+    }
+
+    private Boolean getOpenNow(OpeningHours openingHours) {
+        try {
+            return openingHours.getOpenNow().equals("true") ? true : false;
+        } catch (NullPointerException e) {
+            return null;
+        }
+    }
+
+    private String getSinglePhotoToken(List<Photo> photos) {
+        try {
+            return getPhotoUrl(photos.get(0).getPhotoReference());
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     /**
@@ -479,21 +475,21 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 }
             }
 
-            if (formattedIdx >= 0)
+            if (formattedIdx >= 0) {
                 break;
+            }
         }
 
-        if (formattedIdx < 0)
+        if (formattedIdx < 0) {
             return address;
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i <= formattedIdx; i++) {
-            sb.append(addressArr[i]);
-            sb.append(" ");
         }
 
-        sb.deleteCharAt(sb.length() - 1);
-        return sb.toString();
+        StringJoiner sj = new StringJoiner(" ");
+        for (int i = 0; i <= formattedIdx; i++) {
+            sj.add(addressArr[i]);
+        }
+
+        return sj.toString();
     }
 
     /**

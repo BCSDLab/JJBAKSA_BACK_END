@@ -2,7 +2,8 @@ package com.jjbacsa.jjbacsabackend.google.dto.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Geometry;
-import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Photos;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.OpeningHours;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Photo;
 import lombok.Data;
 
 import java.util.List;
@@ -24,7 +25,7 @@ public class ShopQueryApiDto {
     private Geometry geometry;
 
     @JsonProperty("opening_hours")
-    private com.jjbacsa.jjbacsabackend.google.dto.api.inner.openingHours openingHours;
-    private List<Photos> photos;
+    private OpeningHours openingHours;
+    private List<Photo> photos;
     private List<String> types;
 }

@@ -11,19 +11,11 @@ import lombok.Getter;
 public class ShopQueryResponse {
     private String placeId;
     private String name;
-
-    //todo: 법정동 주소 반환?
     private String formattedAddress;
-
-    //todo: 원자성
-    private Double lat;
-    private Double lng;
-
+    private String simpleFormattedAddress;
+    private Coordinate coordinate;
     private Boolean openNow;
-
     private String photoToken;
-
     private Double dist;
-
     private String category;
 }
