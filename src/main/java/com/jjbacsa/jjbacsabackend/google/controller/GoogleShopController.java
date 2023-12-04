@@ -83,7 +83,6 @@ public class GoogleShopController {
                 .body(googleShopService.searchShopQueryNext(pageToken, shopRequest));
     }
 
-
     @ApiOperation(
             value = "단일 상점 조회",
             notes = "place_id를 기반으로 단일 상점 정보를 조회한다.\n\n"
@@ -151,7 +150,6 @@ public class GoogleShopController {
         return ResponseEntity.ok()
                 .body(googleShopService.getShops(nearBy, friend, scrap, shopRequest));
     }
-
 
     @ApiOperation(
             value = "검색어 자동완성 ",

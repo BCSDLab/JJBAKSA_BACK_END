@@ -172,5 +172,4 @@ public class ScrapController {
     public ResponseEntity <ShopScrapResponse> getScrapShop(@ApiParam("조회할 scrap ID") @PathVariable(name = "scrap_id") Long scrapId) throws Exception {
         return ResponseEntity.ok(service.getScrapShop(scrapId));
     }
-
 }

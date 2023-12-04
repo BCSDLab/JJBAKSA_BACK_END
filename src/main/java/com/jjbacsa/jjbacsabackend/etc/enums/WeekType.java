@@ -14,10 +14,6 @@ public enum WeekType {
         return getWeekType(dayOfWeekNumber - 1);
     }
 
-    public int getWeekNumber() {
-        return this.ordinal();
-    }
-
     private static void validateWeek(int week) {
         if (!(week >= 0 && week <= 6)) {
             throw new ApiException(ErrorMessage.WEEK_DAY_EXCEPTION);

@@ -173,7 +173,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     }
 
     @Override
-    public boolean isShopExist(String placeId){
+    public boolean isShopExist(String placeId) {
         String checkedPlaceId;
 
         try {
@@ -320,24 +320,22 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
         return ShopRateResponse.from(countEntity);
     }
-    
+
     private String toFieldString(String[] fields) {
-        StringBuilder stringBuilder = new StringBuilder();
+        StringJoiner sj = new StringJoiner(",");
 
         for (String field : fields) {
-            stringBuilder.append(field);
-            stringBuilder.append(",");
+            sj.add(field);
         }
 
-        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-
-        return stringBuilder.toString();
+        return sj.toString();
     }
 
     private Double getMeter(Geometry geometry, ShopRequest shopRequest) {
 
-        if (geometry.getLocation().getLat() == null || geometry.getLocation().getLng() == null)
+        if (geometry.getLocation().getLat() == null || geometry.getLocation().getLng() == null) {
             return null;
+        }
 
         double userLat = shopRequest.getLat();
         double userLng = shopRequest.getLng();
