@@ -21,7 +21,7 @@ public interface GoogleShopService {
     ShopPinResponse getPinShop(String placeId) throws JsonProcessingException;
 
     //Scrap 상점 반환(스크랩한 상점 반환 시에 사용)
-    ShopScrapResponse getShopScrap(String placeId, Long scrapId) throws JsonProcessingException;
+    ShopScrapResponse getShopScrap(String placeId) throws JsonProcessingException;
 
     //메인페이지
     List<ShopSimpleResponse> getShops(Integer nearBy, Integer friend, Integer scrap, ShopRequest shopRequest) throws Exception;
@@ -32,4 +32,6 @@ public interface GoogleShopService {
     ShopRateResponse getShopRate(String placeId);
 
     ShopSimpleScrapResponse getSimpleShopScrap(String placeId) throws Exception;
+
+    boolean isShopExist(String placeId) throws JsonProcessingException;
 }

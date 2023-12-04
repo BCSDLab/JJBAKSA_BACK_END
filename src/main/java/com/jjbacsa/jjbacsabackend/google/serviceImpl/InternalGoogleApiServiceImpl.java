@@ -30,30 +30,30 @@ public class InternalGoogleApiServiceImpl implements InternalGoogleApiService {
                     try {
                         return saveGoogleShop(placeId);
                     } catch (Exception e) {
-                        throw new ApiException(ErrorMessage.NOT_FOUND_EXCEPTION);
+                        throw new ApiException(ErrorMessage.INVALID_REQUEST_EXCEPTION);
                     }
                 });
     }
 
     @Override
     public ShopResponse getShopDetails(String placeId) throws Exception {
-
         return googleShopService.getShopDetails(placeId);
     }
 
     @Override
     public ShopScrapResponse formattedToShopResponse(ScrapEntity scrap) throws Exception {
+        ShopScrapResponse shopScrapResponse = googleShopService.getShopScrap(scrap.getShop().getPlaceId());
 
-        ShopScrapResponse shopScrapResponse = googleShopService.getShopScrap(scrap.getShop().getPlaceId(), scrap.getId());
         return shopScrapResponse;
     }
 
-    //todo: 이거에 맞는 메소드를 만들어서 변경하는 게 좋을거같음
     private GoogleShopEntity saveGoogleShop(String placeId) throws Exception {
+        if (googleShopService.isShopExist(placeId) == false) {
+            throw new ApiException(ErrorMessage.INVALID_REQUEST_EXCEPTION);
+        }
 
-        ShopPinResponse shopResponse = googleShopService.getPinShop(placeId);
         GoogleShopEntity googleShopEntity = GoogleShopEntity.builder()
-                .placeId(shopResponse.getPlaceId())
+                .placeId(placeId)
                 .build();
 
         return googleShopRepository.save(googleShopEntity);

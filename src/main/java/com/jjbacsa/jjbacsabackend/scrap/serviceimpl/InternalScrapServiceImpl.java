@@ -66,15 +66,16 @@ public class InternalScrapServiceImpl implements InternalScrapService {
     @Override
     public Long getUserScrapShop(GoogleShopEntity googleShop) throws Exception {
 
-        //사용자가 로그아웃 된 상태이면
-        if(!internalUserService.isUserLogin())
+        if (!internalUserService.isUserLogin()) {
             return null;
+        }
 
-        UserEntity user=internalUserService.getLoginUser();
-        Optional<ScrapEntity> scrap= scrapRepository.findByUserAndShop(user, googleShop);
+        UserEntity user = internalUserService.getLoginUser();
+        Optional<ScrapEntity> scrap = scrapRepository.findByUserAndShop(user, googleShop);
 
-        if(scrap.isPresent())
+        if (scrap.isPresent()) {
             return scrap.get().getId();
+        }
 
         return null;
     }

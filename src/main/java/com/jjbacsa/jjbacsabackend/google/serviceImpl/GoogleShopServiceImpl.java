@@ -58,11 +58,13 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     private final InternalReviewService reviewService;
     private final InternalScrapService scrapService;
 
-    private final String[] placeDetailsField = {"formatted_address", "formatted_phone_number", "name", "geometry/location/lat", "geometry/location/lng", "types", "place_id", "opening_hours/open_now", "opening_hours/weekday_text", "opening_hours/periods", "photos/photo_reference"};
+    //todo: 필드 확인
+    private final String[] placeDetailsFields = {"formatted_address", "formatted_phone_number", "name", "geometry/location/lat", "geometry/location/lng", "types", "place_id", "opening_hours/open_now", "opening_hours/weekday_text", "opening_hours/periods", "photos/photo_reference"};
     private final String[] pinFields = {"name", "types", "place_id", "photos/photo_reference"};
     private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference"};
     private final String[] scrapFields = {"name", "types", "place_id", "photos/photo_reference", "formatted_address"};
     private final String[] addressLevels = {"읍", "면", "동", "가", "로", "길"};
+    private final String[] shopExistField = {"place_id"};
 
     public GoogleShopServiceImpl(ObjectMapper objectMapper, @Value("${external.api.key}") String key, GoogleShopRepository googleShopRepository, InternalFollowService internalFollowService, InternalReviewService internalReviewService, InternalScrapService internalScrapService) {
         this.objectMapper = objectMapper;
@@ -108,7 +110,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
     @Override
     public ShopResponse getShopDetails(String placeId) throws JsonProcessingException {
-        String requestField = toFieldString(placeDetailsField);
+        String requestField = toFieldString(placeDetailsFields);
 
         String shopStr = this.callGoogleApi(placeId, requestField);
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
@@ -168,6 +170,25 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         Long scrapId = scrapService.getUserScrapShop(shopEntity);
 
         return ShopSimpleScrapResponse.createScrappedResponse(scrapId);
+    }
+
+    @Override
+    public boolean isShopExist(String placeId){
+        String checkedPlaceId;
+
+        try {
+            String shopExistStr = callGoogleApi(placeId, toFieldString(shopExistField));
+            ShopApiDto shopApiDto = jsonToShopApiDto(shopExistStr);
+            checkedPlaceId = shopApiDto.getPlaceId();
+        } catch (Exception e) {
+            return false;
+        }
+
+        if (checkedPlaceId == null) {
+            return false;
+        }
+
+        return true;
     }
 
     private TodayPeriod getPeriod(ShopApiDto shopApiDto) {
@@ -271,36 +292,21 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     }
 
     @Override
-    public ShopScrapResponse getShopScrap(String placeId, Long scrapId) throws JsonProcessingException {
-
+    public ShopScrapResponse getShopScrap(String placeId) throws JsonProcessingException {
         String requestField = toFieldString(scrapFields);
         String shopStr = this.callGoogleApi(placeId, requestField);
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
+
         Category category = getCategory(shopApiDto.getTypes());
-        String photoToken;
+        String photoToken = getSinglePhotoToken(shopApiDto.getPhotos());
 
-        try {
-            photoToken = getPhotoUrl(shopApiDto.getPhotos().get(0).getPhotoReference());
-        } catch (NullPointerException e) {
-            photoToken = null;
-        }
-
-        ShopScrapResponse shopScrapResponse = ShopScrapResponse.builder()
+        return ShopScrapResponse.builder()
                 .placeId(shopApiDto.getPlaceId())
                 .name(shopApiDto.getName())
                 .category(category.name())
                 .photo(photoToken)
-                .scrapId(scrapId)
                 .address(shopApiDto.getFormattedAddress())
                 .build();
-
-        Optional<GoogleShopEntity> shop = googleShopRepository.findByPlaceId(shopScrapResponse.getPlaceId());
-        if (shop.isPresent()) {
-            GoogleShopCount shopCount = shop.get().getShopCount();
-            shopScrapResponse.setShopCount(shopCount.getTotalRating(), shopCount.getRatingCount());
-        }
-
-        return shopScrapResponse;
     }
 
     @Override
@@ -314,8 +320,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
         return ShopRateResponse.from(countEntity);
     }
-
-
+    
     private String toFieldString(String[] fields) {
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -552,7 +557,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
         return simpleShopDtos;
     }
-
 
     /**
      * 검색어를 통한 상점검색 내부 메소드
