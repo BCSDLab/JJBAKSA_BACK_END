@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class openingHours {
+public class OpeningHours {
 
     @JsonProperty("open_now")
     String openNow; //현재 open 여부
