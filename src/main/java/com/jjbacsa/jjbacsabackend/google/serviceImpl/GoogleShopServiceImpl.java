@@ -51,14 +51,13 @@ import java.util.stream.Collectors;
 public class GoogleShopServiceImpl implements GoogleShopService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
-    private final String BASE_URL = "https://maps.googleapis.com/maps/api/place";
+    private final String BASE_URL;
     private final String API_KEY;
     private final GoogleShopRepository googleShopRepository;
     private final InternalFollowService followService;
     private final InternalReviewService reviewService;
     private final InternalScrapService scrapService;
 
-    //todo: 필드 확인
     private final String[] placeDetailsFields = {"formatted_address", "formatted_phone_number", "name", "geometry/location/lat", "geometry/location/lng", "types", "place_id", "opening_hours/open_now", "opening_hours/weekday_text", "opening_hours/periods", "photos/photo_reference"};
     private final String[] pinFields = {"name", "types", "place_id", "photos/photo_reference"};
     private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference"};
@@ -66,7 +65,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     private final String[] addressLevels = {"읍", "면", "동", "가", "로", "길"};
     private final String[] shopExistField = {"place_id"};
 
-    public GoogleShopServiceImpl(ObjectMapper objectMapper, @Value("${external.api.key}") String key, GoogleShopRepository googleShopRepository, InternalFollowService internalFollowService, InternalReviewService internalReviewService, InternalScrapService internalScrapService) {
+    public GoogleShopServiceImpl(@Value("${external.api.url}") String baseUrl, ObjectMapper objectMapper, @Value("${external.api.key}") String key, GoogleShopRepository googleShopRepository, InternalFollowService internalFollowService, InternalReviewService internalReviewService, InternalScrapService internalScrapService) {
         this.objectMapper = objectMapper;
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
@@ -75,6 +74,8 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         this.followService = internalFollowService;
         this.reviewService = internalReviewService;
         this.scrapService = internalScrapService;
+
+        this.BASE_URL = baseUrl;
 
         DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory(BASE_URL);
         factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.TEMPLATE_AND_VALUES);
@@ -388,7 +389,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             List<UserEntity> friends = followService.getFollowers();
 
             friends.stream()
-                    .map(f -> reviewService.getReviewIdsForUser(f))
+                    .map(f -> reviewService.getReviewShopIdsForUser(f))
                     .forEach(ids -> addNonDuplication(ids, shopIds));
         }
 
@@ -712,6 +713,10 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     }
 
     private Category getCategory(List<String> types) {
+        if(types == null){
+            return Category.restaurant;
+        }
+
         for (String type : types) {
             if (type.equals("cafe")) {
                 return Category.cafe;
