@@ -141,9 +141,10 @@ public class ScrapServiceImpl implements ScrapService {
     private Page<ShopScrapResponse> scrapToShopScrapResponse(Page<ScrapEntity> scraps, ScrapDirectoryEntity directory) {
         Page<ShopScrapResponse> formattedScrapedShops = scraps.map(new Function<ScrapEntity, ShopScrapResponse>() {
             @Override
-            public ShopScrapResponse apply(ScrapEntity input) {
+            public ShopScrapResponse apply(ScrapEntity scrap) {
                 try {
-                    ShopScrapResponse shopScrapResponse = googleApiService.formattedToShopResponse(input);
+                    ShopScrapResponse shopScrapResponse = googleApiService.formattedToShopResponse(scrap);
+                    shopScrapResponse.setScrapInfo(scrap);
                     return shopScrapResponse;
                 } catch (Exception e) {
                     throw new BaseException(ErrorMessage.INTERNAL_SHOP_EXCEPTION);
@@ -199,7 +200,9 @@ public class ScrapServiceImpl implements ScrapService {
     public ShopScrapResponse getScrapShop(Long scrapId) throws Exception {
 
         ScrapEntity scrap = scrapRepository.findById(scrapId).orElseThrow(() -> new BaseException(ErrorMessage.SCRAP_NOT_EXISTS_EXCEPTION));
-        return googleApiService.formattedToShopResponse(scrap);
+        ShopScrapResponse response = googleApiService.formattedToShopResponse(scrap);
+        response.setScrapInfo(scrap);
+        return response;
     }
 
     private ScrapDirectoryEntity getDirectoryOrNull(Long directoryId) {
