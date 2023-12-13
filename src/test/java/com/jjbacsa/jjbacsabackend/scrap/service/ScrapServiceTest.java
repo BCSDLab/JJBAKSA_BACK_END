@@ -2,7 +2,6 @@ package com.jjbacsa.jjbacsabackend.scrap.service;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.UserType;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopScrapResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.google.repository.GoogleShopRepository;
@@ -14,8 +13,6 @@ import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapDirectoryEntity;
 import com.jjbacsa.jjbacsabackend.scrap.entity.ScrapEntity;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapDirectoryRepository;
 import com.jjbacsa.jjbacsabackend.scrap.repository.ScrapRepository;
-import com.jjbacsa.jjbacsabackend.shop.entity.ShopEntity;
-import com.jjbacsa.jjbacsabackend.shop.repository.ShopRepository;
 import com.jjbacsa.jjbacsabackend.user.entity.CustomUserDetails;
 import com.jjbacsa.jjbacsabackend.user.entity.UserEntity;
 import com.jjbacsa.jjbacsabackend.user.repository.UserRepository;
@@ -24,7 +21,6 @@ import com.jjbacsa.jjbacsabackend.util.CursorUtil;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,7 +32,6 @@ import javax.transaction.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
