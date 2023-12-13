@@ -11,6 +11,10 @@ public class Coordinate {
     Double lat; //위도(y)
 
     public static Coordinate from(Geometry geometry) {
-        return new Coordinate(geometry.getLocation().getLng(), geometry.getLocation().getLat());
+        try {
+            return new Coordinate(geometry.getLocation().getLng(), geometry.getLocation().getLat());
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 }
