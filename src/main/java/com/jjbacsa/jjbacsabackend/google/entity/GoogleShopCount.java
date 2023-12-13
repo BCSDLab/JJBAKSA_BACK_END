@@ -1,13 +1,13 @@
 package com.jjbacsa.jjbacsabackend.google.entity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Getter
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 @Entity
 @Table(name = "google_shop_count")
 public class GoogleShopCount {
