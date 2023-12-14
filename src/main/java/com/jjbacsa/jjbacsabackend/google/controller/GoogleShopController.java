@@ -178,12 +178,34 @@ public class GoogleShopController {
                 .body(googleShopService.getAutoComplete(query, autoCompleteRequest));
     }
 
+    @ApiOperation(
+            value = "별점 조회",
+            notes = "place Id를 바탕으로 별점을 반환한다.\n\n"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "별점 데이터 반환",
+                    response = ShopRateResponse.class
+            )
+    })
     @GetMapping("/shops/rates/{place_id}")
     public ResponseEntity<ShopRateResponse> getShopRate(@PathVariable("place_id") String placeId) {
         return ResponseEntity.ok()
                 .body(googleShopService.getShopRate(placeId));
     }
 
+    @ApiOperation(
+            value = "스크랩 ID 조회",
+            notes = "place Id를 바탕으로 스크랩 ID를 반환한다.\n\n"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "스크랩 ID 반환",
+                    response = ShopSimpleScrapResponse.class
+            )
+    })
     @GetMapping("/shops/scraps/{place_id}")
     public ResponseEntity<ShopSimpleScrapResponse> getShopSimpleScrap(@PathVariable("place_id") String placeId) throws Exception {
         return ResponseEntity.ok()

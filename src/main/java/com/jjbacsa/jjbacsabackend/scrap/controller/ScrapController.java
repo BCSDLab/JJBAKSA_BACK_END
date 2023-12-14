@@ -96,7 +96,7 @@ public class ScrapController {
                     "example : \n\n" +
                     "{\n\n" +
                     "       \"directoryId\" : 0,\n\n" +
-                    "       \"shopId\" : 0\n\n" +
+                    "       \"\"placeId: placeId\n\n" +
                     "}",
             authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
