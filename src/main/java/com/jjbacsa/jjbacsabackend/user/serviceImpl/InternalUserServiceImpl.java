@@ -56,8 +56,9 @@ public class InternalUserServiceImpl implements InternalUserService {
                 .getAuthentication()
                 .getPrincipal();
 
-        if (principal == null || principal.toString().equals("anonymousUser"))
+        if (principal == null || principal.toString().equals("anonymousUser")) {
             return false;
+        }
 
         return true;
     }

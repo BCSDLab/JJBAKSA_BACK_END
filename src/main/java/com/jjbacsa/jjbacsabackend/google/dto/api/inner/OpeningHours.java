@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.google.dto.inner;
+package com.jjbacsa.jjbacsabackend.google.dto.api.inner;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class openingHours {
+public class OpeningHours {
 
     @JsonProperty("open_now")
     String openNow; //현재 open 여부
@@ -21,8 +21,8 @@ public class openingHours {
 
         @Data
         public static class PeriodTime{
-            int day; //일요일(0)~토요일(6)
-            int time; //0000-2359
+            Integer day; //일요일(0)~토요일(6)
+            String time; //0000-2359
         }
     }
 }

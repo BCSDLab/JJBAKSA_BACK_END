@@ -1,43 +1,42 @@
 package com.jjbacsa.jjbacsabackend.search.service;
 
-import com.jjbacsa.jjbacsabackend.search.dto.AutoCompleteResponse;
 import com.jjbacsa.jjbacsabackend.search.dto.TrendingResponse;
-import com.jjbacsa.jjbacsabackend.search.entity.SearchEntity;
-import com.jjbacsa.jjbacsabackend.search.repository.SearchRepository;
-import lombok.RequiredArgsConstructor;
+import com.jjbacsa.jjbacsabackend.search.serviceImpl.SearchServiceImpl;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.TestConstructor;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Redis Rollback 불가능
- * -> SessionCallback 써도 불가해서 별도의 키 생성 후 삭제하는 방식으로 테스트 코드 작성
- */
-
-@RequiredArgsConstructor
-@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 @SpringBootTest
 public class SearchServiceTest {
+    private SearchService searchService;
 
-    private final SearchService searchService;
-    private final StringRedisTemplate redisTemplate;
-    private final String testKey = "rankingTest";
-    private final SearchRepository searchRepository;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+    private String testKey = "rankingTest";
 
+    @BeforeEach
+    void init() {
+        searchService = new SearchServiceImpl(redisTemplate, testKey);
+        redisTemplate.delete(testKey);
+    }
+
+    @AfterAll
+    void after() {
+        redisTemplate.delete(testKey);
+    }
 
     @Test
     public void not_trending() {
         redisTemplate.delete(testKey);
 
-        TrendingResponse trendingResponse = searchService.getTrending(testKey);
+        TrendingResponse trendingResponse = searchService.getTrending();
         assertEquals(trendingResponse.getTrendings().size(), 0);
     }
-
 
     @Test
     public void trending_1() {
@@ -47,7 +46,7 @@ public class SearchServiceTest {
         redisTemplate.opsForZSet().incrementScore(testKey, "떡볶이", 1);
         redisTemplate.opsForZSet().incrementScore(testKey, "떡볶이", 1);
 
-        TrendingResponse trendingResponse = searchService.getTrending(testKey);
+        TrendingResponse trendingResponse = searchService.getTrending();
         assertEquals(trendingResponse.getTrendings().size(), 1);
 
         redisTemplate.delete(testKey);
@@ -60,11 +59,11 @@ public class SearchServiceTest {
         String[] keywords = {"떡볶이", "라멘", "순대볶음", "서촌 맛집", "육회", "중국집", "맥도날드", "햄버거", "홍대 라멘", "마제소바", "이삭토스트"};
         for (int i = 0; i < 11; i++) {
             for (int j = 0; j < i + 1; j++) {
-                searchService.saveRedis(keywords[i], testKey);
+                searchService.saveTrending(keywords[i]);
             }
         }
 
-        TrendingResponse trendingResponse = searchService.getTrending(testKey);
+        TrendingResponse trendingResponse = searchService.getTrending();
         assertEquals(trendingResponse.getTrendings().size(), 10);
 
         for (String trend : trendingResponse.getTrendings()) {
@@ -72,46 +71,5 @@ public class SearchServiceTest {
         }
 
         redisTemplate.delete(testKey);
-    }
-
-    @Test
-    public void auto_complete() {
-        saveForAutoComplete("떡볶이");
-        saveForAutoComplete("떡볶이");
-
-        saveForAutoComplete("합정 떡볶이");
-        saveForAutoComplete("마포 떡볶이");
-        saveForAutoComplete("서촌 떡볶이");
-
-        saveForAutoComplete("즉석 떡볶이");
-        saveForAutoComplete("즉석 떡볶이");
-
-        saveForAutoComplete("홍대 떡볶이");
-        saveForAutoComplete("떡볶이 뷔페");
-
-        AutoCompleteResponse autoCompleteResponse = searchService.getAutoCompletes("떡");
-        assertEquals(autoCompleteResponse.getAutoCompletes().size(), 5);
-
-        /**
-         * 기존 autoComplete 데이터가 중첩된다면 테스트 실패할 수 있음
-         * */
-        assertEquals(autoCompleteResponse.getAutoCompletes().get(0), "떡볶이");
-        assertEquals(autoCompleteResponse.getAutoCompletes().get(1), "즉석 떡볶이");
-    }
-
-    @Transactional
-    void saveForAutoComplete(String keyword) {
-        if (searchRepository.existsByContent(keyword)) {
-            SearchEntity searchEntity = searchRepository.findByContent(keyword).get();
-            Long latestScore = searchEntity.getScore();
-            searchEntity.updateScore(latestScore + 1);
-            searchRepository.save(searchEntity);
-
-        } else {
-            SearchEntity searchEntity = SearchEntity.builder()
-                    .content(keyword)
-                    .build();
-            searchRepository.save(searchEntity);
-        }
     }
 }

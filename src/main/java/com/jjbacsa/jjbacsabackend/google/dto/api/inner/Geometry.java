@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.google.dto.inner;
+package com.jjbacsa.jjbacsabackend.google.dto.api.inner;
 
 import lombok.Data;
 

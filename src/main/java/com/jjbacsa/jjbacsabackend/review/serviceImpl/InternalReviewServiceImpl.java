@@ -24,7 +24,7 @@ public class InternalReviewServiceImpl implements InternalReviewService {
     private final InternalGoogleService shopService;
 
     @Override
-    public List<Long> getReviewIdsForUser(UserEntity user) {
+    public List<Long> getReviewShopIdsForUser(UserEntity user) {
 
         return reviewRepository.findAllByWriter(user)
                 .stream()

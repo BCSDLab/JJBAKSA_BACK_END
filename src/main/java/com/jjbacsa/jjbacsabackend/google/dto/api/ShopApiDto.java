@@ -1,9 +1,13 @@
-package com.jjbacsa.jjbacsabackend.google.dto;
+package com.jjbacsa.jjbacsabackend.google.dto.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
-import com.jjbacsa.jjbacsabackend.google.dto.inner.Photos;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.OpeningHours;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Photo;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -11,6 +15,9 @@ import java.util.List;
  * place Id로 얻어온 단일 상점 api
  * */
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class ShopApiDto {
 
@@ -26,7 +33,7 @@ public class ShopApiDto {
     private String formattedPhoneNumber;
 
     @JsonProperty("opening_hours")
-    private com.jjbacsa.jjbacsabackend.google.dto.inner.openingHours openingHours;
-    private List<Photos> photos;
+    private OpeningHours openingHours;
+    private List<Photo> photos;
     private List<String> types;
 }

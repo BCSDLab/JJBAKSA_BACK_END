@@ -1,6 +1,6 @@
 package com.jjbacsa.jjbacsabackend.google.dto.response;
 
-import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Geometry;
 import lombok.Builder;
 import lombok.Data;
 

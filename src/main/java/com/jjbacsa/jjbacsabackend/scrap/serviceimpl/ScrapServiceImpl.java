@@ -122,7 +122,7 @@ public class ScrapServiceImpl implements ScrapService {
 
         Page<ScrapEntity> scraps = scrapRepository.findAllByUserAndDirectoryWithCursor(user, directory, cursor, PageRequest.of(0, pageSize));
 
-        return scrapToShopScrapResponse(scraps,directory);
+        return scrapToShopScrapResponse(scraps, directory);
     }
 
     @Override
@@ -134,31 +134,17 @@ public class ScrapServiceImpl implements ScrapService {
         else
             user = userService.getUserById(userId);
 
-        Page<ScrapEntity> scraps = scrapRepository.findAllByUserWithCursor(user,  cursor, PageRequest.of(0, pageSize));
+        Page<ScrapEntity> scraps = scrapRepository.findAllByUserWithCursor(user, cursor, PageRequest.of(0, pageSize));
         return scrapToShopScrapResponse(scraps, null);
     }
 
     private Page<ShopScrapResponse> scrapToShopScrapResponse(Page<ScrapEntity> scraps, ScrapDirectoryEntity directory) {
         Page<ShopScrapResponse> formattedScrapedShops = scraps.map(new Function<ScrapEntity, ShopScrapResponse>() {
             @Override
-            public ShopScrapResponse apply(ScrapEntity input) {
+            public ShopScrapResponse apply(ScrapEntity scrap) {
                 try {
-                    ShopScrapResponse shopScrapResponse=googleApiService.formattedToShopResponse(input);
-                    shopScrapResponse.setScrapInfo(input.getId(), input.getCreatedAt(), input.getUpdatedAt());
-
-                    if(directory==null){
-                        return shopScrapResponse;
-                    }
-
-                    ScrapDirectoryResponse.ScrapDirectoryResponseBuilder scrapDirectoryResponse=ScrapDirectoryResponse.builder();
-                    scrapDirectoryResponse.id(directory.getId());
-                    scrapDirectoryResponse.createdAt(directory.getCreatedAt());
-                    scrapDirectoryResponse.updatedAt(directory.getUpdatedAt());
-                    scrapDirectoryResponse.name(directory.getName());
-                    scrapDirectoryResponse.scrapCount(directory.getScrapDirectoryCount().getScrapCount());
-
-                    shopScrapResponse.setDirectory(scrapDirectoryResponse.build());
-
+                    ShopScrapResponse shopScrapResponse = googleApiService.formattedToShopResponse(scrap);
+                    shopScrapResponse.setScrapInfo(scrap);
                     return shopScrapResponse;
                 } catch (Exception e) {
                     throw new BaseException(ErrorMessage.INTERNAL_SHOP_EXCEPTION);
@@ -214,7 +200,9 @@ public class ScrapServiceImpl implements ScrapService {
     public ShopScrapResponse getScrapShop(Long scrapId) throws Exception {
 
         ScrapEntity scrap = scrapRepository.findById(scrapId).orElseThrow(() -> new BaseException(ErrorMessage.SCRAP_NOT_EXISTS_EXCEPTION));
-        return googleApiService.formattedToShopResponse(scrap);
+        ShopScrapResponse response = googleApiService.formattedToShopResponse(scrap);
+        response.setScrapInfo(scrap);
+        return response;
     }
 
     private ScrapDirectoryEntity getDirectoryOrNull(Long directoryId) {

@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.google.serviceImpl;
 
 import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopPinResponse;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
 import com.jjbacsa.jjbacsabackend.google.dto.response.ShopScrapResponse;
 import com.jjbacsa.jjbacsabackend.google.entity.GoogleShopEntity;
@@ -29,29 +30,30 @@ public class InternalGoogleApiServiceImpl implements InternalGoogleApiService {
                     try {
                         return saveGoogleShop(placeId);
                     } catch (Exception e) {
-                        throw new ApiException(ErrorMessage.NOT_FOUND_EXCEPTION);
+                        throw new ApiException(ErrorMessage.INVALID_REQUEST_EXCEPTION);
                     }
                 });
     }
 
     @Override
     public ShopResponse getShopDetails(String placeId) throws Exception {
-
-        return googleShopService.getShopDetails(placeId, true);
+        return googleShopService.getShopDetails(placeId);
     }
 
     @Override
     public ShopScrapResponse formattedToShopResponse(ScrapEntity scrap) throws Exception {
+        ShopScrapResponse shopScrapResponse = googleShopService.getShopScrap(scrap.getShop().getPlaceId());
 
-        ShopScrapResponse shopScrapResponse = googleShopService.getShopScrap(scrap.getShop().getPlaceId(), scrap.getId());
         return shopScrapResponse;
     }
 
     private GoogleShopEntity saveGoogleShop(String placeId) throws Exception {
+        if (googleShopService.isShopExist(placeId) == false) {
+            throw new ApiException(ErrorMessage.INVALID_REQUEST_EXCEPTION);
+        }
 
-        ShopResponse shopResponse = googleShopService.getShopDetails(placeId, false);
         GoogleShopEntity googleShopEntity = GoogleShopEntity.builder()
-                .placeId(shopResponse.getPlaceId())
+                .placeId(placeId)
                 .build();
 
         return googleShopRepository.save(googleShopEntity);

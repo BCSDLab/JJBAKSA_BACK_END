@@ -1,8 +1,8 @@
-package com.jjbacsa.jjbacsabackend.google.dto;
+package com.jjbacsa.jjbacsabackend.google.dto.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.jjbacsa.jjbacsabackend.google.dto.inner.Geometry;
-import com.jjbacsa.jjbacsabackend.google.dto.inner.Photos;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Geometry;
+import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Photo;
 import lombok.Data;
 
 import java.util.List;
@@ -17,8 +17,7 @@ import java.util.List;
 public class SimpleShopDto {
     @JsonProperty("place_id")
     private String placeId;
-
     private String name;
     private Geometry geometry;
-    private List<Photos> photos;
+    private List<Photo> photos;
 }

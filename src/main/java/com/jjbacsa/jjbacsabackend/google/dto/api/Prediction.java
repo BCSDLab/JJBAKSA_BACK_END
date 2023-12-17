@@ -1,4 +1,4 @@
-package com.jjbacsa.jjbacsabackend.google.dto;
+package com.jjbacsa.jjbacsabackend.google.dto.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

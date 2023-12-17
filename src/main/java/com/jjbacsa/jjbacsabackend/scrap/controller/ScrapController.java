@@ -96,7 +96,7 @@ public class ScrapController {
                     "example : \n\n" +
                     "{\n\n" +
                     "       \"directoryId\" : 0,\n\n" +
-                    "       \"shopId\" : 0\n\n" +
+                    "       \"\"placeId: placeId\n\n" +
                     "}",
             authorizations = @Authorization(value = "Bearer + accessToken"))
     @PreAuthorize("hasRole('NORMAL')")
@@ -172,5 +172,4 @@ public class ScrapController {
     public ResponseEntity <ShopScrapResponse> getScrapShop(@ApiParam("조회할 scrap ID") @PathVariable(name = "scrap_id") Long scrapId) throws Exception {
         return ResponseEntity.ok(service.getScrapShop(scrapId));
     }
-
 }

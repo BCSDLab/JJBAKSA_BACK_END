@@ -76,6 +76,7 @@ spring:
   redis:
     host: 127.0.0.1
     port: 6379
+    ranking: key
 
 
 flyway:
@@ -100,6 +101,7 @@ jwt:
 external:
   api:
     key: asdfasddf
+    url: url
 
 cloud:
   aws:

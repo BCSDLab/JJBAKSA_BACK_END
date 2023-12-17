@@ -1,18 +1,15 @@
 package com.jjbacsa.jjbacsabackend.google.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.jjbacsa.jjbacsabackend.google.dto.SimpleShopDto;
+import com.jjbacsa.jjbacsabackend.google.dto.api.SimpleShopDto;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopQueryResponses;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopResponse;
-import com.jjbacsa.jjbacsabackend.google.dto.response.ShopSimpleResponse;
+import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
 import com.jjbacsa.jjbacsabackend.search.service.SearchService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -24,7 +21,6 @@ public class GoogleShopController {
 
     private final GoogleShopService googleShopService;
     private final SearchService searchService;
-    private final String KEY = "RANKING";
 
     /**
      * 각 상점마다 검색시 상세조회 수행 (각각에 대해 상세조회 가격이 들어감<- 1000회 17달러)
@@ -55,8 +51,7 @@ public class GoogleShopController {
     )
     @PostMapping("/shops")
     public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name = "keyword") String keyword) throws JsonProcessingException {
-        searchService.saveForAutoComplete(keyword);
-        searchService.saveRedis(keyword, KEY);
+        searchService.saveTrending(keyword);
 
         return ResponseEntity.ok()
                 .body(googleShopService.searchShopQuery(keyword, shopRequest));
@@ -88,7 +83,6 @@ public class GoogleShopController {
                 .body(googleShopService.searchShopQueryNext(pageToken, shopRequest));
     }
 
-
     @ApiOperation(
             value = "단일 상점 조회",
             notes = "place_id를 기반으로 단일 상점 정보를 조회한다.\n\n"
@@ -105,7 +99,7 @@ public class GoogleShopController {
     public ResponseEntity<ShopResponse> getGoogleShopDetails(@PathVariable("place_id") String placeId) throws Exception {
 
         return ResponseEntity.ok()
-                .body(googleShopService.getShopDetails(placeId, true));
+                .body(googleShopService.getShopDetails(placeId));
     }
 
     @ApiOperation(
@@ -121,9 +115,9 @@ public class GoogleShopController {
     })
     @ApiImplicitParam(name = "place_id", value = "단일 상점 검색 place id(Google)", required = true, dataType = "string", paramType = "path")
     @GetMapping("/shops/pin/{place_id}")
-    public ResponseEntity<ShopResponse> getPinGoogleShop(@PathVariable("place_id") String placeId) throws Exception {
+    public ResponseEntity<ShopPinResponse> getPinGoogleShop(@PathVariable("place_id") String placeId) throws Exception {
         return ResponseEntity.ok()
-                .body(googleShopService.getShopDetails(placeId, false));
+                .body(googleShopService.getPinShop(placeId));
     }
 
     @ApiOperation(
@@ -157,7 +151,6 @@ public class GoogleShopController {
                 .body(googleShopService.getShops(nearBy, friend, scrap, shopRequest));
     }
 
-
     @ApiOperation(
             value = "검색어 자동완성 ",
             notes = "음식점 검색 시에 자동완성으로 음식점 이름을 반환한다.\n\n" +
@@ -178,10 +171,44 @@ public class GoogleShopController {
     @ApiImplicitParam(
             name = "query", value = "자동완성 검색어", required = true, dataType = "string", paramType = "query"
     )
-    @PostMapping ("/shops/auto-complete")
+    @PostMapping("/shops/auto-complete")
     public ResponseEntity<List<String>> getAutoComplete(@RequestParam(name = "query") String query,
                                                         @RequestBody @Valid AutoCompleteRequest autoCompleteRequest) throws JsonProcessingException {
         return ResponseEntity.ok()
                 .body(googleShopService.getAutoComplete(query, autoCompleteRequest));
+    }
+
+    @ApiOperation(
+            value = "별점 조회",
+            notes = "place Id를 바탕으로 별점을 반환한다.\n\n"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "별점 데이터 반환",
+                    response = ShopRateResponse.class
+            )
+    })
+    @GetMapping("/shops/rates/{place_id}")
+    public ResponseEntity<ShopRateResponse> getShopRate(@PathVariable("place_id") String placeId) {
+        return ResponseEntity.ok()
+                .body(googleShopService.getShopRate(placeId));
+    }
+
+    @ApiOperation(
+            value = "스크랩 ID 조회",
+            notes = "place Id를 바탕으로 스크랩 ID를 반환한다.\n\n"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    code = 200,
+                    message = "스크랩 ID 반환",
+                    response = ShopSimpleScrapResponse.class
+            )
+    })
+    @GetMapping("/shops/scraps/{place_id}")
+    public ResponseEntity<ShopSimpleScrapResponse> getShopSimpleScrap(@PathVariable("place_id") String placeId) throws Exception {
+        return ResponseEntity.ok()
+                .body(googleShopService.getSimpleShopScrap(placeId));
     }
 }
