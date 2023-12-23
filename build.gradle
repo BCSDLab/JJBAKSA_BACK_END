@@ -93,6 +93,10 @@ dependencies {
 
 def querydslDir = "$buildDir/generated/querydsl"
 
+clean{
+	delete file(querydslDir)
+}
+
 querydsl {
 	jpa = true
 	querydslSourcesDir = querydslDir
@@ -100,6 +104,7 @@ querydsl {
 sourceSets {
 	main.java.srcDir querydslDir
 }
+
 compileQuerydsl{
 	options.annotationProcessorPath = configurations.querydsl
 }
