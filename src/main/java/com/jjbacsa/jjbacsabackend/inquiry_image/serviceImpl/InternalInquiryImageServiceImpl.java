@@ -71,7 +71,7 @@ public class InternalInquiryImageServiceImpl implements InternalInquiryImageServ
     @Override
     public void delete(InquiryImageEntity inquiryImageEntity) {
         imageService.deleteImage(inquiryImageEntity.getImage().getId());
-        inquiryImageRepository.deleteById(inquiryImageEntity.getId());
+        inquiryImageRepository.delete(inquiryImageEntity);
     }
 
 }

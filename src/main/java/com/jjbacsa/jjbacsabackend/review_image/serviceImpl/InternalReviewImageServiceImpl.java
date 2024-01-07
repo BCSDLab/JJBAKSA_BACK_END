@@ -74,6 +74,6 @@ public class InternalReviewImageServiceImpl implements InternalReviewImageServic
     @Override
     public void delete(ReviewImageEntity reviewImageEntity) {
         imageService.deleteImage(reviewImageEntity.getImage().getId());
-        reviewImageRepository.deleteById(reviewImageEntity.getId());
+        reviewImageRepository.delete(reviewImageEntity);
     }
 }
