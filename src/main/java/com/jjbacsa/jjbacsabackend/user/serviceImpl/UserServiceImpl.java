@@ -9,6 +9,7 @@ import com.jjbacsa.jjbacsabackend.etc.exception.RequestInputException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
 import com.jjbacsa.jjbacsabackend.google.service.InternalGoogleService;
 import com.jjbacsa.jjbacsabackend.image.entity.ImageEntity;
+import com.jjbacsa.jjbacsabackend.inquiry.service.InternalInquiryService;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import com.jjbacsa.jjbacsabackend.review.service.InternalReviewService;
 import com.jjbacsa.jjbacsabackend.review_image.entity.ReviewImageEntity;
@@ -63,6 +64,7 @@ public class UserServiceImpl implements UserService {
     private final InternalProfileService profileService;
     private final InternalEmailService emailService;
     private final InternalReviewService reviewService;
+    private final InternalInquiryService inquiryService;
     private final InternalReviewImageService reviewImageService;
     private final InternalGoogleService shopService;
     private final UserRepository userRepository;
@@ -246,6 +248,9 @@ public class UserServiceImpl implements UserService {
         // 작성한 리뷰 및 리뷰 내 사진, 별점 삭제
         reviewService.deleteReviewsWithUser(user);
         user.getUserCount().setReviewCount(0);
+
+        // 작성한 문의 및 문의 내 사진 삭제
+        inquiryService.deleteInquiriesWithUser(user);
 
         user.setIsDeleted(1);
 
