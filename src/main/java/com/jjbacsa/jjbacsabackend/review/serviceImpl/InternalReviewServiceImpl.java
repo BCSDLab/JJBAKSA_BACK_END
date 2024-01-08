@@ -49,7 +49,7 @@ public class InternalReviewServiceImpl implements InternalReviewService {
             for (ReviewImageEntity reviewImage : review.getReviewImages()) { // 리뷰 이미지를 버킷에서 삭제
                 reviewImageService.delete(reviewImage);
             }
-            review.setIsDeleted(1);
+            reviewRepository.delete(review);
 
             // 리뷰 수, 별점 처리
             Long shopId = review.getShop().getId();
