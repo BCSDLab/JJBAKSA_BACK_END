@@ -11,11 +11,11 @@ import java.util.Date;
 @Builder
 public class ShopScrapResponse {
     private String placeId;
+    private Long scrapId;
     private String name;
     private String photo;
     private String category;
     private String address;
-    private Long scrapId;
     private Date createdAt;
     private Date updatedAt;
 
