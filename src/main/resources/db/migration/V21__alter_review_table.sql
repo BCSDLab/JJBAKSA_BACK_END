@@ -1,0 +1,1 @@
+alter table review modify column content TEXT;
