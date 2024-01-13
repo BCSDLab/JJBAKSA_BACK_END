@@ -1,6 +1,7 @@
 package com.jjbacsa.jjbacsabackend.review.repository.querydsl;
 
 
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopIdPair;
 import com.jjbacsa.jjbacsabackend.review.dto.request.ReviewCursorRequest;
 import com.jjbacsa.jjbacsabackend.review.entity.ReviewEntity;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,7 @@ public interface DslReviewRepository {
 
     Page<ReviewEntity> findAllFollowersReviewsByShopPlaceId(Long userId, String placeId, ReviewCursorRequest request);
 
-    List<String> findShopPlaceIdsByMyReviews(Long userId, Long cursor, Pageable pageable) throws Exception;
+    List<ShopIdPair> findShopPlaceIdsByMyReviews(Long userId, Long cursor, Pageable pageable) throws Exception;
 
     Long getReviewCount(Long userId);
 

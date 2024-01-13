@@ -2,6 +2,7 @@ package com.jjbacsa.jjbacsabackend.review.repository.querydsl;
 
 import com.jjbacsa.jjbacsabackend.follow.entity.FollowEntity;
 import com.jjbacsa.jjbacsabackend.follow.entity.QFollowEntity;
+import com.jjbacsa.jjbacsabackend.google.dto.response.ShopIdPair;
 import com.jjbacsa.jjbacsabackend.google.entity.QGoogleShopCount;
 import com.jjbacsa.jjbacsabackend.google.entity.QGoogleShopEntity;
 import com.jjbacsa.jjbacsabackend.image.entity.QImageEntity;
@@ -178,7 +179,7 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
     }
 
     @Override
-    public List<String> findShopPlaceIdsByMyReviews(Long userId, Long cursor, Pageable pageable) throws Exception {
+    public List<ShopIdPair> findShopPlaceIdsByMyReviews(Long userId, Long cursor, Pageable pageable) throws Exception {
         List<Tuple> results = queryFactory
                 .selectDistinct(review.shop.placeId, review.shop.id)
                 .from(review)
@@ -189,10 +190,12 @@ public class DslReviewRepositoryImpl extends QuerydslRepositorySupport implement
                 .orderBy(review.shop.id.asc())
                 .limit(pageable.getPageSize())
                 .fetch();
-        List<String> shopPlaceIds = results.stream()
-                .map(tuple -> tuple.get(review.shop.placeId))
+        return results.stream()
+                .map(tuple -> ShopIdPair.builder()
+                        .id(tuple.get(review.shop.id))
+                        .placeId(tuple.get(review.shop.placeId))
+                        .build())
                 .collect(Collectors.toList());
-        return shopPlaceIds;
     }
 
     private List<Long> findAllFollowerIds(Long userId) {
