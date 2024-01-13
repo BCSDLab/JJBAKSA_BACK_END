@@ -10,6 +10,6 @@ import lombok.Data;
 public class ShopSimpleResponse {
     private String placeId;
     private String name;
-    private Geometry geometry;
+    private Coordinate coordinate;
     private String photo;
 }
