@@ -11,7 +11,11 @@ public class TodayPeriod {
     private Time closeTime;
 
     public static TodayPeriod createPeriod(OpeningHours.Period todayPeriod) {
-        return new TodayPeriod(Time.from(todayPeriod.getOpen()), Time.from(todayPeriod.getClose()));
+        try {
+            return new TodayPeriod(Time.from(todayPeriod.getOpen()), Time.from(todayPeriod.getClose()));
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     @Getter
