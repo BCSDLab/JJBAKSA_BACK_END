@@ -6,6 +6,8 @@ public interface InternalGoogleService {
 
     GoogleShopEntity getGoogleShopById(Long shopId);
 
+    Long getShopIdByPlaceId(String placeId);
+
     void addTotalRating(Long shopId, int delta);
 
     void increaseRatingCount(Long shopId);
