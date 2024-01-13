@@ -25,13 +25,6 @@ public class InternalGoogleServiceImpl implements InternalGoogleService {
     }
 
     @Override
-    public Long getShopIdByPlaceId(String placeId) {
-        return googleShopRepository.findByPlaceId(placeId)
-                .orElseThrow(() -> new RequestInputException(ErrorMessage.SHOP_NOT_EXISTS_EXCEPTION))
-                .getId();
-    }
-
-    @Override
     public void addTotalRating(Long shopId, int delta) {
 
         GoogleShopEntity shop = getGoogleShopById(shopId);
