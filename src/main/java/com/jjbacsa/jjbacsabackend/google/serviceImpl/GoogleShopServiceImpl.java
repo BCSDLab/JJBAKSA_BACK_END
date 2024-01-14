@@ -246,7 +246,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         List<ShopSimpleResponse> resultSimpleShopDtos = new ArrayList<>();
         for (ShopSimpleResponse dto : simpleShopDtos) {
             try {
-                Double dist = getMeter(dto.getGeometry(), shopRequest);
+                Double dist = getMeter(dto.getCoordinate(), shopRequest);
 
                 if (dist <= 2000) {
                     resultSimpleShopDtos.add(dto);
@@ -332,17 +332,16 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         return sj.toString();
     }
 
-    private Double getMeter(Geometry geometry, ShopRequest shopRequest) {
-
-        if (geometry.getLocation().getLat() == null || geometry.getLocation().getLng() == null) {
+    private Double getMeter(Coordinate coordinate, ShopRequest shopRequest) {
+        if(coordinate == null){
             return null;
         }
 
         double userLat = shopRequest.getLat();
         double userLng = shopRequest.getLng();
 
-        double shopLat = geometry.getLocation().getLat();
-        double shopLng = geometry.getLocation().getLng();
+        double shopLat = coordinate.getLat();
+        double shopLng = coordinate.getLng();
 
         double theta = userLng - shopLng;
         double dist = Math.sin(deg2rad((userLat))) * Math.sin(deg2rad(shopLat))
@@ -421,9 +420,9 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             Boolean openNow = getOpenNow(dto.getOpeningHours());
             String token = getSinglePhotoToken(dto.getPhotos());
             Category category = getCategory(dto.getTypes());
-            Double dist = getMeter(dto.getGeometry(), shopRequest);
-            String simpleFormattedAddress = formattedAddressFormatting(dto.getFormattedAddress());
             Coordinate coordinate = Coordinate.from(dto.getGeometry());
+            Double dist = getMeter(coordinate, shopRequest);
+            String simpleFormattedAddress = formattedAddressFormatting(dto.getFormattedAddress());
 
             ShopQueryResponse shopQueryResponse = ShopQueryResponse.builder()
                     .placeId(dto.getPlaceId())
@@ -544,7 +543,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 ShopSimpleResponse shopSimpleResponse = ShopSimpleResponse.builder()
                         .placeId(simpleShopDto.getPlaceId())
                         .name(simpleShopDto.getName())
-                        .geometry(simpleShopDto.getGeometry())
+                        .coordinate(Coordinate.from(simpleShopDto.getGeometry()))
                         .photo(photoToken)
                         .build();
 
@@ -564,7 +563,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
      * @return block으로 받아온 결과
      */
     private String callApiByQuery(String query, ShopRequest shopRequest) {
-
         String locationQuery = String.valueOf(shopRequest.getLat()) + ", " + String.valueOf(shopRequest.getLng());
 
         String shopStr = webClient.get().uri(uriBuilder ->
@@ -572,6 +570,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                         .queryParam("query", query)
                         .queryParam("key", API_KEY)
                         .queryParam("language", "ko")
+                        //todo: type 적용이 안 됨;;
                         .queryParam("type", "food")
                         .queryParam("location", locationQuery)
                         .build()
