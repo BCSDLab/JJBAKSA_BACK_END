@@ -13,7 +13,6 @@ import java.util.List;
 @Getter
 @Builder
 public class ReviewRequest {
-    @NotNull(message = "리뷰 내용을 입력해주세요.")
     private String content;
     @NotNull(message = "상점 id가 필요합니다.")
     private String placeId;

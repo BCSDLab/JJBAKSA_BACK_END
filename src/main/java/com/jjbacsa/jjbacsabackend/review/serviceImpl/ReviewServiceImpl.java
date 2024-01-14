@@ -41,6 +41,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final InternalUserService userService;
     private final InternalGoogleService shopService;
     private final InternalGoogleApiService googleApiService;
+    private final InternalGoogleService googleService;
     private final InternalFollowService followService;
     private final InternalReviewImageService reviewImageService;
 
@@ -233,11 +234,12 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private List<ShopResponse> findShops(Long userId, Long cursor, int size) throws Exception {
-        List<String> shopPlaceIds = reviewRepository.findShopPlaceIdsByMyReviews(userId, cursor, PageRequest.ofSize(size));
-        return shopPlaceIds.stream()
-                .map(placeId -> {
+        return reviewRepository.findShopPlaceIdsByMyReviews(userId, cursor, PageRequest.ofSize(size)).stream()
+                .map(idPair -> {
                     try {
-                        return googleApiService.getShopDetails(placeId);
+                        ShopResponse response = googleApiService.getShopDetails(idPair.getPlaceId());
+                        response.setId(idPair.getId());
+                        return response;
                     } catch (Exception e) {
                         return null;
                     }
