@@ -247,10 +247,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         for (ShopSimpleResponse dto : simpleShopDtos) {
             try {
                 Double dist = getMeter(dto.getCoordinate(), shopRequest);
-
-                if (dist <= 2000) {
-                    resultSimpleShopDtos.add(dto);
-                }
+                resultSimpleShopDtos.add(dto);
             } catch (Exception e) {
                 failCnt++;
             }
@@ -570,7 +567,6 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                         .queryParam("query", query)
                         .queryParam("key", API_KEY)
                         .queryParam("language", "ko")
-                        //todo: type 적용이 안 됨;;
                         .queryParam("type", "food")
                         .queryParam("location", locationQuery)
                         .build()
