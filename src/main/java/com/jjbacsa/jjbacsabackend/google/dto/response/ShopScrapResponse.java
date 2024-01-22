@@ -18,6 +18,7 @@ public class ShopScrapResponse {
     private String address;
     private Date createdAt;
     private Date updatedAt;
+    private ShopRateResponse rate;
 
     public void setScrapInfo(final ScrapEntity scrap) {
         this.scrapId = scrap.getId();
