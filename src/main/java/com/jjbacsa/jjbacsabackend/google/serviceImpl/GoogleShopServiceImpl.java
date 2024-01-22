@@ -298,14 +298,18 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         Category category = getCategory(shopApiDto.getTypes());
         String photoToken = getSinglePhotoToken(shopApiDto.getPhotos());
 
+        ShopRateResponse shopRateResponse = getShopRate(placeId);
+
         return ShopScrapResponse.builder()
                 .placeId(shopApiDto.getPlaceId())
                 .name(shopApiDto.getName())
                 .category(category.name())
                 .photo(photoToken)
                 .address(shopApiDto.getFormattedAddress())
+                .rate(shopRateResponse)
                 .build();
     }
+
 
     @Override
     public ShopRateResponse getShopRate(String placeId) {
