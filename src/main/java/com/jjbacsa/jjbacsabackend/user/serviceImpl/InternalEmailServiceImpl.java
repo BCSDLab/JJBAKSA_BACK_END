@@ -50,7 +50,7 @@ public class InternalEmailServiceImpl implements InternalEmailService {
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Timestamp(System.currentTimeMillis()));
-        calendar.add(Calendar.SECOND, 5 * 60);
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
 
         String secret = getRandomNumber();
         Map<String, Object> model = new HashMap<>();
