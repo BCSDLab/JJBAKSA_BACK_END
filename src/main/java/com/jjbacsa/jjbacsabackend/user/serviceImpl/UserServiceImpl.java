@@ -35,6 +35,7 @@ import com.jjbacsa.jjbacsabackend.user.service.UserService;
 import com.jjbacsa.jjbacsabackend.util.AuthLinkUtil;
 import com.jjbacsa.jjbacsabackend.util.ImageUtil;
 import com.jjbacsa.jjbacsabackend.util.JwtUtil;
+import com.jjbacsa.jjbacsabackend.util.NameUtil;
 import com.jjbacsa.jjbacsabackend.util.RedisUtil;
 import java.net.URI;
 import java.util.Date;
@@ -83,7 +84,7 @@ public class UserServiceImpl implements UserService {
         validateExistAccount(request.getAccount());
         validateExistEmail(request.getEmail());
 
-        request.setNickname(UUID.randomUUID().toString());
+        request.setNickname(NameUtil.getNewName());
 
         UserEntity user = UserMapper.INSTANCE.toUserEntity(request).toBuilder()
                 .password(passwordEncoder.encode(request.getPassword()))
