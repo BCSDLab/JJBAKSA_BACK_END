@@ -10,8 +10,8 @@ import com.jjbacsa.jjbacsabackend.etc.enums.WeekType;
 import com.jjbacsa.jjbacsabackend.etc.exception.ApiException;
 import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.follow.service.InternalFollowService;
+import com.jjbacsa.jjbacsabackend.google.dto.Category;
 import com.jjbacsa.jjbacsabackend.google.dto.api.*;
-import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Geometry;
 import com.jjbacsa.jjbacsabackend.google.dto.api.inner.OpeningHours;
 import com.jjbacsa.jjbacsabackend.google.dto.api.inner.Photo;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
@@ -94,8 +94,8 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     }
 
     @Override
-    public ShopQueryResponses searchShopQuery(String query, ShopRequest shopRequest) throws JsonProcessingException {
-        String shopStr = this.callApiByQuery(query, shopRequest);
+    public ShopQueryResponses searchShopQuery(String query, ShopRequest shopRequest, Category category) throws JsonProcessingException {
+        String shopStr = this.callApiByQuery(query, shopRequest, category);
         ShopQueryDto shopQueryDto = this.jsonToShopQueryDto(shopStr);
 
         return queryDtoToQueryResponses(shopQueryDto, shopRequest);
@@ -563,7 +563,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
      * @param query 검색어
      * @return block으로 받아온 결과
      */
-    private String callApiByQuery(String query, ShopRequest shopRequest) {
+    private String callApiByQuery(String query, ShopRequest shopRequest, Category category) {
         String locationQuery = String.valueOf(shopRequest.getLat()) + ", " + String.valueOf(shopRequest.getLng());
 
         String shopStr = webClient.get().uri(uriBuilder ->
@@ -571,7 +571,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                         .queryParam("query", query)
                         .queryParam("key", API_KEY)
                         .queryParam("language", "ko")
-                        .queryParam("type", "food")
+                        .queryParam("type", category.name())
                         .queryParam("location", locationQuery)
                         .build()
         ).retrieve().bodyToMono(String.class).block();
@@ -739,6 +739,3 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     }
 }
 
-enum Category {
-    cafe, restaurant;
-}
