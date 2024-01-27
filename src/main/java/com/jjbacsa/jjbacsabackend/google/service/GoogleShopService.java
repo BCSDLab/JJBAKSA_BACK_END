@@ -4,13 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.*;
+import com.jjbacsa.jjbacsabackend.google.dto.Category;
 
 import java.util.List;
 
 public interface GoogleShopService {
 
     //구글 상점 쿼리 다중 검색
-    ShopQueryResponses searchShopQuery(String query, ShopRequest shopRequest) throws JsonProcessingException;
+    ShopQueryResponses searchShopQuery(String query, ShopRequest shopRequest, Category category) throws JsonProcessingException;
 
     //구글 상점 쿼리 다중 검색에서 다음 페이지
     ShopQueryResponses searchShopQueryNext(String pageToken, ShopRequest shopRequest) throws JsonProcessingException;

@@ -1,16 +1,20 @@
 package com.jjbacsa.jjbacsabackend.google.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.jjbacsa.jjbacsabackend.etc.enums.ErrorMessage;
+import com.jjbacsa.jjbacsabackend.etc.exception.BaseException;
 import com.jjbacsa.jjbacsabackend.google.dto.api.SimpleShopDto;
 import com.jjbacsa.jjbacsabackend.google.dto.request.AutoCompleteRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.request.ShopRequest;
 import com.jjbacsa.jjbacsabackend.google.dto.response.*;
 import com.jjbacsa.jjbacsabackend.google.service.GoogleShopService;
+import com.jjbacsa.jjbacsabackend.google.dto.Category;
 import com.jjbacsa.jjbacsabackend.search.service.SearchService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -46,15 +50,23 @@ public class GoogleShopController {
                     response = ShopQueryResponses.class
             )
     })
-    @ApiImplicitParam(
-            name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "query"
-    )
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "category", value = "상점 카테고리", required = true, dataType = "string", paramType = "query")
+    })
     @PostMapping("/shops")
-    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name = "keyword") String keyword) throws JsonProcessingException {
+    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name = "keyword") String keyword, @RequestParam(name = "category") Category category) throws JsonProcessingException {
         searchService.saveTrending(keyword);
 
         return ResponseEntity.ok()
-                .body(googleShopService.searchShopQuery(keyword, shopRequest));
+                .body(googleShopService.searchShopQuery(keyword, shopRequest, category));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<BaseException> getGoogleShopsByTypeHandler(MethodArgumentTypeMismatchException e){
+        BaseException exception = new BaseException(ErrorMessage.INVALID_REQUEST_EXCEPTION);
+
+        return new ResponseEntity<>(exception, HttpStatus.BAD_REQUEST);
     }
 
     @ApiOperation(
