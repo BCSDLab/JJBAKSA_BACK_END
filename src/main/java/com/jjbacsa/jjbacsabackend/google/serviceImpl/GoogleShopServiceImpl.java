@@ -60,7 +60,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 
     private final String[] placeDetailsFields = {"formatted_address", "formatted_phone_number", "name", "geometry/location/lat", "geometry/location/lng", "types", "place_id", "opening_hours/open_now", "opening_hours/weekday_text", "opening_hours/periods", "photos/photo_reference"};
     private final String[] pinFields = {"name", "types", "place_id", "photos/photo_reference"};
-    private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference"};
+    private final String[] simpleFields = {"geometry/location/lng", "geometry/location/lat", "place_id", "name", "photos/photo_reference", "types", "formatted_address", "opening_hours/open_now"};
     private final String[] scrapFields = {"name", "types", "place_id", "photos/photo_reference", "formatted_address"};
     private final String[] addressLevels = {"읍", "면", "동", "가", "로", "길"};
     private final String[] shopExistField = {"place_id"};
@@ -117,7 +117,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
 
         Category category = getCategory(shopApiDto.getTypes());
-        List<String> photoTokens = getPhotoTokens(shopApiDto);
+        List<String> photoTokens = getPhotoTokens(shopApiDto.getPhotos());
         TodayPeriod todayPeriod = getPeriod(shopApiDto);
 
         return ShopResponse.builder()
@@ -140,7 +140,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         ShopApiDto shopApiDto = this.jsonToShopApiDto(shopStr);
 
         Category category = getCategory(shopApiDto.getTypes());
-        List<String> photoTokens = getPhotoTokens(shopApiDto);
+        List<String> photoTokens = getPhotoTokens(shopApiDto.getPhotos());
 
         return ShopPinResponse.builder()
                 .placeId(shopApiDto.getPlaceId())
@@ -150,13 +150,13 @@ public class GoogleShopServiceImpl implements GoogleShopService {
                 .build();
     }
 
-    private List<String> getPhotoTokens(ShopApiDto shopApiDto) {
+    private List<String> getPhotoTokens(List<Photo> photoList) {
         try {
             List<String> photos = new ArrayList<>();
-            int maxRange = shopApiDto.getPhotos().size() >= 10 ? 10 : shopApiDto.getPhotos().size();
+            int maxRange = photoList.size() >= 10 ? 10 : photoList.size();
 
             for (int p = 0; p < maxRange; p++) {
-                photos.add(getPhotoUrl(shopApiDto.getPhotos().get(p).getPhotoReference()));
+                photos.add(getPhotoUrl(photoList.get(p).getPhotoReference()));
             }
 
             return photos;
@@ -238,18 +238,31 @@ public class GoogleShopServiceImpl implements GoogleShopService {
 //        }
 
         List<String> placeIDs = getPlaceIds(shopIds);
-
-        // 2000m(2km) 이내
-        List<ShopSimpleResponse> simpleShopDtos = this.callApiByPlaceIdsNonBlocking(placeIDs);
+        List<SimpleShopDto> simpleShopDtos = this.callApiByPlaceIdsNonBlocking(placeIDs);
 
         int failCnt = 0;
         List<ShopSimpleResponse> resultSimpleShopDtos = new ArrayList<>();
-        for (ShopSimpleResponse dto : simpleShopDtos) {
+        for (SimpleShopDto simpleShopDto : simpleShopDtos) {
             try {
-                Double dist = getMeter(dto.getCoordinate(), shopRequest);
-                resultSimpleShopDtos.add(dto);
-            } catch (Exception e) {
-                failCnt++;
+                Coordinate coordinate = Coordinate.from(simpleShopDto.getGeometry());
+                Double dist = getMeter(coordinate, shopRequest);
+
+                ShopSimpleResponse shopSimpleResponse = ShopSimpleResponse.builder()
+                        .placeId(simpleShopDto.getPlaceId())
+                        .name(simpleShopDto.getName())
+                        .coordinate(coordinate)
+                        .category(getCategory(simpleShopDto.getTypes()).name())
+                        .openNow(getOpenNow(simpleShopDto.getOpeningHours()))
+                        .formattedAddress(simpleShopDto.getFormattedAddress())
+                        .simpleFormattedAddress(formattedAddressFormatting(simpleShopDto.getFormattedAddress()))
+                        .rate(getShopRate(simpleShopDto.getPlaceId()))
+                        .dist(dist)
+                        .photos(getPhotoTokens(simpleShopDto.getPhotos()))
+                        .build();
+
+                resultSimpleShopDtos.add(shopSimpleResponse);
+            } catch (Exception e){
+                failCnt ++;
             }
 
             if (failCnt >= simpleShopDtos.size() / 2 && failCnt != 0) {
@@ -334,7 +347,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     }
 
     private Double getMeter(Coordinate coordinate, ShopRequest shopRequest) {
-        if(coordinate == null){
+        if (coordinate == null) {
             return null;
         }
 
@@ -499,7 +512,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     /**
      * 여러 place_ids에서 간단하게 상점 정보를 받아오는 메소드
      */
-    private List<ShopSimpleResponse> callApiByPlaceIdsNonBlocking(List<String> placeIds) throws JsonProcessingException {
+    private List<SimpleShopDto> callApiByPlaceIdsNonBlocking(List<String> placeIds) throws JsonProcessingException {
         List<Mono<String>> monos = new ArrayList<>();
 
         for (String id : placeIds) {
@@ -521,10 +534,11 @@ public class GoogleShopServiceImpl implements GoogleShopService {
         Function<Object[], List> combinator = monoList -> Arrays.stream(monoList).collect(Collectors.toList());
         List<String> results = Mono.zip(monos, combinator).block();
 
-        if (results == null)
+        if (results == null) {
             results = new ArrayList<>();
+        }
 
-        List<ShopSimpleResponse> simpleShopDtos = new ArrayList<>();
+        List<SimpleShopDto> simpleShopDtos = new ArrayList<>();
         int continualException = 0;
         for (String result : results) {
             if (continualException > 5) {
@@ -532,23 +546,9 @@ public class GoogleShopServiceImpl implements GoogleShopService {
             }
             try {
                 continualException = 0;
+
                 SimpleShopDto simpleShopDto = this.jsonToSimpleShopDto(result);
-
-                String photoToken;
-                try {
-                    photoToken = getPhotoUrl(simpleShopDto.getPhotos().get(0).getPhotoReference());
-                } catch (NullPointerException e) {
-                    photoToken = null;
-                }
-
-                ShopSimpleResponse shopSimpleResponse = ShopSimpleResponse.builder()
-                        .placeId(simpleShopDto.getPlaceId())
-                        .name(simpleShopDto.getName())
-                        .coordinate(Coordinate.from(simpleShopDto.getGeometry()))
-                        .photo(photoToken)
-                        .build();
-
-                simpleShopDtos.add(shopSimpleResponse);
+                simpleShopDtos.add(simpleShopDto);
             } catch (ApiException e) {
                 continualException++;
             }
@@ -712,7 +712,7 @@ public class GoogleShopServiceImpl implements GoogleShopService {
     }
 
     private Category getCategory(List<String> types) {
-        if(types == null){
+        if (types == null) {
             return Category.restaurant;
         }
 
