@@ -165,3 +165,6 @@ auth-url:
   # DynamicLink에 들어갈 속성 정보
   query:
     apn:
+
+swagger:
+  server-url: http://localhost:8080
