@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>쩝쩝박사 회원가입 인증</title>
+
+  <link href="https://cdn.jsdelivr.net/gh/sunn-us/SUITE/fonts/static/woff2/SUITE.css" rel="stylesheet">
+</head>
+
+<body style="margin: 0; padding: 0;">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border: 1px solid #cccccc;">
+  <tr>
+    <td align="center" bgcolor="#EAEAEA" style="padding: 40px 0 0 0;">
+      <!-- stage 수정 -->
+      <img src="https://static.api.stage.jjbaksa.com/logo/email_banner.png" alt="Creating Email Magic" width="1200px"
+           height="416px" style="display: block;"/>
+    </td>
+  </tr>
+
+  <tr>
+    <td bgcolor="#ffffff" height="668px">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td style="margin: 88px 0 0 0; color: #000000; font-family: 'SUITE'; font-size: 49px; text-align: center;">
+            <b>이메일 주소 인증</b>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-top: 16px; text-align: center; font-family: 'SUITE'; font-size: 34px; color: #666666;">
+            <span>
+              아래의 버튼을 클릭하여 인증을 진행해주세요.<br/>
+            </span>
+
+            <a th:href="@{{contextPath}/user/check-email(contextPath=${contextPath}, access_token=${accessToken}, refresh_token=${refreshToken})}"
+               style="margin-top: 50px; background-color: #FF7F23; border: none; border-radius: 25px; color: white; padding: 25px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 34px;"
+               class="btn">
+              <b>이메일 주소 인증</b>
+            </a>
+
+            <div style="margin-top: 65px; color: #666666">
+              이 메일은 1시간 뒤에 만료됩니다.<br>
+              만료시 회원가입을 다시 시도해주세요.<br>
+            </div>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td bgcolor="#2F2F2F" style="padding: 30px 30px 30px 30px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td width="75%" style="color:white; font-family: Arial, sans-serif;">
+            Copyright BCSD Lab, TEAM_JJBAKSA All rights reserved.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
+
