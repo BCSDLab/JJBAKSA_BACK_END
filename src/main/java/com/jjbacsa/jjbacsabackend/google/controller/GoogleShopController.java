@@ -52,10 +52,10 @@ public class GoogleShopController {
     })
     @ApiImplicitParams({
             @ApiImplicitParam(name = "keyword", value = "상점 검색어", required = true, dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "category", value = "상점 카테고리", required = true, dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "category", value = "상점 카테고리", defaultValue = "restaurant", dataType = "string", paramType = "query")
     })
     @PostMapping("/shops")
-    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name = "keyword") String keyword, @RequestParam(name = "category") Category category) throws JsonProcessingException {
+    public ResponseEntity<ShopQueryResponses> getGoogleShopsByType(@RequestBody @Valid ShopRequest shopRequest, @RequestParam(name = "keyword") String keyword, @RequestParam(name = "category", defaultValue = "restaurant") Category category) throws JsonProcessingException {
         searchService.saveTrending(keyword);
 
         return ResponseEntity.ok()
